@@ -546,66 +546,12 @@ metab_dtd.Properties.VariableUnits = varUnits;
 
 erdc_metab = struct('obs',metab_obs,'dtd',metab_dtd);
 %%
-% Average the observed results and plot
-cd([rootpath,'figures\diel-analysis-figures'])
-
 all_metab_obs = synchronize(bc_metab.obs,erdc_metab.obs);
 
-Pg_obs = mean(all_metab_obs{:,["Pg_1","Pg_2"]},2,"includemissing");
-Rt_obs= mean(all_metab_obs{:,["Rt_1","Rt_2"]},2,"includemissing");
-NEM_obs = mean(all_metab_obs{:,["NEM_1","NEM_2"]},2,"includemissing");
 
-varNames = ["Pg","Rt","NEM"];
-varUnits = ["mmol O2 m-2 d-1","mmol O2 m-2 d-1","mmol O2 m-2 d-1"];
+Pg_obs_mean = mean(all_metab_obs{:,["Pg_1","Pg_2"]},2,"includemissing");
+Rt_obs_mean = mean(all_metab_obs{:,["Rt_1","Rt_2"]},2,"includemissing");
+NEM_obs_mean = mean(all_metab_obs{:,["NEM_1","NEM_2"]},2,"includemissing");
 
-mean_metab_obs = timetable(all_metab_obs.Date,Pg_obs,Rt_obs,NEM_obs);
-mean_metab_obs.Properties.VariableNames = varNames;
-mean_metab_obs.Properties.VariableUnits = varUnits;
-
-figure(19),clf
-plot(mean_metab_obs.Time,mean_metab_obs.Pg,'.-','MarkerSize',12,'LineWidth',1)
-hold on
-plot(mean_metab_obs.Time,mean_metab_obs.Rt,'k.-','MarkerSize',12,'LineWidth',1)
-plot(mean_metab_obs.Time,mean_metab_obs.NEM,'r.-','MarkerSize',12,'LineWidth',1)
-ylabel('mmol O_2 m^{-2} d^{-1}','FontSize',14)
-title('Beck Metabolism Results for Gull - Mean of Both Sondes - Not Detided')
-legend({'GPP','ER','NEM'},'FontSize',14)
-
-% figure(20),clf
-% plot(bc_metab.obs.Date,bc_metab.obs.Pg,'.-','MarkerSize',12,'LineWidth',1)
-% hold on
-% plot(erdc_metab.obs.Date,erdc_metab.obs.Pg,'.-','MarkerSize',12,'LineWidth',1)
-% plot(mean_metab_obs.Time,mean_metab_obs.Pg,'.-','MarkerSize',12,'LineWidth',1)
-% legend('BC','ERDC','Mean')
-%%
-% Average the detided results and plot
-cd([rootpath,'figures\diel-analysis-figures'])
-
-all_metab_dtd = synchronize(bc_metab.dtd,erdc_metab.dtd);
-
-Pg_dtd = mean(all_metab_dtd{:,["Pg_1","Pg_2"]},2,"includemissing");
-Rt_dtd= mean(all_metab_dtd{:,["Rt_1","Rt_2"]},2,"includemissing");
-NEM_dtd = mean(all_metab_dtd{:,["NEM_1","NEM_2"]},2,"includemissing");
-
-varNames = ["Pg","Rt","NEM"];
-varUnits = ["mmol O2 m-2 d-1","mmol O2 m-2 d-1","mmol O2 m-2 d-1"];
-
-mean_metab_dtd = timetable(all_metab_dtd.Date,Pg_dtd,Rt_dtd,NEM_dtd);
-mean_metab_dtd.Properties.VariableNames = varNames;
-mean_metab_dtd.Properties.VariableUnits = varUnits;
-
-figure(21),clf
-plot(mean_metab_dtd.Time,mean_metab_dtd.Pg,'.-','MarkerSize',12,'LineWidth',1)
-hold on
-plot(mean_metab_dtd.Time,mean_metab_dtd.Rt,'k.-','MarkerSize',12,'LineWidth',1)
-plot(mean_metab_dtd.Time,mean_metab_dtd.NEM,'r.-','MarkerSize',12,'LineWidth',1)
-ylabel('mmol O_2 m^{-2} d^{-1}','FontSize',14)
-title('Beck Metabolism Results for Gull - Mean of Both Sondes - Detided')
-legend({'GPP','ER','NEM'},'FontSize',14)
-
-% figure(22),clf
-% plot(bc_metab.dtd.Date,bc_metab.dtd.Pg,'.-','MarkerSize',12,'LineWidth',1)
-% hold on
-% plot(erdc_metab.dtd.Date,erdc_metab.dtd.Pg,'.-','MarkerSize',12,'LineWidth',1)
-% plot(mean_metab_dtd.Time,mean_metab_dtd.Pg,'.-','MarkerSize',12,'LineWidth',1)
-% legend('BC','ERDC','Mean')
+mean_metab_obs = timetable(all_metab_obs.Date,Pg_obs_mean,Rt_obs_mean,NEM_obs_mean);
+mean_metab_obs.
