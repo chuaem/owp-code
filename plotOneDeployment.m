@@ -8,7 +8,7 @@
 %
 % DATE:
 % First created: 9/14/2023
-% Last amended: 1/24/2024
+% Last amended: 3/12/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear all;close all;clc
@@ -115,7 +115,7 @@ switch depNum
         xlim('tight')
 
     % Plots if one or more sondes were internally logged (Deployment 4 onwards)
-    case{4,5,6,7,8,9,10,11,12,13,14,15,16}
+    case{4,5,6,7,8,9,10,11,12,13,14,15,16,17}
         if strcmp(site,'south') == 1 && (depNum == 4 || depNum == 6 || depNum == 15)
             if depNum == 4 || depNum == 6
                 nexttile(1)

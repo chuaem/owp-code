@@ -1,15 +1,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% removeOffsets.m
-% This script removes time offsets from UTC, and erroneous depth offsets.
-% Refer to the Collaborative Lab Notebook, which documents which deployments
-% have time and/or depth offsets.
+% removeTimeOffsets.m
+% This script removes time offsets from UTC. Refer to the Collaborative Lab Notebook,
+% which documents which deployments have time offsets.
 %
 % AUTHOR:
 % Emily Chua
 %
 % DATE:
 % First created: 10/12/2023
-% Last amended: 3/12/2024
+% Last amended: 3/13/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -19,26 +18,6 @@ rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 fig = uifigure;
 site = uiconfirm(fig,"Select the platform","Site selection","Options",["gull","north","south"]);
 close(fig)
-
-% Load merged data for the platform
-cd([rootpath,'open-water-platform-data\',site,'\original\merged'])
-load(['alldeps-',site,'-raw.mat'])
-
-means1 = grpstats(sonde1_all,"deployment",{"mean"});
-means2 = grpstats(sonde2_all,"deployment",{"mean"});
-
-% For each sonde, find the mean depth across all deployments that aren't erroneously high, excluding zero values
-switch site
-    case 'gull'
-        alldepths1_avg = mean(nonzeros(means1.mean_depth([1 2 3:8 10 11 13 14 15]))); % BC: Dep# 1, 2, 5-10, 12, 13, 15, 16, 17
-        alldepths2_avg = mean(nonzeros(means2.mean_depth([1:6 8:10 13 14 15])));      % ERDC: Dep# 1, 2, 5-8, 10-12, 15, 16, 17
-    case 'north'
-        alldepths1_avg = mean(nonzeros(means1.mean_depth([1:6 8 10 11 12 13])));   % BC: Dep# 2, 6-10, 12, 14, 15, 16, 17
-        alldepths2_avg = mean(nonzeros(means2.mean_depth([1:4 7 8 10 11 12 13]))); % ERDC: Dep# 2, 6-8, 11, 12, 14, 15, 16, 17
-    case 'south'
-        alldepths1_avg = mean(nonzeros(means1.mean_depth([1:7 9:11 14 15])));    % BC: Dep# 1, 2, 4-8, 10-12, 16, 17
-        alldepths2_avg = mean(nonzeros(means2.mean_depth([1:6 9 10 12:14])));    % ERDC: Dep# 1, 2, 5, 7-9, 12, 13, 15, 16, 17
-end
 
 %===Read in sonde data for a specific deployment===========================
 cd([rootpath,'open-water-platform-data\',site,'\original\deployments'])
@@ -91,32 +70,20 @@ title(['Deployment ',num2str(sonde1.deployment(1)),' - Original'])
 set(gca,'FontSize',FontSize,'LineWidth',LineWidth)
 grid on
 
-disp('Press enter to remove depth offset')
-pause
-
-%===Remove depth offset============================================
-depth1_avg = mean(nonzeros(sonde1.depth),"omitnan");
-depth2_avg = mean(nonzeros(sonde2.depth),"omitnan");
-delta_depth1 = depth1_avg - alldepths1_avg;
-delta_depth2 = depth2_avg - alldepths2_avg;
-depth1_adj = sonde1.depth - delta_depth1;
-depth2_adj = sonde2.depth - delta_depth2;
-
-%===Adjust pressure data===========================================
-p1_adj = sonde1.density.*1000*9.81.*depth1_adj/6894.76;
-p2_adj = sonde2.density.*1000*9.81.*depth2_adj/6894.76;
-
 %===Fix time offset(s) from UTC============================================
 % Some deployments have weird time offsets between the BC and ERDC sondes, assessed visually
-% South Deployment 5
 % Gull Deployment 8
-if strcmp(site,'south') && depNum == 5
-    t_offset = sonde2.datetime_utc(1) - sonde1.datetime_utc(1);
-    sonde2.datetime_utc = sonde2.datetime_utc - t_offset;
-elseif strcmp(site,'gull') && depNum == 8
+% North Deployment 7
+% South Deployment 5
+if strcmp(site,'gull') && depNum == 8
     t_offset = abs(sonde2.datetime_utc(1) - sonde1.datetime_utc(1));
     sonde1.datetime_utc = sonde1.datetime_utc - t_offset;
-% elseif strcmp
+elseif strcmp(site,'north') && depNum == 7
+    t_offset = abs(sonde2.datetime_utc(1) - sonde1.datetime_utc(1));
+    sonde2.datetime_utc = sonde2.datetime_utc - t_offset;
+elseif strcmp(site,'south') && depNum == 5
+    t_offset = sonde2.datetime_utc(1) - sonde1.datetime_utc(1);
+    sonde2.datetime_utc = sonde2.datetime_utc - t_offset;
 else
     % Do nothing
 end
@@ -137,22 +104,8 @@ minPkDist = 55;   % 12 min
 [pks1,locs1] = findpeaks(smoothed1,'MinPeakDistance',minPkDist);
 [pks2,locs2] = findpeaks(smoothed2,'MinPeakDistance',minPkDist);
 
-% figure(3),clf
-% plot(sonde1.datetime_utc,sonde1.depth)
-% hold on
-% plot(sonde1.datetime_utc,smoothed1)
-% hold off
-% legend('Original','Smoothed')
-% 
-% figure(4),clf
-% plot(sonde2.datetime_utc,sonde2.depth)
-% hold on
-% plot(sonde2.datetime_utc,smoothed2)
-% hold off
-% legend('Original','Smoothed')
-
 % Plot peaks in data to double-check
-fig2= figure(2);
+fig2 = figure(2);
 fig2.WindowState = 'maximized';
 h0 = plot(usgs.datetime_utc,usgs.tidal_elev,'k');
 hold on
@@ -228,31 +181,24 @@ fig3 = figure(4);
 fig3.WindowState = 'maximized';
 h3 = plot(usgs.datetime_utc,usgs.tidal_elev,'.k','MarkerSize',12);
 hold on
-h1 = plot(datetime_utc1_adj,depth1_adj,'.','Color',red,'MarkerSize',12);
-h2 = plot(datetime_utc2_adj,depth2_adj,'.','Color',blue,'markersize',12);
+h1 = plot(datetime_utc1_adj,sonde1.depth,'.','Color',red,'MarkerSize',12);
+h2 = plot(datetime_utc2_adj,sonde2.depth,'.','Color',blue,'markersize',12);
 hold off
 legend([h1 h2 h3],'BC','ERDC','USGS')
 xlim([min(datetime_utc1_adj) max(datetime_utc1_adj)])
 xlabel('UTC')
 ylabel('Depth (m)')
-title(['Deployment ',num2str(sonde1.deployment(1)),' - Adjusted Depth and Time'])
+title(['Deployment ',num2str(sonde1.deployment(1)),' - Adjusted Time'])
 set(gca,'FontSize',FontSize,'LineWidth',LineWidth)
 grid on
 
-pause
-
 %====Save adjusted data====================================================
-% Save new tables with columns for UTC & local time, depth, and p replaced
-% with adjusted data
+% Save new tables with columns for UTC & local time replaced with adjusted data
 sonde1.datetime_utc = datetime_utc1_adj;
 sonde1.datetime_local = datetime_local1_adj;
-sonde1.depth = depth1_adj;
-sonde1.p = p1_adj;
 
 sonde2.datetime_utc = datetime_utc2_adj;
 sonde2.datetime_local = datetime_local2_adj;
-sonde2.depth = depth2_adj;
-sonde2.p = p2_adj;
 
 %====Save created tables in .mat files=====================================
 saveFilePath = ['open-water-platform-data\',site,'\adjusted\deployments'];
@@ -261,7 +207,7 @@ option = questdlg(['Save .mat file in ',saveFilePath,'?'],'Save File','Y','N','Y
 switch option
     case 'Y'
         cd([rootpath,saveFilePath])
-        save(fileName,"sonde1","sonde2","delta_depth1","delta_depth2","delta_t1","delta_t2")
+        save(fileName,"sonde1","sonde2","delta_t1","delta_t2")
         disp('File saved!')
     case 'N'
         disp('File not saved.')

@@ -10,12 +10,12 @@
 % 
 % DATE:
 % First created: 11/9/2023
-% Last updated: 2/3/2024
+% Last updated: 4/3/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
 
-site = 'gull';
+site = 'Gull';
 
 rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 
@@ -42,13 +42,13 @@ red = [0.8500 0.3250 0.0980];   % BC sonde
 blue = [0 0.4470 0.7410];       % ERDC sonde
 fontsize = 14;
 linewidth = 1;
-dotsize = 2;
+dotsize = 12;
 circlesize = 6;
 
 label = {'Deployment 1','Deployment 2','Deployment 5','Deployment 6',...
     'Deployment 7','Deployment 8','Deployment 9','Deployment 10',...
     'Deployment 11','Deployment 12','Deployment 13','Deployment 14',...
-    'Deployment 15','Deployment 16'};
+    'Deployment 15','Deployment 16','Deployment 17'};
 
 % Find indices of deployment changes
 ind_dep = find(diff(dat.deployment) > 0);
@@ -64,24 +64,22 @@ switch answer
             'temperature' 'barometric_p' 'p' 'depth' 'TDS' 'DO_conc' 'DO_sat' 'pO2' ...
             'pH' 'pH_raw' 'ORP' 'chla' 'nitrate' 'external_voltage' 'battery_capacity'};
         sondename = 'BC';
-        cd([rootpath,'\figures\open-water-platform-figures\gull\data-qc\bc'])
     case 'Sonde 2'
         flags.Properties.VariableNames = {'deployment' 'datetime_utc' 'datetime_local' ...
             'actual_cond' 'specific_cond' 'salinity' 'resistivity' 'density' ...
             'temperature' 'barometric_p' 'p' 'depth' 'TDS' 'DO_conc' 'DO_sat' 'pO2' ...
             'pH' 'pH_raw' 'ORP' 'turbidity' 'external_voltage' 'battery_capacity'};
         sondename = 'ERDC';
-        cd([rootpath,'\figures\open-water-platform-figures\gull\data-qc\erdc'])
 end
 
 %====(0) Manual removals (see notes in Collab Lab Notebook)================
 % Plot original depth data to define points to remove manually
-% fig = figure(1);clf
-% fig.WindowState = 'maximized';
-% h0 = plot(dat.datetime_utc,dat.depth,'.k','markersize',6);
+% fig0 = figure(1);clf
+% fig0.WindowState = 'maximized';
+% plot(dat.datetime_utc,dat.depth,'.k','markersize',6);
 % xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label);
 % ylabel('Depth (m)')
-% title(['QC Tests: Gull ',sondename,' Sonde - Depth'])
+% title(['Original Data - Gull ',sondename])
 % xlim([dt1 dt2])                 % Use same x limits for comparing sites
 % set(gca,'FontSize',fontsize)
 % xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label);
@@ -101,17 +99,18 @@ switch answer
         oow9 = (113499:113501)';    % Dep 13 --> 14
         oow10 = (122403:122405)';   % Dep 14 --> 15
         oow11 = (130652:130661)';   % Dep 15 --> 16
-        ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11];
+        oow12 = (143717:143719)';   % Dep 16 --> 17
+        ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12];
 
         % Isolated points during large gap from 7/30/21 (during Dep 1) to start of Dep 2
-        ind_manual1 = (7420:12590)';
-        ind_manual2 = find(dat.depth(1:ind_dep(2)) < 0);
-        ind_manual_global = unique([ind_manual1;ind_manual2]);
+        ind_dropout1 = (7420:12590)';
+        ind_dropout2 = find(dat.depth(1:ind_dep(2)) < 0);
+        ind_dropout = unique([ind_dropout1;ind_dropout2]);
     
     case 'Sonde 2'
     % Out-of-water points
         oow1 = (34473:34478)'; % Dep 5 --> 6
-        oow2 = (51063:51081)'; % Dep 6 --> 7
+        oow2 = (51063:51090)'; % Dep 6 --> 7
         oow3 = (60425:60429)'; % Dep 7 --> 8
         oow4 = (67205:67233)'; % Dep 8 --> 9
         oow5 = (71093:71100)'; % Dep 9 --> 10
@@ -121,34 +120,33 @@ switch answer
         oow9 = (113075:113077)'; % Dep 13 --> 14
         oow10 = (121978:121982)'; % Dep 14 --> 15
         oow11 = (130230:130231)'; % Dep 15 --> 16
-        ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11];
+        oow12 = 143288;         % Dep 16 --> 17
+        ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12];
 
         % Isolated points during large gap from 7/30/21 (during Dep 1) to start of Dep 2
-        ind_manual1 = (7420:12589)';
-        ind_manual2 = find(dat.depth(1:ind_dep(2)) < 0);
-        ind_manual_global = unique([ind_manual1;ind_manual2]);
+        ind_dropout1 = (7420:12589)';
+        ind_dropout2 = find(dat.depth(1:ind_dep(1)) < 0);
+        ind_dropout = unique([ind_dropout1;ind_dropout2]);
 end
-clearvars oow1 oow2 oow3 oow4 oow5 oow6 oow7 oow8 oow9 oow10 oow11
+clearvars oow1 oow2 oow3 oow4 oow5 oow6 oow7 oow8 oow9 oow10 oow11 oow12
 
-% DEPTH
+ind_manual = [ind_dropout;ind_oow];
+
+%====DEPTH=================================================================
 depth_orig = dat.depth;  % Preserve original depth data for plotting
 
-%====(1) Gross Range Test==================================================
+% (1) Gross Range Test
 % INPUTS
-d_low = 0;      % Lower limit (m) - flag all negative values as FAIL
-d_high = 5;     % Upper limit (m) - not sure what should be
+low_threshold = 0;      % Lower limit (m) - flag all negative values as FAIL
+high_threshold = 5;     % Upper limit (m)
 
-ind_low = find(dat.depth < d_low);
-ind_high = find(dat.depth > d_high);
-% Don't duplicate points already defined to be manually removed
-ind_low = setdiff(ind_low,ind_manual_global);   
-ind_high = setdiff(ind_high,ind_manual_global);
+ind_low = find(dat.depth < low_threshold);
+ind_high = find(dat.depth > high_threshold);
 ind_grossRange = [ind_low;ind_high];
-ind_grossRange = setdiff(ind_grossRange,ind_oow);
+% Don't duplicate points already defined to be manually removed
+ind_grossRange = setdiff(ind_grossRange,ind_manual);
 
-ind_manual = [ind_manual_global;ind_oow];
-
-%====(2) Spike Test========================================================
+% (2) Spike Test
 % INPUTS
 spike_threshold = 0.1;    % FAIL threshold (m)
 
@@ -163,83 +161,56 @@ for i = 2:length(dat.depth)-1
 end
 % If i - ref is greater than high threshold, mark as a spike
 ind_spike = find(abs(d_depth) >= spike_threshold);
-[C,ig,is] = intersect(ind_grossRange,ind_spike); % Don't duplicate points already removed in Gross Range Test
+[~,~,is] = intersect(ind_grossRange,ind_spike); % Don't duplicate points already removed in Gross Range Test
 ind_spike(is) = [];
 
 % Plot histogram of depth differences
-fig = figure(2);clf
-fig.WindowState = 'maximized';
+fig1 = figure(1);clf
+fig1.WindowState = 'maximized';
 histogram(d_depth)
-title(['Spike Test Histogram: Gull ',sondename,' Sonde - Depth'])
+title([site,' ',sondename,' - Spike Test Histogram'])
 xlabel('d_{depth} (m)')
+ylabel('Frequency')
 set(gca,'YScale','log','FontSize',fontsize)
 
 % Plot original data with flagged points
-fig = figure(3);clf
-fig.WindowState = 'maximized';
-h0 = plot(dat.datetime_utc,dat.depth,'.k','markersize',dotsize);
+fig2 = figure(2);clf
+fig2.WindowState = 'maximized';
+plot(dat.datetime_utc,depth_orig,'.k','MarkerSize',dotsize,'DisplayName','Original Data');
 hold on
-h1 = plot(dat.datetime_utc(ind_manual_global),dat.depth(ind_manual_global),'og','markersize',circlesize);
-h2 = plot(dat.datetime_utc(ind_oow),dat.depth(ind_oow),'oc','markersize',circlesize);
-h3 = plot(dat.datetime_utc(ind_grossRange),dat.depth(ind_grossRange),'or','markersize',circlesize);
-h4 = plot(dat.datetime_utc(ind_spike),dat.depth(ind_spike),'om','markersize',circlesize);
-xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label);
+plot(dat.datetime_utc(ind_dropout),depth_orig(ind_dropout),'og','MarkerSize',circlesize,'DisplayName','Dropouts');
+plot(dat.datetime_utc(ind_oow),depth_orig(ind_oow),'oc','MarkerSize',circlesize,'DisplayName','Out of Water');
+plot(dat.datetime_utc(ind_grossRange),depth_orig(ind_grossRange),'or','MarkerSize',circlesize,'DisplayName','Gross Range Test');
+plot(dat.datetime_utc(ind_spike),depth_orig(ind_spike),'om','MarkerSize',circlesize,'DisplayName','Spike Test');
+xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 hold off
+xlabel('UTC')
 ylabel('Depth (m)')
-legend([h0 h1 h2 h3 h4],'Original Data','Manual Removal','Out of Water','Gross Range Test','Spike Test','location','best')
-title(['QC Tests: Gull ',sondename,' Sonde - Depth'])
+legend('show','location','best')
+title([site,' ',sondename,' - Flagged Points from Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
-%====Clean data============================================================
-% Discard points that failed Gross Range and Spike Tests and do Manual Removals
-dat.depth(ind_manual_global) = NaN;
-dat.depth(ind_grossRange) = NaN;
-dat.depth(ind_spike) = NaN;
-dat.depth(ind_oow) = NaN;
-
-% Flag all NaNs as FAIL
-ind_fail = find(isnan(dat.depth));
-flags.depth(ind_fail) = 4;
-
 % Create structure to save flagged depth indices
-depths_flagged = struct('ind_manual',ind_manual_global,'ind_grossRange',ind_grossRange,'ind_spike',ind_spike,'ind_oow',ind_oow,'d_high',d_high,'d_low',d_low,'spike_threshold',spike_threshold);
+depth_flags = struct('ind_dropout',ind_dropout,'ind_oow',ind_oow,'ind_grossRange',ind_grossRange,'ind_spike',ind_spike,'high_threshold',high_threshold,'low_threshold',low_threshold,'spike_threshold',spike_threshold);
 
-clearvars ind_high ind_low ind_grossRange ind_spike C ig is
+clearvars ind_high ind_low ind_grossRange ind_spike is
 
-%===Clean pressure data based on cleaned depth data========================
-dat.p = mean(dat.density,'omitmissing').*1000*9.81.*dat.depth/6894.76;
-flags.p(ind_fail) = 4;
-
-% TEMPERATURE
+%====TEMPERATURE===========================================================
 T_orig = dat.temperature;  % Preserve original T data for plotting
 
-% Plot the temperature data with the depth flags
-% fig=figure;clf
-% fig.WindowState = 'maximized';
-% h0 = plot(dat.datetime_utc,T_orig,'.k');
-% hold on
-% h1 = plot(dat.datetime_utc(depths_flagged_all),T_orig(depths_flagged_all),'or');
-% xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label);
-% hold off
-% legend([h0 h1],'Original Data','Depth Flags','location','best')
-% ylabel('Temperature (^oC)')
-% title('QC Tests: Gull BC Sonde - Temperature')
-% xlim([dt1 dt2])                 % Use same x limits for comparing sites 
-% set(gca,'FontSize',FontSize)
+% (1) Gross Range Test
+% INPUTS
+low_threshold = -2;      % Lower limit (oC) - Freezing pt of SW at 35 ppt (http://www.csgnetwork.com/h2ofreezecalc.html)
+high_threshold = 35;     % Upper limit (oC)
 
-%====(1) Gross Range Test==================================================
-% INPUTS -- could make fancier by changing limits based on season??
-T_low = -2;      % Lower limit (oC) - Freezing pt of SW at 35 ppt (http://www.csgnetwork.com/h2ofreezecalc.html)
-T_high = 35;     % Upper limit (oC)
-
-ind_low = find(dat.temperature < T_low);
-ind_high = find(dat.temperature > T_high);
-ind_low = setdiff(ind_low,ind_manual_global);
-ind_high = setdiff(ind_high,ind_manual_global);
+ind_low = find(T_orig < low_threshold);
+ind_high = find(T_orig > high_threshold);
 ind_grossRange = [ind_low;ind_high];
+% Don't duplicate points already defined to be manually removed
+ind_grossRange = setdiff(ind_grossRange,ind_manual);
 
-%====(2) Spike Test========================================================
+% (2) Spike Test
 % INPUTS
 spike_threshold = 1;    % FAIL threshold (deg C)
 
@@ -258,197 +229,442 @@ ind_spike = find(abs(d_T) >= spike_threshold);
 ind_spike(is) = [];
 
 % Plot histogram of temperature differences
-fig = figure;clf
-fig.WindowState = 'maximized';
+fig3 = figure(3);clf
+fig3.WindowState = 'maximized';
 histogram(d_T)
-title(['Spike Test Histogram: Gull ',sondename,' Sonde - Temperature'])
+title([site,' ',sondename,' - Spike Test Histogram'])
 xlabel('d_{temperature} (^oC)')
+ylabel('Frequency')
 set(gca,'YScale','log','FontSize',fontsize)
 
 % Plot original data with flagged points
-fig = figure;clf
-fig.WindowState = 'maximized';
-h0 = plot(dat.datetime_utc,dat.temperature,'.k','MarkerSize',dotsize);
+fig4 = figure(4);clf
+fig4.WindowState = 'maximized';
+plot(dat.datetime_utc,T_orig,'.k','MarkerSize',dotsize,'DisplayName','Original Data');
 hold on
-h1 = plot(dat.datetime_utc(ind_manual_global),dat.temperature(ind_manual_global),'og','MarkerSize',circlesize);
-h2 = plot(dat.datetime_utc(ind_grossRange),dat.temperature(ind_grossRange),'or','MarkerSize',circlesize);
-h3 = plot(dat.datetime_utc(ind_spike),dat.temperature(ind_spike),'om','MarkerSize',circlesize);
-h4 = plot(dat.datetime_utc(ind_oow),dat.temperature(ind_oow),'oc','MarkerSize',circlesize);
-xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label);
+plot(dat.datetime_utc(ind_dropout),T_orig(ind_dropout),'og','MarkerSize',circlesize,'DisplayName','Dropouts');
+plot(dat.datetime_utc(ind_oow),T_orig(ind_oow),'oc','MarkerSize',circlesize,'DisplayName','Out of Water');
+plot(dat.datetime_utc(ind_grossRange),T_orig(ind_grossRange),'or','MarkerSize',circlesize,'DisplayName','Gross Range Test');
+plot(dat.datetime_utc(ind_spike),T_orig(ind_spike),'om','MarkerSize',circlesize,'DisplayName','Spike Test');
+xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 hold off
+xlabel('UTC')
 ylabel('Temperature (^oC)')
-legend([h0 h1 h2 h3 h4],'Original Data','Manual Removal','Gross Range Test','Spike Test','Out of Water','location','best')
-title(['QC Tests: Gull ',sondename,' Sonde - Temperature'])
+legend('show','location','best')
+title([site,' ',sondename,' - Flagged Points from Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites 
 set(gca,'FontSize',fontsize)
 
-%====Clean data============================================================
-% Discard points that failed Gross Range and Spike Tests and do Manual Removals
-dat.temperature(ind_grossRange) = NaN;
-dat.temperature(ind_manual_global) = NaN;
-dat.temperature(ind_spike) = NaN;
-dat.temperature(ind_oow) = NaN;
-
-% Flag all NaNs as FAIL
-ind_fail = find(isnan(dat.temperature));
-flags.temperature(ind_fail) = 4;
-
 % Create structure to save flagged temperature indices
-T_flagged = struct('ind_manual',ind_manual_global,'ind_grossRange',ind_grossRange,'ind_spike',ind_spike,'ind_oow',ind_oow,'d_high',d_high,'d_low',d_low,'spike_threshold',spike_threshold);
+T_flags = struct('ind_dropout',ind_dropout,'ind_oow',ind_oow,'ind_grossRange',ind_grossRange,'ind_spike',ind_spike,'high_threshold',high_threshold,'low_threshold',low_threshold,'spike_threshold',spike_threshold);
 
 clearvars ind_high ind_low ind_grossRange ind_spike C ig is
 
-% DO CONCENTRATION
+%====DO CONCENTRATION======================================================
 DOconc_orig = dat.DO_conc;  % Preserve original DO concentration data for plotting
 
-%====(1) Gross Range Test==================================================
+% (1) Gross Range Test
 % INPUTS
-DO_low = 0;      % Lower limit (umol/L)
-DO_high = 500;     % Upper limit (umol/L); based on Winkler data and O2 solubility given S & T
+low_threshold = 0;      % Lower limit (umol/L)
+high_threshold = 650;   % Upper limit (umol/L) - 625 umol/L = 20 mg/L
 
-ind_low = find(dat.DO_conc < DO_low);
-ind_high = find(dat.DO_conc > DO_high);
-ind_low = setdiff(ind_low,ind_manual_global);
-ind_high = setdiff(ind_high,ind_manual_global);
+ind_low = find(DOconc_orig < low_threshold);
+ind_high = find(DOconc_orig > high_threshold);
 ind_grossRange = [ind_low;ind_high];
+% Don't duplicate points already defined to be manually removed
+ind_grossRange = setdiff(ind_grossRange,ind_manual);
 
-%====(2) Spike Test========================================================
+% (2) Spike Test
 % INPUTS
 spike_threshold = 50;    % FAIL threshold (umol/L)
 
-d_DO = zeros(length(dat.DO_conc),1);
+d_DO = zeros(length(DOconc_orig),1);
 
-for i = 2:length(dat.DO_conc)-1
+for i = 2:length(DOconc_orig)-1
     % Only check points if both they and their neighbors have not already been flagged for manual removal
     if ~ismember(i,ind_manual) && ~ismember(i+1,ind_manual) && ~ismember(i-1,ind_manual)
-        ref = (dat.DO_conc(i+1)+dat.DO_conc(i-1))/2; % Calculate the average of i+1 and i-1
-        d_DO(i) = dat.DO_conc(i) - ref; % Calculate the difference between i and ref
+        ref = (DOconc_orig(i+1)+DOconc_orig(i-1))/2; % Calculate the average of i+1 and i-1
+        d_DO(i) = DOconc_orig(i) - ref; % Calculate the difference between i and ref
     end
 end
 % If i - ref is greater than high threshold, mark as a spike
 ind_spike = find(abs(d_DO) >= spike_threshold);
-[C,ig,is] = intersect(ind_grossRange,ind_spike); % Don't duplicate points already removed in Gross Range Test
+[~,~,is] = intersect(ind_grossRange,ind_spike); % Don't duplicate points already removed in Gross Range Test
 ind_spike(is) = [];
 
 % Plot histogram of DO concentration differences
-fig = figure;clf
-fig.WindowState = 'maximized';
+fig5 = figure(5);clf
+fig5.WindowState = 'maximized';
 histogram(d_DO)
-title(['Spike Test Histogram: Gull ',sondename,' DO Concentration'])
+title([site,' ',sondename,' - Spike Test Histogram'])
 xlabel('d_{DO conc} (\mumol/L)')
+ylabel('Frequency')
 set(gca,'YScale','log','FontSize',fontsize)
 
 % Plot original data with flagged points
-fig = figure;clf
-fig.WindowState = 'maximized';
-h0 = plot(dat.datetime_utc,dat.DO_conc,'.k','MarkerSize',dotsize);
+fig6 = figure(6);clf
+fig6.WindowState = 'maximized';
+plot(dat.datetime_utc,DOconc_orig,'.k','MarkerSize',dotsize,'DisplayName','Original Data');
 hold on
-h1 = plot(dat.datetime_utc(ind_manual_global),dat.DO_conc(ind_manual_global),'og','MarkerSize',circlesize);
-h2 = plot(dat.datetime_utc(ind_grossRange),dat.DO_conc(ind_grossRange),'or','MarkerSize',circlesize);
-h3 = plot(dat.datetime_utc(ind_spike),dat.DO_conc(ind_spike),'om','MarkerSize',circlesize);
-h4 = plot(dat.datetime_utc(ind_oow),dat.DO_conc(ind_oow),'oc','MarkerSize',circlesize);
-xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label);
+plot(dat.datetime_utc(ind_dropout),DOconc_orig(ind_dropout),'og','MarkerSize',circlesize,'DisplayName','Dropouts');
+plot(dat.datetime_utc(ind_oow),DOconc_orig(ind_oow),'oc','MarkerSize',circlesize,'DisplayName','Out of Water');
+plot(dat.datetime_utc(ind_grossRange),DOconc_orig(ind_grossRange),'or','MarkerSize',circlesize,'DisplayName','Gross Range Test');
+plot(dat.datetime_utc(ind_spike),DOconc_orig(ind_spike),'om','MarkerSize',circlesize,'DisplayName','Spike Test');
+xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 hold off
+xlabel('UTC')
 ylabel('DO Concentration (\mumol/L)')
-legend([h0 h1 h2 h3 h4],'Original Data','Manual Removal','Gross Range Test','Spike Test','Out of Water','location','best')
-title(['QC Tests: Gull ',sondename,' Sonde - DO Concentration'])
+legend('show','location','best')
+title([site,' ',sondename,' - Flagged Points from Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites--09876543 
 set(gca,'FontSize',fontsize)
 
-%====Clean data============================================================
-% Discard points that failed Gross Range and Spike Tests and do Manual Removals
-dat.DO_conc(ind_manual_global) = NaN;
-dat.DO_conc(ind_grossRange) = NaN;
-dat.DO_conc(ind_spike) = NaN;
-dat.DO_conc(ind_oow) = NaN;
-
-% Flag all NaNs as FAIL
-ind_fail = find(isnan(dat.DO_conc));
-flags.DO_conc(ind_fail) = 4;
-
 % Create structure to save flagged DO concentration indices
-DOconc_flagged = struct('ind_manual',ind_manual_global,'ind_grossRange',ind_grossRange,'ind_spike',ind_spike,'ind_oow',ind_oow,'d_high',d_high,'d_low',d_low,'spike_threshold',spike_threshold);
+DO_flags = struct('ind_dropout',ind_dropout,'ind_oow',ind_oow,'ind_grossRange',ind_grossRange,'ind_spike',ind_spike,'high_threshold',high_threshold,'low_threshold',low_threshold,'spike_threshold',spike_threshold);
 
-clearvars ind_high ind_low ind_grossRange ind_spike C ig is
+clearvars ind_high ind_low ind_grossRange ind_spike is
 
-% SALINITY
+%====SALINITY==============================================================
 S_orig = dat.salinity;  % Preserve original S data for plotting
 
-%====(1) Gross Range Test==================================================
+% (1) Gross Range Test
 % INPUTS
-S_low = 0;      % Lower limit (psu) - flag all negative values as FAIL
-S_high = 50;     % Upper limit (psu) - not sure what should be
+low_threshold = 10;      % Lower limit (psu)
+high_threshold = 50;     % Upper limit (psu)
 
-ind_low = find(dat.salinity < S_low);
-ind_high = find(dat.salinity > S_high);
-% Don't duplicate points already defined to be manually removed
-ind_low = setdiff(ind_low,ind_manual_global);   
-ind_high = setdiff(ind_high,ind_manual_global);
+ind_low = find(S_orig < low_threshold);
+ind_high = find(S_orig > high_threshold);
 ind_grossRange = [ind_low;ind_high];
-ind_grossRange = setdiff(ind_grossRange,ind_oow);
+% Don't duplicate points already defined to be manually removed
+ind_grossRange = setdiff(ind_grossRange,ind_manual);
 
-ind_manual = [ind_manual_global;ind_oow];
-
-%====(2) Spike Test========================================================
+% (2) Spike Test
 % INPUTS
 spike_threshold = 10;    % FAIL threshold (psu)
 
-d_salinity = zeros(length(dat.salinity),1);
+d_salinity = zeros(length(S_orig),1);
 
-for i = 2:length(dat.salinity)-1
+for i = 2:length(S_orig)-1
     % Only check points if both they and their neighbors have not already been flagged for manual removal
     if ~ismember(i,ind_manual) && ~ismember(i+1,ind_manual) && ~ismember(i-1,ind_manual)
-        ref = (dat.salinity(i+1)+dat.salinity(i-1))/2; % Calculate the average of i+1 and i-1
-        d_salinity(i) = dat.salinity(i) - ref; % Calculate the difference between i and ref
+        ref = (S_orig(i+1)+S_orig(i-1))/2; % Calculate the average of i+1 and i-1
+        d_salinity(i) = S_orig(i) - ref; % Calculate the difference between i and ref
     end
 end
 % If i - ref is greater than high threshold, mark as a spike
 ind_spike = find(abs(d_salinity) >= spike_threshold);
-[C,ig,is] = intersect(ind_grossRange,ind_spike); % Don't duplicate points already removed in Gross Range Test
+[~,~,is] = intersect(ind_grossRange,ind_spike); % Don't duplicate points already removed in Gross Range Test
 ind_spike(is) = [];
 
 % Plot histogram of salinity differences
-fig = figure;clf
-fig.WindowState = 'maximized';
+fig7 = figure(7);clf
+fig7.WindowState = 'maximized';
 histogram(d_salinity)
-title(['Spike Test Histogram: Gull ',sondename,' Salinity'])
+title([site,' ',sondename,' - Spike Test Histogram'])
 xlabel('d_{salinity} (psu)')
+ylabel('Frequency')
 set(gca,'YScale','log','FontSize',fontsize)
 
 % Plot original data with flagged points
-fig = figure;clf
-fig.WindowState = 'maximized';
-h0 = plot(dat.datetime_utc,dat.salinity,'.k','MarkerSize',dotsize);
+fig8 = figure(8);clf
+fig8.WindowState = 'maximized';
+plot(dat.datetime_utc,S_orig,'.k','MarkerSize',dotsize,'DisplayName','Original Data');
 hold on
-h1 = plot(dat.datetime_utc(ind_manual_global),dat.salinity(ind_manual_global),'og','MarkerSize',circlesize);
-h2 = plot(dat.datetime_utc(ind_grossRange),dat.salinity(ind_grossRange),'or','MarkerSize',circlesize);
-h3 = plot(dat.datetime_utc(ind_spike),dat.salinity(ind_spike),'om','MarkerSize',circlesize);
-h4 = plot(dat.datetime_utc(ind_oow),dat.salinity(ind_oow),'oc','MarkerSize',circlesize);
-xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label)
+plot(dat.datetime_utc(ind_dropout),S_orig(ind_dropout),'og','MarkerSize',circlesize,'DisplayName','Dropouts');
+plot(dat.datetime_utc(ind_oow),S_orig(ind_oow),'oc','MarkerSize',circlesize,'DisplayName','Out of Water');
+plot(dat.datetime_utc(ind_grossRange),S_orig(ind_grossRange),'or','MarkerSize',circlesize,'DisplayName','Gross Range Test');
+plot(dat.datetime_utc(ind_spike),S_orig(ind_spike),'om','MarkerSize',circlesize,'DisplayName','Spike Test');
+xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 hold off
+xlabel('UTC')
 ylabel('Salinity (psu)')
-legend([h0 h1 h2 h3 h4],'Original Data','Manual Removal','Gross Range Test','Spike Test','Out of Water','location','best')
-title(['QC Tests: Gull ',sondename,' Sonde - Salinity'])
+legend('show','location','best')
+title([site,' ',sondename,' - Flagged Points from Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
+% Create structure to save flagged salinity indices
+S_flags = struct('ind_dropout',ind_dropout,'ind_oow',ind_oow,'ind_grossRange',ind_grossRange,'ind_spike',ind_spike,'high_threshold',high_threshold,'low_threshold',low_threshold,'spike_threshold',spike_threshold);
+
+clearvars ind_high ind_low ind_grossRange ind_spike is
+
+%====pH====================================================================
+pH_orig = dat.pH;  % Preserve original  data for plotting
+
+% (1) Gross Range Test
+% INPUTS
+low_threshold = 7;      % Lower limit
+high_threshold = 9.5;     % Upper limit
+
+ind_low = find(pH_orig < low_threshold);
+ind_high = find(pH_orig > high_threshold);
+ind_grossRange = [ind_low;ind_high];
+% Don't duplicate points already defined to be manually removed
+ind_grossRange = setdiff(ind_grossRange,ind_manual);
+
+% (2) Spike Test
+% INPUTS
+spike_threshold = 0.25;    % FAIL threshold
+
+d_pH = zeros(length(pH_orig),1);
+
+for i = 2:length(pH_orig)-1
+    % Only check points if both they and their neighbors have not already been flagged for manual removal
+    if ~ismember(i,ind_manual) && ~ismember(i+1,ind_manual) && ~ismember(i-1,ind_manual)
+        ref = (pH_orig(i+1)+pH_orig(i-1))/2; % Calculate the average of i+1 and i-1
+        d_pH(i) = pH_orig(i) - ref; % Calculate the difference between i and ref
+    end
+end
+% If i - ref is greater than high threshold, mark as a spike
+ind_spike = find(abs(d_pH) >= spike_threshold);
+[~,~,is] = intersect(ind_grossRange,ind_spike); % Don't duplicate points already removed in Gross Range Test
+ind_spike(is) = [];
+
+% Plot histogram of pH differences
+fig9 = figure(9);clf
+fig9.WindowState = 'maximized';
+histogram(d_pH)
+title([site,' ',sondename,' - Spike Test Histogram'])
+xlabel('d_{pH}')
+ylabel('Frequency')
+set(gca,'YScale','log','FontSize',fontsize)
+
+% Plot original data with flagged points
+fig10 = figure(10);clf
+fig10.WindowState = 'maximized';
+plot(dat.datetime_utc,pH_orig,'.k','MarkerSize',dotsize,'DisplayName','Original Data');
+hold on
+plot(dat.datetime_utc(ind_dropout),pH_orig(ind_dropout),'og','MarkerSize',circlesize,'DisplayName','Dropouts');
+plot(dat.datetime_utc(ind_oow),pH_orig(ind_oow),'oc','MarkerSize',circlesize,'DisplayName','Out of Water');
+plot(dat.datetime_utc(ind_grossRange),pH_orig(ind_grossRange),'or','MarkerSize',circlesize,'DisplayName','Gross Range Test');
+plot(dat.datetime_utc(ind_spike),pH_orig(ind_spike),'om','MarkerSize',circlesize,'DisplayName','Spike Test');
+xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
+hold off
+xlabel('UTC')
+ylabel('pH')
+legend('show','location','best')
+title([site,' ',sondename,' - Flagged Points from Initial Data QC'])
+xlim([dt1 dt2])                 % Use same x limits for comparing sites
+set(gca,'FontSize',fontsize)
+
+% Create structure to save flagged pH indices
+pH_flags = struct('ind_dropout',ind_dropout,'ind_oow',ind_oow,'ind_grossRange',ind_grossRange,'ind_spike',ind_spike,'high_threshold',high_threshold,'low_threshold',low_threshold,'spike_threshold',spike_threshold);
+
+clearvars ind_high ind_low ind_grossRange ind_spike is
+
+switch answer
+    case 'Sonde 1'
+        %====Chl a (Sonde 1 only)===============================================
+        chla_orig = dat.chla;  % Preserve original  data for plotting
+        
+        % (1) Gross Range Test
+        % INPUTS
+        low_threshold = 0;      % Lower limit
+        % high_threshold = 100;   % Upper limit
+        high_threshold = 400;   % Upper limit
+
+        ind_low = find(chla_orig < low_threshold);
+        ind_high = find(chla_orig > high_threshold);
+        ind_grossRange = [ind_low;ind_high];
+        % Don't duplicate points already defined to be manually removed
+        ind_grossRange = setdiff(ind_grossRange,ind_manual);
+
+        % (2) Spike Test
+        % INPUTS
+        spike_threshold = 150;    % FAIL threshold (RFU)
+
+        d_chla = zeros(length(dat.chla),1);
+
+        for i = 2:length(dat.chla)-1
+            % Only check points if both they and their neighbors have not already been flagged for manual removal
+            if ~ismember(i,ind_manual) && ~ismember(i+1,ind_manual) && ~ismember(i-1,ind_manual)
+                ref = (dat.chla(i+1)+dat.chla(i-1))/2; % Calculate the average of i+1 and i-1
+                d_chla(i) = dat.chla(i) - ref; % Calculate the difference between i and ref
+            end
+        end
+        % If i - ref is greater than high threshold, mark as a spike
+        ind_spike = find(abs(d_chla) >= spike_threshold);
+        [~,~,is] = intersect(ind_grossRange,ind_spike); % Don't duplicate points already removed in Gross Range Test
+        ind_spike(is) = [];
+
+        % Plot histogram of chla differences
+        fig11 = figure(11);clf
+        fig11.WindowState = 'maximized';
+        histogram(d_chla)
+        title([site,' ',sondename,' - Spike Test Histogram'])
+        xlabel('d_{chla} (RFU)')
+        ylabel('Frequency')
+        set(gca,'YScale','log','FontSize',fontsize)
+
+        % Plot original data with flagged points
+        fig12 = figure(12);clf
+        fig12.WindowState = 'maximized';
+        plot(dat.datetime_utc,chla_orig,'.k','MarkerSize',dotsize,'DisplayName','Original Data');
+        hold on
+        plot(dat.datetime_utc(ind_dropout),chla_orig(ind_dropout),'og','MarkerSize',circlesize,'DisplayName','Dropouts');
+        plot(dat.datetime_utc(ind_oow),chla_orig(ind_oow),'oc','MarkerSize',circlesize,'DisplayName','Out of Water');
+        plot(dat.datetime_utc(ind_grossRange),chla_orig(ind_grossRange),'or','MarkerSize',circlesize,'DisplayName','Gross Range Test');
+        plot(dat.datetime_utc(ind_spike),chla_orig(ind_spike),'om','MarkerSize',circlesize,'DisplayName','Spike Test');
+        xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
+        hold off
+        xlabel('UTC')
+        ylabel('Chl a (RFU)')
+        legend('show','location','best')
+        title([site,' ',sondename,' - Flagged Points from Initial Data QC'])
+        xlim([dt1 dt2])                 % Use same x limits for comparing sites
+        set(gca,'FontSize',fontsize)
+
+        % Create structure to save flagged chla indices
+        chla_flags = struct('ind_dropout',ind_dropout,'ind_oow',ind_oow,'ind_grossRange',ind_grossRange,'ind_spike',ind_spike,'high_threshold',high_threshold,'low_threshold',low_threshold,'spike_threshold',spike_threshold);
+
+        clearvars ind_high ind_low ind_grossRange ind_spike is
+
+    case 'Sonde 2'
+        %====Turbidity (Sonde 2 only)===============================================
+        turbidity_orig = dat.turbidity;  % Preserve original  data for plotting
+        
+        % (1) Gross Range Test
+        % INPUTS
+        low_threshold = 0;      % Lower limit
+        high_threshold = 4000;  % Upper limit
+
+        ind_low = find(turbidity_orig < low_threshold);
+        ind_high = find(turbidity_orig > high_threshold);
+        ind_grossRange = [ind_low;ind_high];
+        % Don't duplicate points already defined to be manually removed
+        ind_grossRange = setdiff(ind_grossRange,ind_manual);
+
+        % (2) Spike Test
+        % INPUTS
+        spike_threshold = 2000;    % FAIL threshold (NTU)
+
+        d_turbidity = zeros(length(dat.turbidity),1);
+
+        for i = 2:length(dat.turbidity)-1
+            % Only check points if both they and their neighbors have not already been flagged for manual removal
+            if ~ismember(i,ind_manual) && ~ismember(i+1,ind_manual) && ~ismember(i-1,ind_manual)
+                ref = (dat.turbidity(i+1)+dat.turbidity(i-1))/2; % Calculate the average of i+1 and i-1
+                d_turbidity(i) = dat.turbidity(i) - ref; % Calculate the difference between i and ref
+            end
+        end
+        % If i - ref is greater than high threshold, mark as a spike
+        ind_spike = find(abs(d_turbidity) >= spike_threshold);
+        [~,~,is] = intersect(ind_grossRange,ind_spike); % Don't duplicate points already removed in Gross Range Test
+        ind_spike(is) = [];
+
+        % Plot histogram of turbidity differences
+        fig11 = figure(11);clf
+        fig11.WindowState = 'maximized';
+        histogram(d_turbidity)
+        title([site,' ',sondename,' - Spike Test Histogram'])
+        xlabel('d_{turbidity} (NTU)')
+        ylabel('Frequency')
+        set(gca,'YScale','log','FontSize',fontsize)
+
+        % Plot original data with flagged points
+        fig12 = figure(12);clf
+        fig12.WindowState = 'maximized';
+        plot(dat.datetime_utc,turbidity_orig,'.k','MarkerSize',dotsize,'DisplayName','Original Data');
+        hold on
+        plot(dat.datetime_utc(ind_dropout),turbidity_orig(ind_dropout),'og','MarkerSize',circlesize,'DisplayName','Dropouts');
+        plot(dat.datetime_utc(ind_oow),turbidity_orig(ind_oow),'oc','MarkerSize',circlesize,'DisplayName','Out of Water');
+        plot(dat.datetime_utc(ind_grossRange),turbidity_orig(ind_grossRange),'or','MarkerSize',circlesize,'DisplayName','Gross Range Test');
+        plot(dat.datetime_utc(ind_spike),turbidity_orig(ind_spike),'om','MarkerSize',circlesize,'DisplayName','Spike Test');
+        xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
+        hold off
+        xlabel('UTC')
+        ylabel('Turbidity (NTU)')
+        legend('show','location','best')
+        title([site,' ',sondename,' - Flagged Points from Initial Data QC'])
+        xlim([dt1 dt2])                 % Use same x limits for comparing sites
+        set(gca,'FontSize',fontsize)
+
+        % Create structure to save flagged turbidity indices
+        turbidity_flags = struct('ind_dropout',ind_dropout,'ind_oow',ind_oow,'ind_grossRange',ind_grossRange,'ind_spike',ind_spike,'high_threshold',high_threshold,'low_threshold',low_threshold,'spike_threshold',spike_threshold);
+
+        clearvars ind_high ind_low ind_grossRange ind_spike is
+end
+
 %====Clean data============================================================
-% Discard points that failed Gross Range and Spike Tests and do Manual Removals
-dat.salinity(ind_manual_global) = NaN;
-dat.salinity(ind_grossRange) = NaN;
-dat.salinity(ind_spike) = NaN;
-dat.salinity(ind_oow) = NaN;
+% Discard points marked for Manual Removal and that failed Gross Range and Spike Tests
+dat.depth(depth_flags.ind_dropout) = NaN;
+dat.depth(depth_flags.ind_oow) = NaN;
+dat.depth(depth_flags.ind_grossRange) = NaN;
+dat.depth(depth_flags.ind_spike) = NaN;
+
+dat.p(depth_flags.ind_dropout) = NaN;
+dat.p(depth_flags.ind_oow) = NaN;
+dat.p(depth_flags.ind_grossRange) = NaN;
+dat.p(depth_flags.ind_spike) = NaN;
+
+dat.temperature(T_flags.ind_dropout) = NaN;
+dat.temperature(T_flags.ind_oow) = NaN;
+dat.temperature(T_flags.ind_grossRange) = NaN;
+dat.temperature(T_flags.ind_spike) = NaN;
+
+dat.DO_conc(DO_flags.ind_dropout) = NaN;
+dat.DO_conc(DO_flags.ind_oow) = NaN;
+dat.DO_conc(DO_flags.ind_grossRange) = NaN;
+dat.DO_conc(DO_flags.ind_spike) = NaN;
+
+dat.DO_sat(DO_flags.ind_dropout) = NaN;
+dat.DO_sat(DO_flags.ind_oow) = NaN;
+dat.DO_sat(DO_flags.ind_grossRange) = NaN;
+dat.DO_sat(DO_flags.ind_spike) = NaN;
+
+dat.salinity(S_flags.ind_dropout) = NaN;
+dat.salinity(S_flags.ind_oow) = NaN;
+dat.salinity(S_flags.ind_grossRange) = NaN;
+dat.salinity(S_flags.ind_spike) = NaN;
+
+dat.pH(pH_flags.ind_dropout) = NaN;
+dat.pH(pH_flags.ind_oow) = NaN;
+dat.pH(pH_flags.ind_grossRange) = NaN;
+dat.pH(pH_flags.ind_spike) = NaN;
+
+switch answer
+    case 'Sonde 1'
+        dat.chla(chla_flags.ind_dropout) = NaN;
+        dat.chla(chla_flags.ind_oow) = NaN;
+        dat.chla(chla_flags.ind_grossRange) = NaN;
+        dat.chla(chla_flags.ind_spike) = NaN;
+    case 'Sonde 2'
+        dat.turbidity(turbidity_flags.ind_dropout) = NaN;
+        dat.turbidity(turbidity_flags.ind_oow) = NaN;
+        dat.turbidity(turbidity_flags.ind_grossRange) = NaN;
+        dat.turbidity(turbidity_flags.ind_spike) = NaN;
+end
 
 % Flag all NaNs as FAIL
+ind_fail = find(isnan(dat.depth));
+flags.depth(ind_fail) = 4;
+flags.p(ind_fail) = 4;
+
+ind_fail = find(isnan(dat.temperature));
+flags.temperature(ind_fail) = 4;
+
+ind_fail = find(isnan(dat.DO_conc));
+flags.DO_conc(ind_fail) = 4;
+flags.DO_sat(ind_fail) = 4;
+
 ind_fail = find(isnan(dat.salinity));
 flags.salinity(ind_fail) = 4;
 
-% Create structure to save flagged salinity indices
-S_flagged = struct('ind_manual',ind_manual_global,'ind_grossRange',ind_grossRange,'ind_spike',ind_spike,'ind_oow',ind_oow,'S_high',S_high,'S_low',S_low,'spike_threshold',spike_threshold);
+ind_fail = find(isnan(dat.pH));
+flags.pH(ind_fail) = 4;
 
-clearvars ind_high ind_low ind_grossRange ind_spike C ig is
+switch answer
+    case 'Sonde 1'
+        ind_fail = find(isnan(dat.chla));
+        flags.chla(ind_fail) = 4;
+    case 'Sonde 2'
+        ind_fail = find(isnan(dat.turbidity));
+        flags.turbidity(ind_fail) = 4;
+end
 
-%====Convert table to timetable============================================
+dat(ind_oow,:) = [];
+
+%====Retime data to 10 min intervals=======================================
 dat_TT = table2timetable(dat,'RowTimes','datetime_utc');
 newTimeStep = minutes(10);
 dat_TT = retime(dat_TT,'regular','mean','TimeStep',newTimeStep); % Calculate mean of values in each time bin
@@ -457,82 +673,173 @@ dat_TT.datetime_utc = dat_TT.datetime_utc + newTimeStep/2;
 dat_TT.datetime_local = dat_TT.datetime_utc;
 dat_TT.datetime_local.TimeZone = 'America/New_York';
 
-%====Plot the cleaned data=================================================
-cd([rootpath,'\figures\open-water-platform-figures\gull\data-qc\',sondename])
+dat_TT = rmmissing(dat_TT,'DataVariables',"deployment");
+
+% Find new indices of deployment changes
+ind_dep = find(diff(dat_TT.deployment) > 0);
+
+%====Plot the cleaned data after initial QC tests==========================
+cd([rootpath,'\figures\open-water-platform\gull\data-qc\',sondename])
 
 % Depth
-fig = figure;clf
-fig.WindowState = 'maximized';
-% h0 = plot(dat.datetime_utc,depth_orig,'.','Color',red);
-% hold on
-h1 = plot(dat_TT.datetime_utc,dat_TT.depth,'.k','MarkerSize',dotsize);
-xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label);
-% hold off
-% legend([h0 h1],'Original','Retimed','location','best')
+fig13 = figure(13);clf
+fig13.WindowState = 'maximized';
+plot(dat_TT.datetime_utc,dat_TT.depth,'.k','MarkerSize',dotsize);
+xline([dat_TT.datetime_utc(1); dat_TT.datetime_utc(ind_dep+1)],'--',label);
 ylabel('Depth (m)')
-title(['Gull ',sondename,' Sonde - Cleaned & Retimed Depth Data'])
+title([site,' ',sondename,' - After Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
-ylim([-.5 3])
+% ylim([-.5 3])
 set(gca,'FontSize',fontsize)
 
 % Temperature
-fig = figure;clf
-fig.WindowState = 'maximized';
-% h0 = plot(dat.datetime_utc,T_orig,'.','Color',red);
-% hold on
-h1 = plot(dat_TT.datetime_utc,dat_TT.temperature,'.k','MarkerSize',dotsize);
-xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label);
-% hold off
-% legend([h0 h1],'Original','Retimed','location','best')
+fig14 = figure(14);clf
+fig14.WindowState = 'maximized';
+plot(dat_TT.datetime_utc,dat_TT.temperature,'.k','MarkerSize',dotsize);
+xline([dat_TT.datetime_utc(1); dat_TT.datetime_utc(ind_dep+1)],'--',label);
 ylabel('Temperature (^oC)')
-title(['Gull ',sondename,' Sonde - Cleaned & Retimed Temperature Data'])
+title([site,' ',sondename,' - After Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
-% DO
-fig = figure;clf
-fig.WindowState = 'maximized';
-% h0 = plot(dat.datetime_utc,DOconc_orig,'.','Color',red);
-% hold on
-h1 = plot(dat_TT.datetime_utc,dat_TT.DO_conc,'.k','MarkerSize',dotsize);
-xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label);
-% hold off
-% legend([h0 h1],'Original','Retimed','location','best')
+% DO Concentration
+fig15 = figure(15);clf
+fig15.WindowState = 'maximized';
+plot(dat_TT.datetime_utc,dat_TT.DO_conc,'.k','MarkerSize',dotsize);
+xline([dat_TT.datetime_utc(1); dat_TT.datetime_utc(ind_dep+1)],'--',label);
 ylabel('DO Concentration (\mumol/L)')
-title(['Gull ',sondename,' Sonde - Cleaned & Retimed DO Concentration Data'])
+title([site,' ',sondename,' - After Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
 % Salinity
-fig = figure;clf
-fig.WindowState = 'maximized';
-% h0 = plot(dat.datetime_utc,S_orig,'.','Color',red);
-% hold on
-h1 = plot(dat_TT.datetime_utc,dat_TT.salinity,'.k','MarkerSize',dotsize);
-xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label);
-% hold off
-% legend([h0 h1],'Original','Retimed','location','best')
+fig16 = figure(16);clf
+fig16.WindowState = 'maximized';
+plot(dat_TT.datetime_utc,dat_TT.salinity,'.k','MarkerSize',dotsize);
+xline([dat_TT.datetime_utc(1); dat_TT.datetime_utc(ind_dep+1)],'--',label);
 ylabel('Salinity (psu)')
-title(['Gull ',sondename,' Sonde - Cleaned & Retimed Salinity Data'])
+title([site,' ',sondename,' - After Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
-ylim([-.5 50])
+% ylim([-.5 50])
 set(gca,'FontSize',fontsize)
+
+% pH
+fig17 = figure(17);clf
+fig17.WindowState = 'maximized';
+plot(dat_TT.datetime_utc,dat_TT.pH,'.k','MarkerSize',dotsize);
+xline([dat_TT.datetime_utc(1); dat_TT.datetime_utc(ind_dep+1)],'--',label);
+ylabel('pH')
+title([site,' ',sondename,' - After Initial Data QC'])
+xlim([dt1 dt2])                 % Use same x limits for comparing sites
+set(gca,'FontSize',fontsize)
+
+switch answer
+    case 'Sonde 1'
+        % Chl a
+        fig18 = figure(18);clf
+        fig18.WindowState = 'maximized';
+        plot(dat_TT.datetime_utc,dat_TT.chla,'.k','MarkerSize',dotsize);
+        xline([dat_TT.datetime_utc(1); dat_TT.datetime_utc(ind_dep+1)],'--',label);
+        ylabel('Chl a (RFU)')
+        title([site,' ',sondename,' - After Initial Data QC'])
+        xlim([dt1 dt2])                 % Use same x limits for comparing sites
+        set(gca,'FontSize',fontsize)
+
+    case 'Sonde 2'
+        % Turbidity
+        fig18 = figure(18);clf
+        fig18.WindowState = 'maximized';
+        plot(dat_TT.datetime_utc,dat_TT.turbidity,'.k','MarkerSize',dotsize);
+        xline([dat_TT.datetime_utc(1); dat_TT.datetime_utc(ind_dep+1)],'--',label);
+        ylabel('Turbidity (NTU)')
+        title([site,' ',sondename,' - After Initial Data QC'])
+        xlim([dt1 dt2])                 % Use same x limits for comparing sites
+        set(gca,'FontSize',fontsize)
+end
 
 %====Save the cleaned data=================================================
 option = questdlg('Save cleaned data?','Save File','Yes','No','Yes');
 switch option
     case 'Yes'
-        cd([rootpath,'open-water-platform-data\gull\cleaned'])
+        cd([rootpath,'open-water-platform-data\',site,'\cleaned\initial-qc'])
         switch answer
             case 'Sonde 1'
                 sonde1_cleaned = dat_TT;
-                save('gull-bc-cleaned.mat','sonde1_cleaned','flags')
+                save([site,'-bc-cleaned.mat'],'sonde1_cleaned')
             case 'Sonde 2'
                 sonde2_cleaned = dat_TT;
-                save('gull-erdc-cleaned.mat','sonde2_cleaned','flags')
+                save([site,'-erdc-cleaned.mat'],'sonde2_cleaned')
         end
         disp('File saved!')
     case 'No'
         disp('File not saved.')
 end
+
+%====Save the flagged and cleaned plots====================================
+option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');
+
+switch option
+    case 'Yes'
+        switch answer
+            case 'Sonde 1'
+                saveFilePath = ['figures\open-water-platform\',site,'\data-qc\bc\initial-qc'];
+            case 'Sonde 2'
+                saveFilePath = ['figures\open-water-platform\',site,'\data-qc\erdc\initial-qc'];
+        end
+        cd([rootpath,saveFilePath])
+        saveas(fig1,'depth_spike-histogram.png')
+        saveas(fig1,'depth_spike-histogram.fig')
+        saveas(fig2,'depth_flagged.png')
+        saveas(fig2,'depth_flagged.fig')
+        saveas(fig3,'T_spike-histogram.png')
+        saveas(fig3,'T_spike-histogram.fig')
+        saveas(fig4,'T_flagged.png')
+        saveas(fig4,'T_flagged.fig')
+        saveas(fig5,'DOconc_spike-histogram.png')
+        saveas(fig5,'DOconc_spike-histogram.fig')
+        saveas(fig6,'DOconc_flagged.png')
+        saveas(fig6,'DOconc_flagged.fig')
+        saveas(fig7,'S_spike-histogram.png')
+        saveas(fig7,'S_spike-histogram.fig')
+        saveas(fig8,'S_flagged.png')
+        saveas(fig8,'S_flagged.fig')
+        saveas(fig9,'pH_spike-histogram.png')
+        saveas(fig9,'pH_spike-histogram.fig')
+        saveas(fig10,'pH_flagged.png')
+        saveas(fig10,'pH_flagged.fig')
+        switch answer
+            case 'Sonde 1'
+                saveas(fig11,'chla_spike-histogram.png')
+                saveas(fig11,'chla_spike-histogram.fig')
+                saveas(fig12,'chla_flagged.png')
+                saveas(fig12,'chla_flagged.fig')
+            case 'Sonde 2'
+                saveas(fig11,'turbidity_spike-histogram.png')
+                saveas(fig11,'turbidity_spike-histogram.fig')
+                saveas(fig12,'turbidity_flagged.png')
+                saveas(fig12,'turbidity_flagged.fig')
+        end
+        saveas(fig13,'depth_cleaned&retimed.png')
+        saveas(fig13,'depth_cleaned&retimed.fig')
+        saveas(fig14,'T_cleaned&retimed.png')
+        saveas(fig14,'T_cleaned&retimed.fig')
+        saveas(fig15,'DOconc_cleaned&retimed.png')
+        saveas(fig15,'DOconc_cleaned&retimed.fig')
+        saveas(fig16,'S_cleaned&retimed.png')
+        saveas(fig16,'S_cleaned&retimed.fig')
+        saveas(fig17,'pH_cleaned&retimed.png')
+        saveas(fig17,'pH_cleaned&retimed.fig')
+        switch answer
+            case 'Sonde 1'
+                saveas(fig18,'chla_cleaned&retimed.png')
+                saveas(fig18,'chla_cleaned&retimed.fig')
+            case 'Sonde 2'
+                saveas(fig18,'turbidity_cleaned&retimed.png')
+                saveas(fig18,'turbidity_cleaned&retimed.fig')
+        end
         
+        disp('Plots saved!')
+    
+    case 'No'
+        disp('Plots not saved.')
+end

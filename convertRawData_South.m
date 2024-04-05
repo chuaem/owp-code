@@ -8,7 +8,7 @@
 % 
 % DATE:
 % First created: 9/14/2023
-% Last amended: 1/24/2024
+% Last amended: 3/12/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %===Read in sonde data=====================================================
@@ -82,7 +82,7 @@ switch depNum
             "density","TDS","DO_conc","DO_sat","pO2","pH","pH_raw","ORP","chla",...
             "temperature","external_voltage","battery_capacity","barometric_p","p","depth"];
 
-    case{8,10,11,12,13,14,16}
+    case{8,10,11,12,13,14,16,17}
         paramNames1 = ["datetime_local","actual_cond","specific_cond","salinity","resistivity",...
             "density","TDS","DO_conc","DO_sat","pO2","pH","pH_raw","ORP","chla",...
             "temperature","external_voltage","battery_capacity","barometric_p","p","depth"];
@@ -163,7 +163,7 @@ switch depNum
     case{6}
     sonde1.datetime_utc.TimeZone = 'America/New_York';
 
-    case{7,8,9,10,11,12,13,14,16}
+    case{7,8,9,10,11,12,13,14,16,17}
     sonde1.datetime_local.TimeZone = 'America/New_York';
     datetime_utc1 = datetime(sonde1.datetime_local,'TimeZone','UTC');
     datetime_utc1 = table(datetime_utc1,'VariableNames',"datetime_utc");
@@ -267,7 +267,7 @@ switch depNum
     turbidity = array2table(NaN(height(sonde2),1),'VariableNames',"turbidity");
     sonde2 = [turbidity sonde2];
 
-    case{7,8,10,11,12,13,14,16}
+    case{7,8,10,11,12,13,14,16,17}
     % sonde1 (BC)
     nitrate = array2table(NaN(height(sonde1),1),'VariableNames',"nitrate");
     sonde1 = [nitrate sonde1];
@@ -279,7 +279,7 @@ end
 switch depNum
     case{9}
         sonde1.depth = sonde1.depth/3.281;
-    case{10,11}
+    case{10,11,17}
         sonde2.depth = sonde2.depth/3.281;
     case{12,13,14,16}
         sonde1.depth = sonde1.depth/3.281;
