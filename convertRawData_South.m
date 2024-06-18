@@ -28,7 +28,7 @@ if numel(fileNames) == 2
     fileName2 = extractBefore(fileNames{2},'.csv');
     depNum = extractBetween(fileName1,"dep","-");
 else
-    sonde = extractBefore(extractAfter(fileNames,13),5);
+    sonde = extractBefore(extractAfter(fileNames,13),'.csv');
     switch sonde
         case{'bc'}
         fileName1 = extractBefore(fileNames,'.csv');

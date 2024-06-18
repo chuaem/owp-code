@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% dataQC_gull.m
-% This script performs data quality control on the adjusted merged sonde
-% data for Gull.
+% initialQC.m
+% This script performs intial quality control tests on the adjusted merged sonde
+% data for the selected site and sonde.
 %
 % Code that requires manual input is commented with "INPUTS".
 %
@@ -10,12 +10,13 @@
 % 
 % DATE:
 % First created: 11/9/2023
-% Last updated: 4/3/2024
+% Last updated: 5/9/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
 
-site = 'Gull';
+prompt = {'Choose which site to QC'};
+site = questdlg(prompt,'Sonde Selection','Gull','North','South','Gull');
 
 rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 
@@ -24,12 +25,12 @@ cd([rootpath,'open-water-platform-data\',site,'\adjusted\merged'])
 load(['alldeps-',site,'-adj.mat'])
 
 prompt = {'Choose which sonde to QC'};
-answer = questdlg(prompt,'Sonde Selection','Sonde 1','Sonde 2','Cancel','Cancel');
+sonde = questdlg(prompt,'Sonde Selection','BC','ERDC','Cancel','Cancel');
 
-switch answer
-    case 'Sonde 1'
+switch sonde
+    case 'BC'
         dat = sonde1_all;
-    case 'Sonde 2'
+    case 'ERDC'
         dat = sonde2_all;
 end
 
@@ -45,10 +46,29 @@ linewidth = 1;
 dotsize = 12;
 circlesize = 6;
 
-label = {'Deployment 1','Deployment 2','Deployment 5','Deployment 6',...
-    'Deployment 7','Deployment 8','Deployment 9','Deployment 10',...
-    'Deployment 11','Deployment 12','Deployment 13','Deployment 14',...
-    'Deployment 15','Deployment 16','Deployment 17'};
+switch site
+    case 'Gull'
+        label = {'Deployment 1','Deployment 2','Deployment 5','Deployment 6',...
+            'Deployment 7','Deployment 8','Deployment 9','Deployment 10',...
+            'Deployment 11','Deployment 12','Deployment 13','Deployment 14',...
+            'Deployment 15','Deployment 16','Deployment 17'};
+    case 'North'
+        label = {'Deployment 2','Deployment 6','Deployment 7','Deployment 8',...
+            'Deployment 9','Deployment 10','Deployment 11','Deployment 12',...
+            'Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17'};
+    case 'South'
+        switch sonde
+            case 'BC'
+                label = {'Deployment 1','Deployment 2','Deployment 4','Deployment 5',...
+                    'Deployment 6','Deployment 7','Deployment 8','Deployment 9',...
+                    'Deployment 10','Deployment 11','Deployment 12','Deployment 13',...
+                    'Deployment 14','Deployment 16','Deployment 17'};
+            case 'ERDC'
+                label = {'Deployment 1','Deployment 2','Deployment 5','Deployment 7',...
+                    'Deployment 8','Deployment 9','Deployment 10','Deployment 11',...
+                    'Deployment 12','Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17'};
+        end
+end
 
 % Find indices of deployment changes
 ind_dep = find(diff(dat.deployment) > 0);
@@ -57,78 +77,173 @@ ind_dep = find(diff(dat.deployment) > 0);
 % Start with everything as passing (flag = 1)
 flags = ones(height(dat),width(dat));
 flags = array2table(flags);
-switch answer
-    case 'Sonde 1'
+switch sonde
+    case 'BC'
         flags.Properties.VariableNames = {'deployment' 'datetime_utc' 'datetime_local' ...
             'actual_cond' 'specific_cond' 'salinity' 'resistivity' 'density' ...
             'temperature' 'barometric_p' 'p' 'depth' 'TDS' 'DO_conc' 'DO_sat' 'pO2' ...
             'pH' 'pH_raw' 'ORP' 'chla' 'nitrate' 'external_voltage' 'battery_capacity'};
-        sondename = 'BC';
-    case 'Sonde 2'
+    case 'ERDC'
         flags.Properties.VariableNames = {'deployment' 'datetime_utc' 'datetime_local' ...
             'actual_cond' 'specific_cond' 'salinity' 'resistivity' 'density' ...
             'temperature' 'barometric_p' 'p' 'depth' 'TDS' 'DO_conc' 'DO_sat' 'pO2' ...
             'pH' 'pH_raw' 'ORP' 'turbidity' 'external_voltage' 'battery_capacity'};
-        sondename = 'ERDC';
 end
 
 %====(0) Manual removals (see notes in Collab Lab Notebook)================
 % Plot original depth data to define points to remove manually
-% fig0 = figure(1);clf
-% fig0.WindowState = 'maximized';
-% plot(dat.datetime_utc,dat.depth,'.k','markersize',6);
-% xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label);
-% ylabel('Depth (m)')
-% title(['Original Data - Gull ',sondename])
-% xlim([dt1 dt2])                 % Use same x limits for comparing sites
-% set(gca,'FontSize',fontsize)
-% xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label);
+fig0 = figure(1);clf
+fig0.WindowState = 'maximized';
+plot(dat.datetime_utc,dat.depth,'.k','markersize',12);
+xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label);
+ylabel('Depth (m)')
+title(['Original Data - ',site,' ',sonde])
+xlim([dt1 dt2])                 % Use same x limits for comparing sites
+set(gca,'FontSize',fontsize)
+xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label);
 
 % INPUTS
-switch answer
-    case 'Sonde 1'
-        % Out-of-water points
-        oow1 = (34474:34476)';      % Dep 5 --> 6
-        oow2 = (51466:51486)';      % Dep 6 --> 7
-        oow3 = (60821:60829)';      % Dep 7 --> 8
-        oow4 = (67605:67643)';      % Dep 8 --> 9
-        oow5 = (71503:71528)';      % Dep 9 --> 10
-        oow6 = (78899);             % Dep 10 --> 11
-        oow7 = (87962:87965)';      % Dep 11 --> 12
-        oow8 = (104299:104326)';    % Dep 12 --> 13
-        oow9 = (113499:113501)';    % Dep 13 --> 14
-        oow10 = (122403:122405)';   % Dep 14 --> 15
-        oow11 = (130652:130661)';   % Dep 15 --> 16
-        oow12 = (143717:143719)';   % Dep 16 --> 17
-        ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12];
+switch site
+    case 'Gull'
+        switch sonde
+            case 'BC'
+                % Out-of-water points
+                oow1 = (34474:34476)';      % Dep 5 --> 6
+                oow2 = (51466:51486)';      % Dep 6 --> 7
+                oow3 = (60821:60829)';      % Dep 7 --> 8
+                oow4 = (67605:67643)';      % Dep 8 --> 9
+                oow5 = (71503:71528)';      % Dep 9 --> 10
+                oow6 = (78899);             % Dep 10 --> 11
+                oow7 = (87962:87965)';      % Dep 11 --> 12
+                oow8 = (104299:104326)';    % Dep 12 --> 13
+                oow9 = (113499:113501)';    % Dep 13 --> 14
+                oow10 = (122403:122405)';   % Dep 14 --> 15
+                oow11 = (130652:130661)';   % Dep 15 --> 16
+                oow12 = (143717:143719)';   % Dep 16 --> 17
+                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12];
 
-        % Isolated points during large gap from 7/30/21 (during Dep 1) to start of Dep 2
-        ind_dropout1 = (7420:12590)';
-        ind_dropout2 = find(dat.depth(1:ind_dep(2)) < 0);
-        ind_dropout = unique([ind_dropout1;ind_dropout2]);
-    
-    case 'Sonde 2'
-    % Out-of-water points
-        oow1 = (34473:34478)'; % Dep 5 --> 6
-        oow2 = (51063:51090)'; % Dep 6 --> 7
-        oow3 = (60425:60429)'; % Dep 7 --> 8
-        oow4 = (67205:67233)'; % Dep 8 --> 9
-        oow5 = (71093:71100)'; % Dep 9 --> 10
-        oow6 = (78470:78477)'; % Dep 10 --> 11
-        oow7 = (87534:87540)'; % Dep 11 --> 12
-        oow8 = (103874:103903)'; % Dep 12 --> 13
-        oow9 = (113075:113077)'; % Dep 13 --> 14
-        oow10 = (121978:121982)'; % Dep 14 --> 15
-        oow11 = (130230:130231)'; % Dep 15 --> 16
-        oow12 = 143288;         % Dep 16 --> 17
-        ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12];
+                % Isolated points during large gap from 7/30/21 (during Dep 1) to start of Dep 2
+                ind_dropout1 = (7420:12590)';
+                ind_dropout2 = find(dat.depth(1:ind_dep(2)) < 0);
+                ind_dropout = unique([ind_dropout1;ind_dropout2]);
 
-        % Isolated points during large gap from 7/30/21 (during Dep 1) to start of Dep 2
-        ind_dropout1 = (7420:12589)';
-        ind_dropout2 = find(dat.depth(1:ind_dep(1)) < 0);
-        ind_dropout = unique([ind_dropout1;ind_dropout2]);
+            case 'ERDC'
+                % Out-of-water points
+                oow1 = (34473:34478)'; % Dep 5 --> 6
+                oow2 = (51063:51090)'; % Dep 6 --> 7
+                oow3 = (60425:60429)'; % Dep 7 --> 8
+                oow4 = (67205:67233)'; % Dep 8 --> 9
+                oow5 = (71093:71100)'; % Dep 9 --> 10
+                oow6 = (78470:78477)'; % Dep 10 --> 11
+                oow7 = (87534:87540)'; % Dep 11 --> 12
+                oow8 = (103874:103903)'; % Dep 12 --> 13
+                oow9 = (113075:113077)'; % Dep 13 --> 14
+                oow10 = (121978:121982)'; % Dep 14 --> 15
+                oow11 = (130230:130231)'; % Dep 15 --> 16
+                oow12 = 143288;         % Dep 16 --> 17
+                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12];
+
+                % Isolated points during large gap from 7/30/21 (during Dep 1) to start of Dep 2
+                ind_dropout1 = (7420:12589)';
+                ind_dropout2 = find(dat.depth(1:ind_dep(1)) < 0);
+                ind_dropout = unique([ind_dropout1;ind_dropout2]);
+        end
+        
+    case 'North'
+        switch sonde
+            case 'BC'
+                % Out-of-water points
+                oow1 = 8767;                % Dep 5 --> 6
+                oow2 = (25818:25833)';      % Dep 6 --> 7
+                oow3 = (34655:34673)';      % Dep 7 --> 8
+                oow4 = (41585:41594)';      % Dep 8 --> 9
+                oow5 = (45507:45509)';      % Dep 9 --> 10
+                oow6 = (52681:52689)';      % Dep 10 --> 11
+                oow7 = (61893:61928)';      % Dep 11 --> 12
+                oow8 = (78392:78394)';      % Dep 12 --> 13
+                oow9 = (87464:87466)';      % Dep 13 --> 14
+                oow10 = (96663:96669)';     % Dep 14 --> 15
+                oow11 = (104890:104899)';   % Dep 15 --> 16
+                oow12 = (117837:117842)';   % Dep 16 --> 17
+                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12];
+
+                % Isolated points during Deployment 2
+                ind_dropout1 = (7250:7280)';
+                ind_dropout2 = find(dat.depth(1:ind_dep(2)) < 0);
+                ind_dropout = unique([ind_dropout1;ind_dropout2]);
+
+            case 'ERDC'
+                % Out-of-water points
+                oow1 = (9255:9259)'; % Dep 6 --> 7
+                oow2 = (18081:18102)'; % Dep 7 --> 8
+                oow3 = (25013:25022)'; % Dep 8 --> 9
+                oow4 = (28935:28938)'; % Dep 9 --> 10
+                oow5 = (36111:36112)'; % Dep 10 --> 11
+                oow6 = (45316:45333)'; % Dep 11 --> 12
+                oow7 = (61847:61849)'; % Dep 12 --> 13
+                oow8 = (70919:70919)'; % Dep 13 --> 14
+                oow9 = (80118:80124)'; % Dep 14 --> 15
+                oow10 = (88346:88355)'; % Dep 15 --> 16
+                oow11 = (101293:101296)'; % Dep 16 --> 17
+                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11];
+
+                % Isolated points during Deployment 2
+                ind_dropout1 = (7250:7280)';
+                ind_dropout2 = find(dat.depth(1:ind_dep(2)) < 0);
+                ind_dropout = unique([ind_dropout1;ind_dropout2]);
+        end
+
+    case 'South'
+        switch sonde
+            case 'BC'
+                % Out-of-water points
+                oow1 = (36234:36242)';    % Dep 4 --> 5
+                oow2 = (49134:49138)';    % Dep 5 --> 6
+                oow3 = (52669:52688)';    % Dep 6 --> 7
+                oow4 = (61341:61386)';    % Dep 7 --> 8
+                oow5 = (68177:68198)';    % Dep 8 --> 9
+                oow6 = (72317:72330)';    % Dep 9 --> 10
+                oow7 = (79529:79530)';    % Dep 10 --> 11
+                oow8 = (82141:82456)';    % Dep 11 --> 12
+                oow9 = (96672:96694)';    % Dep 12 --> 13
+                oow10 = (105582:105590)'; % Dep 13 --> 14
+                oow11 = (114699:114713)'; % Dep 14 --> 16
+                oow12 = (127949:127969)'; % Dep 16 --> 17
+                oow13 = (134757:134758)'; % Dep 17 --> 18
+                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12;oow13];
+
+                % Isolated points during large gap from 7/30/21 (during Dep 1) to start of Dep 2
+                % DEP 14 LOOKS FUNKY - TIDAL AMPLITDUE MUCH SMALLER??
+
+                ind_dropout1 = (18395:18419)';
+                ind_dropout2 = find(dat.depth(1:ind_dep(2)) < 0);
+                ind_dropout = unique([ind_dropout1;ind_dropout2]);
+
+            case 'ERDC'
+                % Out-of-water points
+                oow1 = (19871:19873)'; % Dep 2 --> 5
+                oow2 = (32765:32791)'; % Dep 5 --> 7
+                oow3 = (41444:41494)'; % Dep 7 --> 8
+                oow4 = (48285:48299)'; % Dep 8 --> 9
+                oow5 = (52422:52433)'; % Dep 9 --> 10
+                oow6 = (57630:57631)'; % Dep 10 --> 11
+                oow7 = (64748:65013)'; % Dep 11 --> 12
+                oow8 = (79228:79235)'; % Dep 12 --> 13
+                oow9 = (88098:88114)'; % Dep 13 --> 14
+                oow10 = (97223:97237)'; % Dep 14 --> 15
+                oow11 = (105534:105537)'; % Dep 15 --> 16
+                oow12 = (118263:118268)'; % Dep 16 --> 17
+                oow13 = (125056:125058)'; % Dep 17 --> 18
+                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12;oow13];
+
+                % Isolated points during Deployment 2
+                ind_dropout1 = (18395:18419)';
+                ind_dropout2 = find(dat.depth(1:ind_dep(2)) < 0);
+                ind_dropout = unique([ind_dropout1;ind_dropout2]);
+        end
 end
-clearvars oow1 oow2 oow3 oow4 oow5 oow6 oow7 oow8 oow9 oow10 oow11 oow12
+        
+clearvars oow1 oow2 oow3 oow4 oow5 oow6 oow7 oow8 oow9 oow10 oow11 oow12 oow13
 
 ind_manual = [ind_dropout;ind_oow];
 
@@ -168,7 +283,7 @@ ind_spike(is) = [];
 fig1 = figure(1);clf
 fig1.WindowState = 'maximized';
 histogram(d_depth)
-title([site,' ',sondename,' - Spike Test Histogram'])
+title([site,' ',sonde,' - Spike Test Histogram'])
 xlabel('d_{depth} (m)')
 ylabel('Frequency')
 set(gca,'YScale','log','FontSize',fontsize)
@@ -187,7 +302,7 @@ hold off
 xlabel('UTC')
 ylabel('Depth (m)')
 legend('show','location','best')
-title([site,' ',sondename,' - Flagged Points from Initial Data QC'])
+title([site,' ',sonde,' - Flagged Points from Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
@@ -232,7 +347,7 @@ ind_spike(is) = [];
 fig3 = figure(3);clf
 fig3.WindowState = 'maximized';
 histogram(d_T)
-title([site,' ',sondename,' - Spike Test Histogram'])
+title([site,' ',sonde,' - Spike Test Histogram'])
 xlabel('d_{temperature} (^oC)')
 ylabel('Frequency')
 set(gca,'YScale','log','FontSize',fontsize)
@@ -251,7 +366,7 @@ hold off
 xlabel('UTC')
 ylabel('Temperature (^oC)')
 legend('show','location','best')
-title([site,' ',sondename,' - Flagged Points from Initial Data QC'])
+title([site,' ',sonde,' - Flagged Points from Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites 
 set(gca,'FontSize',fontsize)
 
@@ -296,7 +411,7 @@ ind_spike(is) = [];
 fig5 = figure(5);clf
 fig5.WindowState = 'maximized';
 histogram(d_DO)
-title([site,' ',sondename,' - Spike Test Histogram'])
+title([site,' ',sonde,' - Spike Test Histogram'])
 xlabel('d_{DO conc} (\mumol/L)')
 ylabel('Frequency')
 set(gca,'YScale','log','FontSize',fontsize)
@@ -315,7 +430,7 @@ hold off
 xlabel('UTC')
 ylabel('DO Concentration (\mumol/L)')
 legend('show','location','best')
-title([site,' ',sondename,' - Flagged Points from Initial Data QC'])
+title([site,' ',sonde,' - Flagged Points from Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites--09876543 
 set(gca,'FontSize',fontsize)
 
@@ -360,7 +475,7 @@ ind_spike(is) = [];
 fig7 = figure(7);clf
 fig7.WindowState = 'maximized';
 histogram(d_salinity)
-title([site,' ',sondename,' - Spike Test Histogram'])
+title([site,' ',sonde,' - Spike Test Histogram'])
 xlabel('d_{salinity} (psu)')
 ylabel('Frequency')
 set(gca,'YScale','log','FontSize',fontsize)
@@ -379,7 +494,7 @@ hold off
 xlabel('UTC')
 ylabel('Salinity (psu)')
 legend('show','location','best')
-title([site,' ',sondename,' - Flagged Points from Initial Data QC'])
+title([site,' ',sonde,' - Flagged Points from Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
@@ -393,8 +508,10 @@ pH_orig = dat.pH;  % Preserve original  data for plotting
 
 % (1) Gross Range Test
 % INPUTS
-low_threshold = 7;      % Lower limit
-high_threshold = 9.5;     % Upper limit
+% low_threshold = 7;      % Lower limit
+% high_threshold = 9.5;     % Upper limit
+low_threshold = 6;      % Lower limit
+high_threshold = 9;     % Upper limit
 
 ind_low = find(pH_orig < low_threshold);
 ind_high = find(pH_orig > high_threshold);
@@ -424,7 +541,7 @@ ind_spike(is) = [];
 fig9 = figure(9);clf
 fig9.WindowState = 'maximized';
 histogram(d_pH)
-title([site,' ',sondename,' - Spike Test Histogram'])
+title([site,' ',sonde,' - Spike Test Histogram'])
 xlabel('d_{pH}')
 ylabel('Frequency')
 set(gca,'YScale','log','FontSize',fontsize)
@@ -443,7 +560,7 @@ hold off
 xlabel('UTC')
 ylabel('pH')
 legend('show','location','best')
-title([site,' ',sondename,' - Flagged Points from Initial Data QC'])
+title([site,' ',sonde,' - Flagged Points from Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
@@ -452,9 +569,9 @@ pH_flags = struct('ind_dropout',ind_dropout,'ind_oow',ind_oow,'ind_grossRange',i
 
 clearvars ind_high ind_low ind_grossRange ind_spike is
 
-switch answer
-    case 'Sonde 1'
-        %====Chl a (Sonde 1 only)===============================================
+switch sonde
+    case 'BC'
+        %====Chl a (BC only)===============================================
         chla_orig = dat.chla;  % Preserve original  data for plotting
         
         % (1) Gross Range Test
@@ -491,7 +608,7 @@ switch answer
         fig11 = figure(11);clf
         fig11.WindowState = 'maximized';
         histogram(d_chla)
-        title([site,' ',sondename,' - Spike Test Histogram'])
+        title([site,' ',sonde,' - Spike Test Histogram'])
         xlabel('d_{chla} (RFU)')
         ylabel('Frequency')
         set(gca,'YScale','log','FontSize',fontsize)
@@ -510,7 +627,7 @@ switch answer
         xlabel('UTC')
         ylabel('Chl a (RFU)')
         legend('show','location','best')
-        title([site,' ',sondename,' - Flagged Points from Initial Data QC'])
+        title([site,' ',sonde,' - Flagged Points from Initial Data QC'])
         xlim([dt1 dt2])                 % Use same x limits for comparing sites
         set(gca,'FontSize',fontsize)
 
@@ -519,8 +636,8 @@ switch answer
 
         clearvars ind_high ind_low ind_grossRange ind_spike is
 
-    case 'Sonde 2'
-        %====Turbidity (Sonde 2 only)===============================================
+    case 'ERDC'
+        %====Turbidity (ERDC only)===============================================
         turbidity_orig = dat.turbidity;  % Preserve original  data for plotting
         
         % (1) Gross Range Test
@@ -556,7 +673,7 @@ switch answer
         fig11 = figure(11);clf
         fig11.WindowState = 'maximized';
         histogram(d_turbidity)
-        title([site,' ',sondename,' - Spike Test Histogram'])
+        title([site,' ',sonde,' - Spike Test Histogram'])
         xlabel('d_{turbidity} (NTU)')
         ylabel('Frequency')
         set(gca,'YScale','log','FontSize',fontsize)
@@ -575,7 +692,7 @@ switch answer
         xlabel('UTC')
         ylabel('Turbidity (NTU)')
         legend('show','location','best')
-        title([site,' ',sondename,' - Flagged Points from Initial Data QC'])
+        title([site,' ',sonde,' - Flagged Points from Initial Data QC'])
         xlim([dt1 dt2])                 % Use same x limits for comparing sites
         set(gca,'FontSize',fontsize)
 
@@ -583,6 +700,34 @@ switch answer
         turbidity_flags = struct('ind_dropout',ind_dropout,'ind_oow',ind_oow,'ind_grossRange',ind_grossRange,'ind_spike',ind_spike,'high_threshold',high_threshold,'low_threshold',low_threshold,'spike_threshold',spike_threshold);
 
         clearvars ind_high ind_low ind_grossRange ind_spike is
+end
+
+%====Percentage of points removed in each test=============================
+% length(ind_dropout)/length(depth_orig)*100;
+% length(ind_oow)/length(depth_orig)*100;
+
+grossRange.depth = length(depth_flags.ind_grossRange)/length(depth_orig)*100;
+spike.depth = length(depth_flags.ind_spike)/length(depth_orig)*100;
+
+grossRange.T = length(T_flags.ind_grossRange)/length(T_orig)*100; 
+spike.T = length(T_flags.ind_spike)/length(T_orig)*100;
+
+grossRange.DOconc = length(DO_flags.ind_grossRange)/length(DOconc_orig)*100;
+spike.DOconc = length(DO_flags.ind_spike)/length(DOconc_orig)*100;
+
+grossRange.S = length(S_flags.ind_grossRange)/length(S_orig)*100;
+spike.S = length(S_flags.ind_spike)/length(S_orig)*100;
+
+grossRange.pH = length(pH_flags.ind_grossRange)/length(pH_orig)*100;
+spike.pH = length(pH_flags.ind_spike)/length(pH_orig)*100;
+
+switch sonde
+    case 'BC'
+        grossRange.chla = length(chla_flags.ind_grossRange)/length(chla_orig)*100;
+        spike.chla = length(chla_flags.ind_spike)/length(chla_orig)*100;
+    case 'ERDC'
+        grossRange.turbidity = length(turbidity_flags.ind_grossRange)/length(turbidity_orig)*100;
+        spike.turbidity = length(turbidity_flags.ind_spike)/length(turbidity_orig)*100;
 end
 
 %====Clean data============================================================
@@ -622,13 +767,13 @@ dat.pH(pH_flags.ind_oow) = NaN;
 dat.pH(pH_flags.ind_grossRange) = NaN;
 dat.pH(pH_flags.ind_spike) = NaN;
 
-switch answer
-    case 'Sonde 1'
+switch sonde
+    case 'BC'
         dat.chla(chla_flags.ind_dropout) = NaN;
         dat.chla(chla_flags.ind_oow) = NaN;
         dat.chla(chla_flags.ind_grossRange) = NaN;
         dat.chla(chla_flags.ind_spike) = NaN;
-    case 'Sonde 2'
+    case 'ERDC'
         dat.turbidity(turbidity_flags.ind_dropout) = NaN;
         dat.turbidity(turbidity_flags.ind_oow) = NaN;
         dat.turbidity(turbidity_flags.ind_grossRange) = NaN;
@@ -653,11 +798,11 @@ flags.salinity(ind_fail) = 4;
 ind_fail = find(isnan(dat.pH));
 flags.pH(ind_fail) = 4;
 
-switch answer
-    case 'Sonde 1'
+switch sonde
+    case 'BC'
         ind_fail = find(isnan(dat.chla));
         flags.chla(ind_fail) = 4;
-    case 'Sonde 2'
+    case 'ERDC'
         ind_fail = find(isnan(dat.turbidity));
         flags.turbidity(ind_fail) = 4;
 end
@@ -678,16 +823,14 @@ dat_TT = rmmissing(dat_TT,'DataVariables',"deployment");
 % Find new indices of deployment changes
 ind_dep = find(diff(dat_TT.deployment) > 0);
 
-%====Plot the cleaned data after initial QC tests==========================
-cd([rootpath,'\figures\open-water-platform\gull\data-qc\',sondename])
-
+%====Plot the cleaned data after initial QC tests=======================
 % Depth
 fig13 = figure(13);clf
 fig13.WindowState = 'maximized';
 plot(dat_TT.datetime_utc,dat_TT.depth,'.k','MarkerSize',dotsize);
 xline([dat_TT.datetime_utc(1); dat_TT.datetime_utc(ind_dep+1)],'--',label);
 ylabel('Depth (m)')
-title([site,' ',sondename,' - After Initial Data QC'])
+title([site,' ',sonde,' - After Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 % ylim([-.5 3])
 set(gca,'FontSize',fontsize)
@@ -698,7 +841,7 @@ fig14.WindowState = 'maximized';
 plot(dat_TT.datetime_utc,dat_TT.temperature,'.k','MarkerSize',dotsize);
 xline([dat_TT.datetime_utc(1); dat_TT.datetime_utc(ind_dep+1)],'--',label);
 ylabel('Temperature (^oC)')
-title([site,' ',sondename,' - After Initial Data QC'])
+title([site,' ',sonde,' - After Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
@@ -708,7 +851,7 @@ fig15.WindowState = 'maximized';
 plot(dat_TT.datetime_utc,dat_TT.DO_conc,'.k','MarkerSize',dotsize);
 xline([dat_TT.datetime_utc(1); dat_TT.datetime_utc(ind_dep+1)],'--',label);
 ylabel('DO Concentration (\mumol/L)')
-title([site,' ',sondename,' - After Initial Data QC'])
+title([site,' ',sonde,' - After Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
@@ -718,7 +861,7 @@ fig16.WindowState = 'maximized';
 plot(dat_TT.datetime_utc,dat_TT.salinity,'.k','MarkerSize',dotsize);
 xline([dat_TT.datetime_utc(1); dat_TT.datetime_utc(ind_dep+1)],'--',label);
 ylabel('Salinity (psu)')
-title([site,' ',sondename,' - After Initial Data QC'])
+title([site,' ',sonde,' - After Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 % ylim([-.5 50])
 set(gca,'FontSize',fontsize)
@@ -729,30 +872,30 @@ fig17.WindowState = 'maximized';
 plot(dat_TT.datetime_utc,dat_TT.pH,'.k','MarkerSize',dotsize);
 xline([dat_TT.datetime_utc(1); dat_TT.datetime_utc(ind_dep+1)],'--',label);
 ylabel('pH')
-title([site,' ',sondename,' - After Initial Data QC'])
+title([site,' ',sonde,' - After Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
-switch answer
-    case 'Sonde 1'
+switch sonde
+    case 'BC'
         % Chl a
         fig18 = figure(18);clf
         fig18.WindowState = 'maximized';
         plot(dat_TT.datetime_utc,dat_TT.chla,'.k','MarkerSize',dotsize);
         xline([dat_TT.datetime_utc(1); dat_TT.datetime_utc(ind_dep+1)],'--',label);
         ylabel('Chl a (RFU)')
-        title([site,' ',sondename,' - After Initial Data QC'])
+        title([site,' ',sonde,' - After Initial Data QC'])
         xlim([dt1 dt2])                 % Use same x limits for comparing sites
         set(gca,'FontSize',fontsize)
 
-    case 'Sonde 2'
+    case 'ERDC'
         % Turbidity
         fig18 = figure(18);clf
         fig18.WindowState = 'maximized';
         plot(dat_TT.datetime_utc,dat_TT.turbidity,'.k','MarkerSize',dotsize);
         xline([dat_TT.datetime_utc(1); dat_TT.datetime_utc(ind_dep+1)],'--',label);
         ylabel('Turbidity (NTU)')
-        title([site,' ',sondename,' - After Initial Data QC'])
+        title([site,' ',sonde,' - After Initial Data QC'])
         xlim([dt1 dt2])                 % Use same x limits for comparing sites
         set(gca,'FontSize',fontsize)
 end
@@ -762,11 +905,11 @@ option = questdlg('Save cleaned data?','Save File','Yes','No','Yes');
 switch option
     case 'Yes'
         cd([rootpath,'open-water-platform-data\',site,'\cleaned\initial-qc'])
-        switch answer
-            case 'Sonde 1'
+        switch sonde
+            case 'BC'
                 sonde1_cleaned = dat_TT;
                 save([site,'-bc-cleaned.mat'],'sonde1_cleaned')
-            case 'Sonde 2'
+            case 'ERDC'
                 sonde2_cleaned = dat_TT;
                 save([site,'-erdc-cleaned.mat'],'sonde2_cleaned')
         end
@@ -780,10 +923,10 @@ option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');
 
 switch option
     case 'Yes'
-        switch answer
-            case 'Sonde 1'
+        switch sonde
+            case 'BC'
                 saveFilePath = ['figures\open-water-platform\',site,'\data-qc\bc\initial-qc'];
-            case 'Sonde 2'
+            case 'ERDC'
                 saveFilePath = ['figures\open-water-platform\',site,'\data-qc\erdc\initial-qc'];
         end
         cd([rootpath,saveFilePath])
@@ -807,13 +950,13 @@ switch option
         saveas(fig9,'pH_spike-histogram.fig')
         saveas(fig10,'pH_flagged.png')
         saveas(fig10,'pH_flagged.fig')
-        switch answer
-            case 'Sonde 1'
+        switch sonde
+            case 'BC'
                 saveas(fig11,'chla_spike-histogram.png')
                 saveas(fig11,'chla_spike-histogram.fig')
                 saveas(fig12,'chla_flagged.png')
                 saveas(fig12,'chla_flagged.fig')
-            case 'Sonde 2'
+            case 'ERDC'
                 saveas(fig11,'turbidity_spike-histogram.png')
                 saveas(fig11,'turbidity_spike-histogram.fig')
                 saveas(fig12,'turbidity_flagged.png')
@@ -829,11 +972,11 @@ switch option
         saveas(fig16,'S_cleaned&retimed.fig')
         saveas(fig17,'pH_cleaned&retimed.png')
         saveas(fig17,'pH_cleaned&retimed.fig')
-        switch answer
-            case 'Sonde 1'
+        switch sonde
+            case 'BC'
                 saveas(fig18,'chla_cleaned&retimed.png')
                 saveas(fig18,'chla_cleaned&retimed.fig')
-            case 'Sonde 2'
+            case 'ERDC'
                 saveas(fig18,'turbidity_cleaned&retimed.png')
                 saveas(fig18,'turbidity_cleaned&retimed.fig')
         end

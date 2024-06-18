@@ -12,7 +12,7 @@
 % 
 % DATE:
 % First created: 9/14/2023
-% Last amended: 3/14/2024
+% Last amended: 4/11/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear all;close all;clc
@@ -337,9 +337,9 @@ end
 %===Option to save plots===================================================
 switch dataset
     case "original"
-        saveFilePath = ['figures\open-water-platform-figures\',site,'\original\merged'];
+        saveFilePath = ['figures\open-water-platform\',site,'\original\merged'];
     case "adjusted"
-        saveFilePath = ['figures\open-water-platform-figures\',site,'\adjusted\merged'];
+        saveFilePath = ['figures\open-water-platform\',site,'\adjusted\merged'];
 end
 
 option = questdlg(['Save plots as .png and .fig in ',saveFilePath,'?'],'Save plots','Y','N','Y');

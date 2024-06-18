@@ -4,11 +4,11 @@
 % following Beck et al. (2015)
 %
 % AUTHOR:
-% Emily Chua 
-% 
+% Emily Chua
+%
 % DATE:
 % First created: 1/3/2024
-% Last updated: 3/18/2024
+% Last updated: 5/31/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -16,34 +16,15 @@ clear;close all;clc
 rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 
 %====Import data===========================================================
-% Import sonde/physical data (output from prepDielData.m)
 prompt = {'Choose the platform'};
-answer = questdlg(prompt,'Platform Selection','Gull','North','South','Cancel');
-switch answer
-    case 'Gull'
-        site = 'Gull';
-    case 'North'
-        site = 'North';
-    case 'South'
-        site = 'South';
-end   
+site = questdlg(prompt,'Platform Selection','Gull','North','South','Gull');
 
-prompt = {'Choose the sonde to analyze'};
-answer = questdlg(prompt,'Sonde Selection','Sonde 1','Sonde 2','Cancel','Cancel');
-% cd([rootpath,'\diel-method\owp-data\'])
-cd([rootpath,'\diel-method\owp-data\movmed'])
+cd([rootpath,'\diel-method\owp-data\final-qc'])
 
-switch answer
-    case 'Sonde 1'
-        sondename = 'BC';
-    case 'Sonde 2'
-        sondename = 'ERDC';
-end
-load([site,'-',sondename,'_obs.mat'])   % Load the table
+load([site,'_obs.mat'])   % Load the table
 
 % Load R results
-% cd([rootpath,'diel-method\R-results\',site,'-',sondename])
-cd([rootpath,'diel-method\R-results\',site,'-',sondename,'\movmed'])
+cd([rootpath,'diel-method\R-results\final-qc\',site])
 wtreg_res = readtable('wtreg_res.csv');
 wtreg_res.Properties.DimensionNames{1} = 'datetime_utc';
 wtreg_res.DateTimeStamp.TimeZone = "UTC";
@@ -52,10 +33,10 @@ wtreg_res = table2timetable(wtreg_res);
 % Retime weighted regression data to same datetimes as sonde/physical data
 wtreg_res.solar_period = [];
 newTimes = dat.datetime_utc(1):minutes(10):dat.datetime_utc(end);
-wtreg_res_rt = retime(wtreg_res,newTimes,'mean'); 
+wtreg_res_rt = retime(wtreg_res,newTimes,'mean');
 
-% metab_obs = table2timetable(readtable('metab_obs.csv'));
-% metab_dtd = table2timetable(readtable('metab_dtd.csv'));
+metab_obs = table2timetable(readtable('metab_obs.csv'));
+metab_dtd = table2timetable(readtable('metab_dtd.csv'));
 
 %====Define input variables================================================
 dt_utc = wtreg_res_rt.DateTimeStamp;
@@ -67,8 +48,8 @@ S = wtreg_res_rt.Sal;
 T = wtreg_res_rt.Temp;
 % p = dat.p;
 p = wtreg_res_rt.Tide;  % Pressure in dbar and depth in meters are approx. equal
-d = wtreg_res_rt.Tide; 
-H = mean(d,'omitnan') + 0.1524;   % Mean water depth [m] plus 6 inches to account for height of sonde above bottom
+d = wtreg_res_rt.Tide;
+H = mean(dat.depth,'omitnan') + 0.1524;   % Mean water depth [m] plus 6 inches to account for height of sonde above bottom
 
 % Air
 Tair = wtreg_res_rt.ATemp;
@@ -79,42 +60,28 @@ u = wtreg_res_rt.WSpd;
 DO_obs = wtreg_res_rt.DO_obs*1000/32;   % Observed DO concentration [mmol m-3]
 DO_nrm = wtreg_res_rt.DO_nrm*1000/32;   % Detided DO concentration [mmol m-3]
 
-cd([rootpath,'\figures\diel-analysis-figures'])
+cd([rootpath,'\figures\diel-analysis\final-qc'])
 
-% Plot observed & detided DO concentration and tidal level (c.f. Beck Fig. 6)
-fig = figure(1);clf
-fig.WindowState = 'maximized';
+% Plot results of R detiding (c.f. Beck Fig. 6)
+fig1 = figure(1);clf
+fig1.WindowState = 'maximized';
 t = tiledlayout(2,1,'TileSpacing','compact');
 ax1 = nexttile;
-plot(dt_local,DO_obs,'.-','MarkerSize',6,'Linewidth',1)
+plot(dt_local,DO_obs,'.-','MarkerSize',6,'Linewidth',1,'DisplayName','Observed')
 hold on
-plot(dt_local,DO_nrm,'.-','MarkerSize',6,'Linewidth',1)
-legend('Observed','Detided')
+plot(dt_local,DO_nrm,'.-','MarkerSize',6,'Linewidth',1,'DisplayName','Detided')
+legend('show','location','best')
 ylabel('DO conc. (mmol m^{-3})','FontSize',14)
-% title([site,' ',sondename,' Sonde'])
+title(site)
 ax2 = nexttile;
 plot(dt_local,d,'.-','MarkerSize',6,'Linewidth',1)
 xlabel('Local Time')
 ylabel('Water depth (m)')
 linkaxes([ax1 ax2],'x')
 
-%%
-fig = figure(1);clf
-fig.WindowState = 'maximized';
-t = tiledlayout(2,1,'TileSpacing','compact');
-ax1 = nexttile;
-plot(dt_utc,DO_obs,'.','MarkerSize',6,'Linewidth',1)
-hold on
-plot(dt_utc,DO_nrm,'.','MarkerSize',6,'Linewidth',1)
-legend('Observed','Detided')
-ylabel('DO conc. (mmol m^{-3})','FontSize',14)
-% title([site,' ',sondename,' Sonde'])
-ax2 = nexttile;
-plot(dt_local,d,'.-','MarkerSize',6,'Linewidth',1)
-xlabel('Local Time')
-ylabel('Water depth (m)')
-linkaxes([ax1 ax2],'x')
-%% Conduct diel analysis with observed DO data
+%==========================================================================
+%   Conduct diel analysis with observed DO data
+%==========================================================================
 DO_conc = DO_obs;
 
 %====STEP 1: Calculate DO concentration at equilibrium (DO_sat)============
@@ -188,7 +155,7 @@ xline(end3_dt,'--','label','DST Ends')
 ylabel('DO conc (mmol m^{-3})')
 % xlabel('UTC')
 xlabel('Local Time')
-title([site,' ',sondename,': Observed DO Concentration'])
+title([site,': Observed DO Concentration'])
 
 % Find the indices for when each day starts and stops
 daystart = dayind(find(diff(dayind) > 1) + 1);
@@ -206,7 +173,7 @@ fig3.WindowState = 'maximized';
 plot(dt_local(daystart(1:end-1)),daylength,'.')
 % xlabel('Local')
 ylabel('Day length (h)')
-title([site,' ',sondename,': Observed DO Concentration'])
+title([site,': Observed DO Concentration'])
 
 %====STEP 4: Calculate rates===============================================
 dCdt = nan(length(DO_conc),1);
@@ -227,7 +194,7 @@ ylabel('dC/dt (mmol m^{-3} h^{-1})')
 yyaxis right;plot(dt_utc,D,'.','markersize',6)
 ylabel('D (mmol m^{-3} h^{-1})')
 xlabel('UTC')
-title([site,' ',sondename,': Observed DO Concentration'])
+title([site,': Observed DO Concentration'])
 
 % Daily rates
 R_daily = R_hourly .* 24;                      % Daily rate of respiration; [mmol m-3 d-1]
@@ -241,7 +208,9 @@ NEM = GPP + ER;         % [mmol O2 m-2 d-1]
 diel_obs = table(daystart_dt,dayend_dt,daylength,R_hourly,P_hourly,R_daily,P_daily,GPP,ER,NEM);
 diel_obs = table2timetable(diel_obs);
 
-%% Conduct diel analysis with detided DO data
+%==========================================================================
+%   Conduct diel analysis with detided DO data
+%==========================================================================
 DO_conc = DO_nrm;
 
 %====STEP 1: Calculate DO concentration at equilibrium (DO_sat)============
@@ -312,7 +281,7 @@ xline(start3_dt,'--','label','DST Starts')
 xline(end3_dt,'--','label','DST Ends')
 ylabel('DO conc (mmol m^{-3})')
 xlabel('Local Time')
-title([site,' ',sondename,': Detided DO Concentration'])
+title([site,': Detided DO Concentration'])
 
 % Find the indices for when each day starts and stops
 daystart = dayind(find(diff(dayind) > 1) + 1);
@@ -331,7 +300,7 @@ fig6.WindowState = 'maximized';
 plot(dt_local(daystart(1:end-1)),daylength,'.')
 % xlabel('UTC')
 ylabel('Day length (h)')
-title([site,' ',sondename,': Detided DO Concentration'])
+title([site,': Detided DO Concentration'])
 
 %====STEP 4: Calculate rates===============================================
 dCdt = nan(length(DO_conc),1);
@@ -352,7 +321,7 @@ ylabel('dC/dt (mmol m^{-3} h^{-1})')
 yyaxis right;plot(dt_utc,D,'.','markersize',6)
 xlabel('UTC')
 ylabel('D (mmol m^{-3} h^{-1})')
-title([site,' ',sondename,': Detided DO Concentration'])
+title([site,': Detided DO Concentration'])
 
 % Daily rates
 R_daily = R_hourly .* 24;                      % Daily rate of respiration; [mmol m-3 d-1]
@@ -366,12 +335,12 @@ NEM = GPP + ER;         % [mmol O2 m-2 d-1]
 diel_dtd = table(daystart_dt,dayend_dt,daylength,R_hourly,P_hourly,R_daily,P_daily,GPP,ER,NEM);
 diel_dtd = table2timetable(diel_dtd);
 
-%%
-% PLOT RESULTS - COMPARE ECOMETAB AND MATLAB ANALYSIS
+%==========================================================================
+%   Plot results from R ecometab and MATLAB diel analysis
+%==========================================================================
+cd([rootpath,'figures\diel-analysis\final-qc\',site])
 
-cd([rootpath,'figures\diel-analysis-figures\',site,'-',sondename])
-
-% Observed 
+% Observed
 fig8 = figure(8);clf
 fig8.WindowState = 'maximized';
 plot(metab_obs.Date,metab_obs.Pg,'.-','MarkerSize',12,'LineWidth',1)
@@ -379,9 +348,9 @@ hold on
 plot(metab_obs.Date,metab_obs.Rt,'k.-','MarkerSize',12,'LineWidth',1)
 plot(metab_obs.Date,metab_obs.NEM,'r.-','MarkerSize',12,'LineWidth',1)
 ylabel('mmol O_2 m^{-2} d^{-1}','FontSize',14)
-title([site,' ',sondename,' Sonde: R "ecometab" Results Using Observed Data'])
+title([site,': R "ecometab" Results Using Observed Data'])
 legend({'GPP','ER','NEM'},'FontSize',14)
-ylim([-1000 800])
+% ylim([-1000 800])
 
 fig9 = figure(9);clf
 fig9.WindowState = 'maximized';
@@ -393,8 +362,8 @@ xlabel('UTC')
 ylabel('mmol O_2 m^{-2} d^{-1}','FontSize',14)
 legend({'GPP','ER','NEM'},'FontSize',14)
 set(gca,'FontSize',14,'LineWidth',2)
-title([site,' ',sondename,' Sonde: MATLAB Results Using Observed Data'])
-ylim([-1000 800])
+title([site,': MATLAB Results Using Observed Data'])
+% ylim([-1000 800])
 
 % Detided
 fig10 = figure(10);clf
@@ -407,8 +376,8 @@ xlabel('UTC')
 ylabel('mmol O_2 m^{-2} d^{-1}','FontSize',14)
 legend({'GPP','ER','NEM'},'FontSize',14)
 set(gca,'FontSize',14,'LineWidth',2)
-title([site,' ',sondename,' Sonde: R "ecometab" Results Using Detided Data'])
-ylim([-500 500])
+title([site,': R "ecometab" Results Using Detided Data'])
+% ylim([-500 500])
 
 fig11 = figure(11);clf
 fig11.WindowState = 'maximized';
@@ -420,62 +389,64 @@ xlabel('UTC')
 ylabel('mmol O_2 m^{-2} d^{-1}','FontSize',14)
 legend({'GPP','ER','NEM'},'FontSize',14)
 set(gca,'FontSize',14,'LineWidth',2)
-title([site,' ',sondename,' Sonde: MATLAB Results Using Detided Data'])
-ylim([-500 500])
-%%
-%====Save the results =================================================
+title([site,': MATLAB Results Using Detided Data'])
+% ylim([-500 500])
+
+
+%==========================================================================
+%   Option to save the results and figures
+%==========================================================================
+
+%====Save the data=========================================================
 option = questdlg('Save diel analysis results?','Save File','Yes','No','Yes');
 switch option
     case 'Yes'
-        cd([rootpath,'diel-method\matlab-results\',site,'-',sondename])
+        cd([rootpath,'diel-method\matlab-results\final-qc\',site])
         save('diel_res.mat','diel_obs','diel_dtd')
-        disp('File saved!')
+        disp('Files saved!')
     case 'No'
-        disp('File not saved.')
+        disp('Files not saved.')
 end
 
-cd('G:\My Drive\Postdoc\Work\SMIIL\diel-method\matlab-results\gull-bc\movmed')
-save('diel_res.mat','diel_obs','diel_dtd')
-
-%====Save the flagged and cleaned plots====================================
+%====Save the plots========================================================
 option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');
 
 switch option
     case 'Yes'
-        cd([rootpath,'figures\diel-analysis-figures\',site,'-',sondename,'\assess-DOconc'])
-        saveas(fig1,'DOconc-depth-ts.fig')
-        saveas(fig1,'DOconc-depth-ts.png')
+        cd([rootpath,'figures\diel-analysis\final-qc\',site])
+        saveas(fig1,'detiding_results.fig')
+        saveas(fig1,'detiding_results.png')
 
         % Save plots of R results
-        cd([rootpath,'figures\diel-analysis-figures\',site,'-',sondename,'\R-results'])
-        saveas(fig8,'metab_obs.png')
-        saveas(fig8,'metab_obs.fig')
-        saveas(fig10,'metab_dtd.png')
-        saveas(fig10,'metab_dtd.fig')
+        cd([rootpath,'figures\diel-analysis\final-qc\',site,'\R-results'])
+        saveas(fig8,'ecometab_obs.png')
+        saveas(fig8,'ecometab_obs.fig')
+        saveas(fig10,'ecometab_dtd.png')
+        saveas(fig10,'ecometab_dtd.fig')
 
         % Save plots of MATLAB results
-        cd([rootpath,'figures\diel-analysis-figures\',site,'-',sondename,'\matlab-results'])
-        % Observed
+        cd([rootpath,'figures\diel-analysis\final-qc\',site,'\matlab-results\sanity-checks'])
         saveas(fig2,'day-night_obs.fig')
         saveas(fig2,'day-night_obs.png')
         saveas(fig3,'daylength_obs.fig')
         saveas(fig3,'daylength_obs.png')
         saveas(fig4,'mass-balance_obs.fig')
         saveas(fig4,'mass-balance_obs.png')
-        saveas(fig9,'matlab_obs.png')
-        saveas(fig9,'matlab_obs.fig')
-        % Detided
         saveas(fig5,'day-night_dtd.fig')
         saveas(fig5,'day-night_dtd.png')
         saveas(fig6,'daylength_dtd.fig')
         saveas(fig6,'daylength_dtd.png')
         saveas(fig7,'mass-balance_dtd.fig')
         saveas(fig7,'mass-balance_dtd.png')
-        saveas(fig11,'matlab_dtd.png')
-        saveas(fig11,'matlab_dtd.fig')
+
+        cd([rootpath,'figures\diel-analysis\final-qc\',site,'\matlab-results'])
+        saveas(fig9,'dielAnalysis_obs.png')
+        saveas(fig9,'dielAnalysis_obs.fig')
+        saveas(fig11,'dielAnalysis_dtd.png')
+        saveas(fig11,'dielAnalysis_dtd.fig')
 
         disp('Plots saved!')
-    
+
     case 'No'
         disp('Plots not saved.')
 end

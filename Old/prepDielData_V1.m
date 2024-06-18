@@ -8,7 +8,7 @@
 % 
 % DATE:
 % First created: 2/8/2024
-% Last updated: 
+% Last updated: 4/12/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -16,22 +16,19 @@ clear;close all;clc
 rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 
 %====Import data===========================================================
-% prompt = {'Choose the platform'};
-% answer = questdlg(prompt,'Platform Selection','Gull','North','South','Cancel');
-% switch answer
-%     case 'Gull'
-%         cd([rootpath,'open-water-platform-data\gull\cleaned'])
-%         site = 'Gull';
-%     case 'North'
-%         cd([rootpath,'open-water-platform-data\north\cleaned'])
-%         site = 'North';
-%     case 'South'
-%         cd([rootpath,'open-water-platform-data\south\cleaned'])
-%         site = 'South';
-% end   
-
-site = 'Gull';
-cd('G:\My Drive\Postdoc\Work\SMIIL\open-water-platform-data\gull\cleaned\3_5mad')
+prompt = {'Choose the platform'};
+answer = questdlg(prompt,'Platform Selection','Gull','North','South','Cancel');
+switch answer
+    case 'Gull'
+        cd([rootpath,'open-water-platform-data\gull\cleaned'])
+        site = 'Gull';
+    case 'North'
+        cd([rootpath,'open-water-platform-data\north\cleaned'])
+        site = 'North';
+    case 'South'
+        cd([rootpath,'open-water-platform-data\south\cleaned'])
+        site = 'South';
+end   
 
 prompt = {'Choose the sonde dataset'};
 answer = questdlg(prompt,'Sonde Selection','Sonde 1','Sonde 2','Cancel','Cancel');
@@ -69,13 +66,13 @@ for i = 1:height(metDat_rt.datetime_utc)
     id(1:length(nid),1) = nid;
 end
 
-figure(1),clf
-plot(metDat_rt.datetime_utc,metDat_rt.wspd,'.-')
-hold on
-plot(noaaDat_rt.date(id),noaaDat_rt.wspd_avg(id),'or','MarkerSize',4)
-ylabel('Wind Speed (m/s)')
-legend('Gull Met Station','NOAA Daily Mean')
-title('Gap-Filled Wind Speed Data')
+% figure(1),clf
+% plot(metDat_rt.datetime_utc,metDat_rt.wspd,'.-')
+% hold on
+% plot(noaaDat_rt.date(id),noaaDat_rt.wspd_avg(id),'or','MarkerSize',4)
+% ylabel('Wind Speed (m/s)')
+% legend('Gull Met Station','NOAA Daily Mean')
+% title('Gap-Filled Wind Speed Data')
 
 % Replace missing Gull windspeed data with NOAA windspeed data
 ind_nan = find(isnan(metDat_rt.wspd));
@@ -102,48 +99,48 @@ for i = 1:height(metDat_rt.datetime_utc)
     id(1:length(nid),1) = nid;
 end
 
-% See if the PAR or the BP sensor do a better job of matching the met station data
-figure(2),clf
-plot(metDat_rt.datetime_utc,metDat_rt.Tair,'.','MarkerSize',10)
-hold on
-plot(parDat_rt.datetime_utc,parDat_rt.Tair,'.r','MarkerSize',4)
-plot(bpDat_rt.datetime_utc,bpDat_rt.Tair,'.g','MarkerSize',4)
-ylabel('Air Temperature (^oC)')
-legend('Gull Met Station','PAR Dataset','Baro Pressure Dataset')
-title('Assessing Air Temperature Datasets')
+% % See if the PAR or the BP sensor do a better job of matching the met station data
+% figure(2),clf
+% plot(metDat_rt.datetime_utc,metDat_rt.Tair,'.','MarkerSize',10)
+% hold on
+% plot(parDat_rt.datetime_utc,parDat_rt.Tair,'.r','MarkerSize',4)
+% plot(bpDat_rt.datetime_utc,bpDat_rt.Tair,'.g','MarkerSize',4)
+% ylabel('Air Temperature (^oC)')
+% legend('Gull Met Station','PAR Dataset','Baro Pressure Dataset')
+% title('Assessing Air Temperature Datasets')
 
 % Replace missing Gull T_air data with HOBO Baro Pressure T_air data
 ind_nan = find(isnan(metDat_rt.Tair));
 metDat_rt.Tair(ind_nan) = bpDat_rt.Tair(ind_nan);
 
-figure(3),clf
-plot(metDat_rt.datetime_utc,metDat_rt.Tair,'.','MarkerSize',4)
-hold on
-plot(metDat_rt.datetime_utc(ind_nan),metDat_rt.Tair(ind_nan),'og','MarkerSize',6,'LineWidth',1)
-ylabel('Air Temperature (^oC)')
-legend('Gull Met Station','Baro Pressure Dataset','location','southeast')
-title('Gap-Filled Air Temperature Data')
+% figure(3),clf
+% plot(metDat_rt.datetime_utc,metDat_rt.Tair,'.','MarkerSize',4)
+% hold on
+% plot(metDat_rt.datetime_utc(ind_nan),metDat_rt.Tair(ind_nan),'og','MarkerSize',6,'LineWidth',1)
+% ylabel('Air Temperature (^oC)')
+% legend('Gull Met Station','Baro Pressure Dataset','location','southeast')
+% title('Gap-Filled Air Temperature Data')
 
 %====Gap filling Gull met station atmos p data============================
-figure(4),clf
-plot(metDat_rt.datetime_utc,metDat_rt.patm,'.','MarkerSize',4)
-hold on
-plot(bpDat_rt.datetime_utc,bpDat_rt.patm,'.g','MarkerSize',4)
-ylabel('p_{atm} (hPa)')
-legend('Gull Met Station','Baro Pressure Dataset')
-title('Assessing Atmospheric Pressure Datasets')
+% figure(4),clf
+% plot(metDat_rt.datetime_utc,metDat_rt.patm,'.','MarkerSize',4)
+% hold on
+% plot(bpDat_rt.datetime_utc,bpDat_rt.patm,'.g','MarkerSize',4)
+% ylabel('p_{atm} (hPa)')
+% legend('Gull Met Station','Baro Pressure Dataset')
+% title('Assessing Atmospheric Pressure Datasets')
 
 % Replace missing Gull p_atm data with HOBO Baro Pressure p_atm data
 ind_nan = find(isnan(metDat_rt.patm));
 metDat_rt.patm(ind_nan) = bpDat_rt.patm(ind_nan);
 
-figure(5),clf
-plot(metDat_rt.datetime_utc,metDat_rt.patm,'.','MarkerSize',4)
-hold on
-plot(metDat_rt.datetime_utc(ind_nan),metDat_rt.patm(ind_nan),'og','MarkerSize',6,'LineWidth',1)
-ylabel('p_{atm} (hPa)')
-legend('Gull Met Station','Baro Pressure Dataset')
-title('Gap-Filled Atmospheric Pressure Data')
+% figure(5),clf
+% plot(metDat_rt.datetime_utc,metDat_rt.patm,'.','MarkerSize',4)
+% hold on
+% plot(metDat_rt.datetime_utc(ind_nan),metDat_rt.patm(ind_nan),'og','MarkerSize',6,'LineWidth',1)
+% ylabel('p_{atm} (hPa)')
+% legend('Gull Met Station','Baro Pressure Dataset')
+% title('Gap-Filled Atmospheric Pressure Data')
 
 % Horizontally concatenate sonde and met data (already have common time vector)
 dat = synchronize(dat,metDat_rt);
@@ -158,11 +155,7 @@ DO_mgL = dat.DO_conc / 1000 * 31.999;
 varNames = ["DateTimeStamp","Temp","Sal","DO_obs","ATemp","BP","WSpd","Tide"];
 dat_R = table(dat.datetime_utc,dat.temperature,dat.salinity,DO_mgL,dat.Tair,dat.patm,dat.wspd,dat.depth,'VariableNames',varNames);
 dat_R = rmmissing(dat_R);
-%%
-cd('G:\My Drive\Postdoc\Work\SMIIL\diel-method\owp-data')
-writetable(dat_R,'gull-bc_3_5mad.csv')
-save('gull-bc_3mad.mat','dat')
-%%
+
 option = questdlg('Save cleaned data?','Save File','Yes','No','Yes');
 switch option
     case 'Yes'

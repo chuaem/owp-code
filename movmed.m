@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% movmed_gull.m
-% This script applies the moving median test to the cleaned Gull sonde data
-% (from dataQC_gull.m).
+% movmed.m
+% This script applies the moving median test to the cleaned sonde data
+% (from initialQC.m).
 %
 % Code that requires manual input is commented with "INPUTS".
 %
@@ -10,29 +10,28 @@
 % 
 % DATE:
 % First created: 
-% Last updated: 4/5/24
+% Last updated: 5/10/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
 
-site = 'Gull';
+prompt = {'Chose which site to QC'};
+site = questdlg(prompt,'Platform Selection','Gull','North','South','Gull');
 
 rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 
 cd([rootpath,'open-water-platform-data\',site,'\cleaned\initial-qc'])
 
 prompt = {'Choose which sonde to QC'};
-answer = questdlg(prompt,'Sonde Selection','Sonde 1','Sonde 2','Cancel','Cancel');
+sonde = questdlg(prompt,'Sonde Selection','BC','ERDC','Cancel','Cancel');
 
-switch answer
-    case 'Sonde 1'
-        load('gull-bc-cleaned.mat')
+switch sonde
+    case 'BC'
+        load([site,'-bc-cleaned.mat'])
         dat = sonde1_cleaned;
-        sondename = 'BC';
-    case 'Sonde 2'
-        load('gull-erdc-cleaned.mat')
+    case 'ERDC'
+        load([site,'-erdc-cleaned.mat'])
         dat = sonde2_cleaned;
-        sondename = 'ERDC';
 end
 
 %====Global plotting settings==============================================
@@ -45,10 +44,29 @@ linewidth = 1;
 dotsize = 12;
 circlesize = 6;
 
-label = {'Deployment 1','Deployment 2','Deployment 5','Deployment 6',...
-    'Deployment 7','Deployment 8','Deployment 9','Deployment 10',...
-    'Deployment 11','Deployment 12','Deployment 13','Deployment 14',...
-    'Deployment 15','Deployment 16','Deployment 17'};
+switch site
+    case 'Gull'
+        label = {'Deployment 1','Deployment 2','Deployment 5','Deployment 6',...
+            'Deployment 7','Deployment 8','Deployment 9','Deployment 10',...
+            'Deployment 11','Deployment 12','Deployment 13','Deployment 14',...
+            'Deployment 15','Deployment 16','Deployment 17'};
+    case 'North'
+        label = {'Deployment 2','Deployment 6','Deployment 7','Deployment 8',...
+            'Deployment 9','Deployment 10','Deployment 11','Deployment 12',...
+            'Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17'};
+    case 'South'
+        switch sonde
+            case 'BC'
+                label = {'Deployment 1','Deployment 2','Deployment 4','Deployment 5',...
+                    'Deployment 6','Deployment 7','Deployment 8','Deployment 9',...
+                    'Deployment 10','Deployment 11','Deployment 12','Deployment 13',...
+                    'Deployment 14','Deployment 16','Deployment 17'};
+            case 'ERDC'
+                label = {'Deployment 1','Deployment 2','Deployment 5','Deployment 7',...
+                    'Deployment 8','Deployment 9','Deployment 10','Deployment 11',...
+                    'Deployment 12','Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17'};
+        end
+end
 
 % Find indices of deployment changes
 ind_dep = find(diff(dat.deployment) > 0);
@@ -89,7 +107,8 @@ plot(dat.datetime_utc(ind_bad_high),dat.depth(ind_bad_high)','o','MarkerSize',ci
 xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 legend('show','location','best')
 ylabel('Depth (m)')
-title([site,' ',sondename,' - Flagged Points from Moving Median Test'])
+title([site,' ',sonde,' - Flagged Points from Moving Median Test'])
+xlim([dt1 dt2])                 % Use same x limits for comparing sites
 
 % Compare distributions of data before/after
 ind_bad = sort([ind_bad_low;ind_bad_high]);
@@ -104,6 +123,8 @@ histogram(depth_new,'DisplayName','After Moving Median Test')
 legend('show')
 xlabel('Depth (m)')
 ylabel('Frequency')
+title([site,' ',sonde,' - Data Histogram'])
+
 depth_flags.ind_movmed = ind_bad;
 
 %====TEMPERATURE===========================================================
@@ -137,7 +158,8 @@ plot(dat.datetime_utc(ind_bad_high),dat.temperature(ind_bad_high)','o','MarkerSi
 xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 legend('show','location','best')
 ylabel('Temperature (^oC)')
-title([site,' ',sondename,' - Flagged Points from Moving Median Test'])
+title([site,' ',sonde,' - Flagged Points from Moving Median Test'])
+xlim([dt1 dt2])                 % Use same x limits for comparing sites
 
 % Compare distributions of data before/after
 ind_bad = sort([ind_bad_low;ind_bad_high]);
@@ -152,6 +174,8 @@ histogram(T_new,'DisplayName','After Moving Median Test')
 legend('show')
 xlabel('Temperature (^oC)')
 ylabel('Frequency')
+title([site,' ',sonde,' - Data Histogram'])
+
 T_flags.ind_movmed = ind_bad;
 
 %====DO CONCENTRATION======================================================
@@ -187,7 +211,8 @@ hold off
 xlabel('UTC')
 ylabel('DO Concentration (\mumol/L)')
 legend('show','location','best')
-title([site,' ',sondename,' - Flagged Points from Moving Median Test'])
+title([site,' ',sonde,' - Flagged Points from Moving Median Test'])
+xlim([dt1 dt2])                 % Use same x limits for comparing sites
 
 % Compare distributions of data before/after
 ind_bad = sort([ind_bad_low;ind_bad_high]);
@@ -202,6 +227,7 @@ histogram(DO_new,'DisplayName','After Moving Median Test')
 legend('show')
 xlabel('DO Concentration (\mumol/L)')
 ylabel('Frequency')
+title([site,' ',sonde,' - Data Histogram'])
 
 DO_flags.ind_movmed = ind_bad;
 
@@ -236,7 +262,8 @@ plot(dat.datetime_utc(ind_bad_high),dat.salinity(ind_bad_high)','o','MarkerSize'
 xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 legend('show','location','best')
 ylabel('Salinity (psu)')
-title([site,' ',sondename,' - Flagged Points from Moving Median Test'])
+title([site,' ',sonde,' - Flagged Points from Moving Median Test'])
+xlim([dt1 dt2])                 % Use same x limits for comparing sites
 
 % Compare distributions of data before/after
 ind_bad = sort([ind_bad_low;ind_bad_high]);
@@ -251,6 +278,7 @@ histogram(S_new,'DisplayName','After Moving Median Test')
 legend('show')
 xlabel('Salinity (psu)')
 ylabel('Frequency')
+title([site,' ',sonde,' - Data Histogram'])
 
 S_flags.ind_movmed = ind_bad;
 
@@ -285,7 +313,8 @@ plot(dat.datetime_utc(ind_bad_high),dat.pH(ind_bad_high)','o','MarkerSize',circl
 xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 legend('show','location','best')
 ylabel('pH')
-title([site,' ',sondename,' - Flagged Points from Moving Median Test'])
+title([site,' ',sonde,' - Flagged Points from Moving Median Test'])
+xlim([dt1 dt2])                 % Use same x limits for comparing sites
 
 % Compare distributions of data before/after
 ind_bad = sort([ind_bad_low;ind_bad_high]);
@@ -300,11 +329,12 @@ histogram(pH_new,'DisplayName','After Moving Median Test')
 legend('show')
 xlabel('pH')
 ylabel('Frequency')
+title([site,' ',sonde,' - Data Histogram'])
 
 pH_flags.ind_movmed = ind_bad;
 
-switch answer
-    case 'Sonde 1'
+switch sonde
+    case 'BC'
         %====Chl a=================================================================
         % Find numbers below and above the moving median
         mmed = movmedian(dat.chla,window,"omitmissing");
@@ -336,7 +366,8 @@ switch answer
         xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
         legend('show','location','best')
         ylabel('Chl a (RFU)')
-        title([site,' ',sondename,' - Flagged Points from Moving Median Test'])
+        title([site,' ',sonde,' - Flagged Points from Moving Median Test'])
+        xlim([dt1 dt2])                 % Use same x limits for comparing sites
 
         % Compare distributions of data before/after
         ind_bad = sort([ind_bad_low;ind_bad_high]);
@@ -351,10 +382,11 @@ switch answer
         legend('show')
         xlabel('Chl a (RFU)')
         ylabel('Frequency')
+        title([site,' ',sonde,' - Data Histogram'])
 
         chla_flags.ind_movmed = ind_bad;
 
-    case 'Sonde 2'
+    case 'ERDC'
         %====Turbidity=====================================================
         % Find numbers below and above the moving median
         mmed = movmedian(dat.turbidity,window,"omitmissing");
@@ -386,7 +418,8 @@ switch answer
         xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
         legend('show','location','best')
         ylabel('Turbidity (NTU)')
-        title([site,' ',sondename,' - Flagged Points from Moving Median Test'])
+        title([site,' ',sonde,' - Flagged Points from Moving Median Test'])
+        xlim([dt1 dt2])                 % Use same x limits for comparing sites
 
         % Compare distributions of data before/after
         ind_bad = sort([ind_bad_low;ind_bad_high]);
@@ -401,6 +434,7 @@ switch answer
         legend('show')
         xlabel('Turbidity (NTU)')
         ylabel('Frequency')
+        title([site,' ',sonde,' - Data Histogram'])
 
         turbidity_flags.ind_movmed = ind_bad;
 end
@@ -414,10 +448,10 @@ switch option
         dat.DO_conc(DO_flags.ind_movmed) = NaN;
         dat.salinity(S_flags.ind_movmed) = NaN;
         dat.pH(pH_flags.ind_movmed) = NaN;
-        switch answer
-            case 'Sonde 1'
+        switch sonde
+            case 'BC'
                 dat.chla(chla_flags.ind_movmed) = NaN;
-            case 'Sonde 2'
+            case 'ERDC'
                 dat.turbidity(turbidity_flags.ind_movmed) = NaN;
         end
         disp('Data cleaned!')
@@ -426,7 +460,7 @@ switch option
 end
 
 %====Plot the cleaned data after movmed test===============================
-cd([rootpath,'\figures\open-water-platform\gull\data-qc\',sondename,'\movmed'])
+cd([rootpath,'\figures\open-water-platform\',site,'\data-qc\',sonde,'\movmed'])
 
 % Depth
 fig13 = figure(13);clf
@@ -434,7 +468,7 @@ fig13.WindowState = 'maximized';
 plot(dat.datetime_utc,dat.depth,'.k','MarkerSize',dotsize);
 xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 ylabel('Depth (m)')
-title([site,' ',sondename,' - After Moving Median Test'])
+title([site,' ',sonde,' - After Moving Median Test'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 % ylim([-.5 3])
 set(gca,'FontSize',fontsize)
@@ -445,7 +479,7 @@ fig14.WindowState = 'maximized';
 plot(dat.datetime_utc,dat.temperature,'.k','MarkerSize',dotsize);
 xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 ylabel('Temperature (^oC)')
-title([site,' ',sondename,' - After Moving Median Test'])
+title([site,' ',sonde,' - After Moving Median Test'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
@@ -455,7 +489,7 @@ fig15.WindowState = 'maximized';
 plot(dat.datetime_utc,dat.DO_conc,'.k','MarkerSize',dotsize);
 xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 ylabel('DO Concentration (\mumol/L)')
-title([site,' ',sondename,' - After Moving Median Test'])
+title([site,' ',sonde,' - After Moving Median Test'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
@@ -465,7 +499,7 @@ fig16.WindowState = 'maximized';
 plot(dat.datetime_utc,dat.salinity,'.k','MarkerSize',dotsize);
 xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 ylabel('Salinity (psu)')
-title([site,' ',sondename,' - After Moving Median Test'])
+title([site,' ',sonde,' - After Moving Median Test'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 % ylim([-.5 50])
 set(gca,'FontSize',fontsize)
@@ -476,30 +510,30 @@ fig17.WindowState = 'maximized';
 plot(dat.datetime_utc,dat.pH,'.k','MarkerSize',dotsize);
 xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 ylabel('pH')
-title([site,' ',sondename,' - After Moving Median Test'])
+title([site,' ',sonde,' - After Moving Median Test'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
-switch answer
-    case 'Sonde 1'
+switch sonde
+    case 'BC'
         % Chl a
         fig18 = figure(18);clf
         fig18.WindowState = 'maximized';
         plot(dat.datetime_utc,dat.chla,'.k','MarkerSize',dotsize);
         xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
         ylabel('Chl a (RFU)')
-        title([site,' ',sondename,' - After Moving Median Test'])
+        title([site,' ',sonde,' - After Moving Median Test'])
         xlim([dt1 dt2])                 % Use same x limits for comparing sites
         set(gca,'FontSize',fontsize)
 
-    case 'Sonde 2'
+    case 'ERDC'
         % Turbidity
         fig18 = figure(18);clf
         fig18.WindowState = 'maximized';
         plot(dat.datetime_utc,dat.turbidity,'.k','MarkerSize',dotsize);
         xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
         ylabel('Turbidity (NTU)')
-        title([site,' ',sondename,' - After Moving Median Test'])
+        title([site,' ',sonde,' - After Moving Median Test'])
         xlim([dt1 dt2])                 % Use same x limits for comparing sites
         set(gca,'FontSize',fontsize)
 end
@@ -509,11 +543,11 @@ option = questdlg('Save cleaned data?','Save File','Yes','No','Yes');
 switch option
     case 'Yes'
         cd([rootpath,'open-water-platform-data\',site,'\cleaned\movmed'])
-        switch answer
-            case 'Sonde 1'
+        switch sonde
+            case 'BC'
                 sonde1_cleaned = dat;
                 save([site,'-bc-cleaned.mat'],'sonde1_cleaned')
-            case 'Sonde 2'
+            case 'ERDC'
                 sonde2_cleaned = dat;
                 save([site,'-erdc-cleaned.mat'],'sonde2_cleaned')
         end
@@ -527,10 +561,10 @@ option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');
 
 switch option
     case 'Yes'
-        switch answer
-            case 'Sonde 1'
+        switch sonde
+            case 'BC'
                 saveFilePath = ['figures\open-water-platform\',site,'\data-qc\bc\movmed'];
-            case 'Sonde 2'
+            case 'ERDC'
                 saveFilePath = ['figures\open-water-platform\',site,'\data-qc\erdc\movmed'];
         end
         cd([rootpath,saveFilePath])
@@ -554,13 +588,13 @@ switch option
         saveas(fig9,'pH_movmed.fig')
         saveas(fig10,'pH_histogram.png')
         saveas(fig10,'pH_histogram.fig')
-        switch answer
-            case 'Sonde 1'
+        switch sonde
+            case 'BC'
                 saveas(fig11,'chla_movmed.png')
                 saveas(fig11,'chla_movmed.fig')
                 saveas(fig12,'chla_histogram.png')
                 saveas(fig12,'chla_histogram.fig')
-            case 'Sonde 2'
+            case 'ERDC'
                 saveas(fig11,'turbidity_movmed.png')
                 saveas(fig11,'turbidity_movmed.fig')
                 saveas(fig12,'turbidity_histogram.png')
@@ -576,11 +610,11 @@ switch option
         saveas(fig16,'S_cleaned.fig')
         saveas(fig17,'pH_cleaned.png')
         saveas(fig17,'pH_cleaned.fig')
-        switch answer
-            case 'Sonde 1'
+        switch sonde
+            case 'BC'
                 saveas(fig18,'chla_cleaned.png')
                 saveas(fig18,'chla_cleaned.fig')
-            case 'Sonde 2'
+            case 'ERDC'
                 saveas(fig18,'turbidity_cleaned.png')
                 saveas(fig18,'turbidity_cleaned.fig')
         end
@@ -593,25 +627,24 @@ end
 
 
 %% Test
-x = [1, 4, 4, 4, 5, 5, 5, 5, 7, 7, 8, 10, 16, 30];
-% x = [4, 10, 15, 18, 19, 20, 501, 502, 503, 504, 3000];
-% C = 1.4826;
-C = 1;
-k = 3;
-
-med=median(x);
-ind_low = find(x<=med);
-ind_high = find(x>=med);
-mad_low = C*median(abs(x(ind_low) - med));
-mad_high = C*median(abs(x(ind_high) - med));
-lower = med - k*mad_low;
-upper = med + k*mad_high;
-x_low = x(find(x<lower))
-x_high = x(find(x>upper))
-
-figure,clf
-plot(x,'.')
-hold on
-plot(repmat(lower,length(x),1),'-')
-plot(repmat(upper,length(x),1),'-')
-
+% x = [1, 4, 4, 4, 5, 5, 5, 5, 7, 7, 8, 10, 16, 30];
+% % x = [4, 10, 15, 18, 19, 20, 501, 502, 503, 504, 3000];
+% % C = 1.4826;
+% C = 1;
+% k = 3;
+% 
+% med=median(x);
+% ind_low = find(x<=med);
+% ind_high = find(x>=med);
+% mad_low = C*median(abs(x(ind_low) - med));
+% mad_high = C*median(abs(x(ind_high) - med));
+% lower = med - k*mad_low;
+% upper = med + k*mad_high;
+% x_low = x(find(x<lower))
+% x_high = x(find(x>upper))
+% 
+% figure,clf
+% plot(x,'.')
+% hold on
+% plot(repmat(lower,length(x),1),'-')
+% plot(repmat(upper,length(x),1),'-')

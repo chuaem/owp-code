@@ -16,7 +16,6 @@ clear;close all;clc
 rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 
 %====Import data===========================================================
-% Import sonde/physical data (output from prepDielData.m)
 prompt = {'Choose the platform'};
 answer = questdlg(prompt,'Platform Selection','Gull','North','South','Cancel');
 switch answer
@@ -31,19 +30,20 @@ end
 prompt = {'Choose the sonde to analyze'};
 answer = questdlg(prompt,'Sonde Selection','Sonde 1','Sonde 2','Cancel','Cancel');
 cd([rootpath,'\diel-method\owp-data\'])
+% cd([rootpath,'\diel-method\owp-data\movmed'])
+
 switch answer
     case 'Sonde 1'
         sondename = 'BC';
     case 'Sonde 2'
         sondename = 'ERDC';
 end
-% load([site,'-',sondename,'_obs.mat'])   % Load the table
-dat = readtable('gull-bc_3mad.csv');
+load([site,'-',sondename,'_obs.mat'])   % Load the table
 
 % Load R results
 cd([rootpath,'diel-method\R-results\',site,'-',sondename])
-% wtreg_res = readtable('wtreg_res.csv');
-wtreg_res = readtable('wtreg_res_3mad.csv');
+% cd([rootpath,'diel-method\R-results\',site,'-',sondename,'\movmed'])
+wtreg_res = readtable('wtreg_res.csv');
 wtreg_res.Properties.DimensionNames{1} = 'datetime_utc';
 wtreg_res.DateTimeStamp.TimeZone = "UTC";
 wtreg_res = table2timetable(wtreg_res);
@@ -53,8 +53,8 @@ wtreg_res.solar_period = [];
 newTimes = dat.datetime_utc(1):minutes(10):dat.datetime_utc(end);
 wtreg_res_rt = retime(wtreg_res,newTimes,'mean'); 
 
-metab_obs = table2timetable(readtable('metab_obs.csv'));
-metab_dtd = table2timetable(readtable('metab_dtd.csv'));
+% metab_obs = table2timetable(readtable('metab_obs.csv'));
+% metab_dtd = table2timetable(readtable('metab_dtd.csv'));
 
 %====Define input variables================================================
 dt_utc = wtreg_res_rt.DateTimeStamp;
@@ -81,8 +81,8 @@ DO_nrm = wtreg_res_rt.DO_nrm*1000/32;   % Detided DO concentration [mmol m-3]
 cd([rootpath,'\figures\diel-analysis-figures'])
 
 % Plot observed & detided DO concentration and tidal level (c.f. Beck Fig. 6)
-fig1 = figure(1);clf
-fig1.WindowState = 'maximized';
+fig = figure(1);clf
+fig.WindowState = 'maximized';
 t = tiledlayout(2,1,'TileSpacing','compact');
 ax1 = nexttile;
 plot(dt_local,DO_obs,'.-','MarkerSize',6,'Linewidth',1)
@@ -349,6 +349,7 @@ NEM = GPP + ER;         % [mmol O2 m-2 d-1]
 diel_dtd = table(daystart_dt,dayend_dt,daylength,R_hourly,P_hourly,R_daily,P_daily,GPP,ER,NEM);
 diel_dtd = table2timetable(diel_dtd);
 
+%%
 % PLOT RESULTS - COMPARE ECOMETAB AND MATLAB ANALYSIS
 
 cd([rootpath,'figures\diel-analysis-figures\',site,'-',sondename])
@@ -404,7 +405,7 @@ legend({'GPP','ER','NEM'},'FontSize',14)
 set(gca,'FontSize',14,'LineWidth',2)
 title([site,' ',sondename,' Sonde: MATLAB Results Using Detided Data'])
 ylim([-500 500])
-%%
+
 %====Save the results =================================================
 option = questdlg('Save diel analysis results?','Save File','Yes','No','Yes');
 switch option
@@ -415,6 +416,9 @@ switch option
     case 'No'
         disp('File not saved.')
 end
+
+cd('G:\My Drive\Postdoc\Work\SMIIL\diel-method\matlab-results\gull-bc\movmed')
+save('diel_res.mat','diel_obs','diel_dtd')
 
 %====Save the flagged and cleaned plots====================================
 option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');

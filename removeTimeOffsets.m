@@ -8,7 +8,7 @@
 %
 % DATE:
 % First created: 10/12/2023
-% Last amended: 3/13/2024
+% Last amended: 4/11/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -52,14 +52,14 @@ LineWidth = 1;
 
 fig1 = figure(1);
 fig1.WindowState = 'maximized';
-h3 = plot(usgs.datetime_utc,usgs.tidal_elev,'k');
+h3 = plot(usgs.datetime_utc,usgs.tidal_elev,'.k');
 hold on
-h1 = plot(sonde1.datetime_utc,sonde1.depth,'Color',red);
+h1 = plot(sonde1.datetime_utc,sonde1.depth,'.','Color',red);
 if strcmp(site,'south') == 1 && (depNum == 4 || depNum == 6)
     % Don't plot sonde2 data for skipped deployments
     legend([h1 h3],'BC','USGS')
 else
-    h2 = plot(sonde2.datetime_utc,sonde2.depth,'Color',blue);
+    h2 = plot(sonde2.datetime_utc,sonde2.depth,'.','Color',blue);
     legend([h1 h2 h3],'BC','ERDC','USGS')
 end
 hold off
@@ -98,21 +98,24 @@ smoothed0 = smoothdata(usgs.tidal_elev);
 smoothed1 = smoothdata(sonde1.depth);
 smoothed2 = smoothdata(sonde2.depth);
 % Change this value depending on sampling interval (6, 10, or 12 min)
-minPkDist = 55;   % 12 min
+minPkDist = 55;   % 12 min (use for all other deployments)
 % minPkDist = 65;    % 10 min
-% minPkDist = 115;   % 6 min
+% minPkDist = 115;   % 6 min (use for Gull Deployment 1!!)
 [pks1,locs1] = findpeaks(smoothed1,'MinPeakDistance',minPkDist);
 [pks2,locs2] = findpeaks(smoothed2,'MinPeakDistance',minPkDist);
+% Use next two lines for Gull Deployment 1 only!!
+% [pks1,locs1] = findpeaks(sonde1.depth,'MinPeakDistance',minPkDist);
+% [pks2,locs2] = findpeaks(sonde1.depth,'MinPeakDistance',minPkDist);
 
 % Plot peaks in data to double-check
 fig2 = figure(2);
 fig2.WindowState = 'maximized';
-h0 = plot(usgs.datetime_utc,usgs.tidal_elev,'k');
+h0 = plot(usgs.datetime_utc,usgs.tidal_elev,'.k');
 hold on
 plot(usgs.datetime_utc(locs0),usgs.tidal_elev(locs0),'ok')
-h1 = plot(sonde1.datetime_utc,sonde1.depth,'Color',red);
+h1 = plot(sonde1.datetime_utc,sonde1.depth,'.','Color',red);
 plot(sonde1.datetime_utc(locs1),sonde1.depth(locs1),'o','Color',red)
-h2 = plot(sonde2.datetime_utc,sonde2.depth,'Color',blue);
+h2 = plot(sonde2.datetime_utc,sonde2.depth,'.','Color',blue);
 plot(sonde2.datetime_utc(locs2),sonde2.depth(locs2),'o','Color',blue)
 hold off
 legend([h0 h1 h2],'USGS','BC','ERDC')
