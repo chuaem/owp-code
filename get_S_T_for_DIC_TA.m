@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % get_S_T_for_DIC_TA.m
-% This script pulls out the final quality controlled salinity and temperature
+% This script pulls out the final QC'd AquaTroll salinity and temperature
 % values for the open water platforms at the sample times corresponding to the
 % discrete DIC and TA samples.
 %
