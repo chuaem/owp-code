@@ -1,25 +1,30 @@
-clear;close all;clcdat
+clear;close all;clc
 
 rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 
 %====Import data===========================================================
 cd([rootpath,'diel-method\pond-data'])
-% dat_in = readtable('Pondforfilter6.csv');
-pondNum = '3';
-filename = ['Pondforfilter',num2str(pondNum),'.mat'];
-dat = importdata(filename);
+pondNum = '1';
+filename = ['pond',num2str(pondNum),'_obs.csv'];
+opts = detectImportOptions(filename);
+opts = setvaropts(opts,'DateTimeStamp','DatetimeFormat','MM/dd/yy HH:mm:ss');
+dat_in = readtable(filename,opts);
 
 %====Export data in proper format to run Beck's R code=====================
+% Remove rows with any missing data
+% indNaN = find(isnan(dat_in.Tide));
+% indNaN = find(isnan(dat(:,2:end)));
+% dat(indNaN,:) = [];
+
+dat = rmmissing(dat_in);
+
 % Remove duplicate rows
 [dat2,I,J] = unique(dat(:,2:end),'rows');
 indDups = setdiff(1:size(dat,1),I);
 dat(indDups,:) = []; 
 
-indNaN = find(isnan(dat.Tide));
-dat(indNaN,:) = [];
-
 % Export .csv file to run WtRegDO in R
-writetable(dat,['pond',num2str(pondNum),'.csv'])
+% writetable(dat,['pond',num2str(pondNum),'.csv'])
 
 %% ====Run Beck's R code=====================================================
 % Go to R and run WtRegDO

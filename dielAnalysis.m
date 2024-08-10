@@ -49,18 +49,24 @@ T = wtreg_res_rt.Temp;
 % p = dat.p;
 p = wtreg_res_rt.Tide;  % Pressure in dbar and depth in meters are approx. equal
 d = wtreg_res_rt.Tide;
-H = mean(dat.depth,'omitnan') + 0.1524;   % Mean water depth [m] plus 6 inches to account for height of sonde above bottom
-
+% Mean water column depth, H = d + D [m]
+% See Collab Lab Notebook - Table 2 for manual measurements for D for each site
+switch site
+    case 'Gull'
+        H = mean(dat.depth,'omitnan') + 0.42;
+    case 'North'
+        H = mean(dat.depth,'omitnan') + 0.47;
+    case 'South'
+        H = mean(dat.depth,'omitnan') + 0.80;
+end
 % Air
-Tair = wtreg_res_rt.ATemp;
-patm = wtreg_res_rt.BP;
-u = wtreg_res_rt.WSpd;
+Tair = wtreg_res_rt.ATemp;  % [deg C]
+patm = wtreg_res_rt.BP;     % [hPa]
+u = wtreg_res_rt.WSpd;      % [m/s]
 
 % DO concentration conversions
 DO_obs = wtreg_res_rt.DO_obs*1000/32;   % Observed DO concentration [mmol m-3]
 DO_nrm = wtreg_res_rt.DO_nrm*1000/32;   % Detided DO concentration [mmol m-3]
-
-cd([rootpath,'\figures\diel-analysis\final-qc'])
 
 % Plot results of R detiding (c.f. Beck Fig. 6)
 fig1 = figure(1);clf
@@ -338,7 +344,6 @@ diel_dtd = table2timetable(diel_dtd);
 %==========================================================================
 %   Plot results from R ecometab and MATLAB diel analysis
 %==========================================================================
-cd([rootpath,'figures\diel-analysis\final-qc\',site])
 
 % Observed
 fig8 = figure(8);clf
@@ -413,19 +418,19 @@ option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');
 
 switch option
     case 'Yes'
-        cd([rootpath,'figures\diel-analysis\final-qc\',site])
+        cd([rootpath,'figures\diel-analysis\R-results\final-qc\',site])
         saveas(fig1,'detiding_results.fig')
         saveas(fig1,'detiding_results.png')
 
         % Save plots of R results
-        cd([rootpath,'figures\diel-analysis\final-qc\',site,'\R-results'])
+        cd([rootpath,'figures\diel-analysis\R-results\final-qc\',site])
         saveas(fig8,'ecometab_obs.png')
         saveas(fig8,'ecometab_obs.fig')
         saveas(fig10,'ecometab_dtd.png')
         saveas(fig10,'ecometab_dtd.fig')
 
         % Save plots of MATLAB results
-        cd([rootpath,'figures\diel-analysis\final-qc\',site,'\matlab-results\sanity-checks'])
+        cd([rootpath,'figures\diel-analysis\matlab-results\final-qc\',site,'\sanity-checks'])
         saveas(fig2,'day-night_obs.fig')
         saveas(fig2,'day-night_obs.png')
         saveas(fig3,'daylength_obs.fig')
@@ -439,7 +444,7 @@ switch option
         saveas(fig7,'mass-balance_dtd.fig')
         saveas(fig7,'mass-balance_dtd.png')
 
-        cd([rootpath,'figures\diel-analysis\final-qc\',site,'\matlab-results'])
+        cd([rootpath,'figures\diel-analysis\matlab-results\final-qc\',site])
         saveas(fig9,'dielAnalysis_obs.png')
         saveas(fig9,'dielAnalysis_obs.fig')
         saveas(fig11,'dielAnalysis_dtd.png')

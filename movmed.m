@@ -10,7 +10,7 @@
 % 
 % DATE:
 % First created: 
-% Last updated: 5/10/2024
+% Last updated: 6/26/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -49,22 +49,22 @@ switch site
         label = {'Deployment 1','Deployment 2','Deployment 5','Deployment 6',...
             'Deployment 7','Deployment 8','Deployment 9','Deployment 10',...
             'Deployment 11','Deployment 12','Deployment 13','Deployment 14',...
-            'Deployment 15','Deployment 16','Deployment 17'};
+            'Deployment 15','Deployment 16','Deployment 17','Deployment 18'};
     case 'North'
         label = {'Deployment 2','Deployment 6','Deployment 7','Deployment 8',...
             'Deployment 9','Deployment 10','Deployment 11','Deployment 12',...
-            'Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17'};
+            'Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17','Deployment 18'};
     case 'South'
         switch sonde
             case 'BC'
                 label = {'Deployment 1','Deployment 2','Deployment 4','Deployment 5',...
                     'Deployment 6','Deployment 7','Deployment 8','Deployment 9',...
                     'Deployment 10','Deployment 11','Deployment 12','Deployment 13',...
-                    'Deployment 14','Deployment 16','Deployment 17'};
+                    'Deployment 14','Deployment 16','Deployment 17','Deployment 18'};
             case 'ERDC'
                 label = {'Deployment 1','Deployment 2','Deployment 5','Deployment 7',...
                     'Deployment 8','Deployment 9','Deployment 10','Deployment 11',...
-                    'Deployment 12','Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17'};
+                    'Deployment 12','Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17','Deployment 18'};
         end
 end
 

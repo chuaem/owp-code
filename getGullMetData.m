@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % getGullMetData.m
 % This script creates an output table (.mat) of cleaned data from the Gull Met Station
-% (which measures windspeed, atmospheric pressure, and air temperature).
+% (which measures wind speed, atmospheric pressure, and air temperature).
 %
 % AUTHOR:
 % Emily Chua 

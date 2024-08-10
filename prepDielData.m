@@ -48,7 +48,17 @@ varNames = ["DateTimeStamp","Temp","Sal","DO_obs","ATemp","BP","WSpd","Tide"];
 dat_R = table(dat.datetime_utc,dat.temperature,dat.salinity,DO_mgL,dat.Tair,dat.patm,dat.wspd,dat.depth,'VariableNames',varNames);
 dat_R = rmmissing(dat_R);
 
-H = mean(dat.depth,'omitnan') + 0.1524 % Mean water depth [m] plus 6 inches to account for height of sonde above bottom
+% Mean water column depth = d + D [m]
+% See Collab Lab Notebook - Table 2 for manual measurements for D for each site
+switch site
+    case 'Gull'
+        H = mean(dat.depth,'omitnan') + 0.42;
+    case 'North'
+        H = mean(dat.depth,'omitnan') + 0.47;
+    case 'South'
+        H = mean(dat.depth,'omitnan') + 0.80;
+end
+disp(sprintf(['H = ',num2str(H),' m \n']))
 
 %====Save the synchronized data============================================
 option = questdlg('Save data?','Save File','Yes','No','Yes');

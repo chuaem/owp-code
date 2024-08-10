@@ -7,7 +7,7 @@
 %
 % DATE:
 % First created: 5/23/2024
-% Last updated:
+% Last updated: 7/11/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -160,7 +160,7 @@ switch option
         disp('Figure not saved.')
 end
 %% Tiled plots of one site -- 3x2 format
-site = 'Gull'; % Input
+site = 'North'; % Input
 cd([rootpath,'open-water-platform-data\',site,'\cleaned\final-qc'])
 load([site,'-cleaned.mat'])
 
@@ -221,7 +221,7 @@ y = dielRange_monAvg.mean_range_temperature;
 y_sd = dielRange_monStd.std_range_temperature;
 errorbar(x,y,y_sd,'.-','LineWidth',1);
 % ylim([0 12])  % For site comparison
-ylim([0 6])
+ylim([0 12])
 ylabel('Diel range (^oC)')
 box on
 
@@ -261,8 +261,6 @@ x = dielRange_monAvg.monthofyear_day_datetime_utc;
 y = dielRange_monAvg_pH;
 y_sd = dielRange_monStd.std_range_pH;
 errorbar(x,y,y_sd,'.-','LineWidth',1);
-% ylim([0 0.8]) % For site comparison
-% ylim([0 0.6])
 ylabel('Diel range (-)')
 box on
 
@@ -276,7 +274,7 @@ patch([x; flip(x)] , [yl; flip(yu)], [.6 .7 .8])
 hold on
 plot(x,y,'.-');
 % ylim([0 70]) % For site comparison
-ylim([0 45])
+ylim([0 65])
 ylabel('Chl a (RFU)')
 yyaxis right
 ax = gca;
@@ -296,8 +294,6 @@ yl = dielMin_monAvg.mean_min_DOsat;
 patch([x; flip(x)] , [yl; flip(yu)], [.6 .7 .8])
 hold on
 plot(x,y,'.-');
-% ylim([80 380])
-% ylim([40 120])
 ylim([30 130])
 ylabel('DO sat (%)')
 yyaxis right
@@ -305,7 +301,6 @@ x = dielRange_monAvg.monthofyear_day_datetime_utc;
 y = dielRange_monAvg.mean_range_DOsat;
 y_sd = dielRange_monStd.std_range_DOsat;
 errorbar(x,y,y_sd,'.-','LineWidth',1);
-% ylim([0 200])
 ylim([0 80])
 ylabel('Diel range (%)')
 box on
@@ -369,6 +364,12 @@ for i = 1:length(site)
     dielRange.day_datetime_utc = datetime(dielRange.day_datetime_utc);
     dielRange_monAvg = groupsummary(dielRange,'day_datetime_utc','monthofyear','mean');
     dielRange_monStd = groupsummary(dielRange,'day_datetime_utc','monthofyear','std');
+    
+    [ind val] = min(monAvg(:,5:end),[],1)
+    [ind val] = max(monAvg(:,5:end),[],1)
+
+    [ind val] = min(dielRange_monAvg(:,[7 9 10]),[],1)
+    [ind val] = max(dielRange_monAvg(:,[7 9 10]),[],1)
 
     ax1 = nexttile;
     yyaxis left
@@ -504,8 +505,8 @@ option = questdlg('Save figure?','Save Figure','Yes','No','Yes');
 switch option
     case 'Yes'
         cd([rootpath,'figures\open-water-platform\site-comparisons'])
-        exportgraphics(t2,[site,'AllSites_AllParams.png'])
-        saveas(t2,[site,'AllSites_AllParams.fig'])
+        saveas(fig2,'AllSites_AllParams.png')
+        saveas(fig2,'AllSites_AllParams.fig')
         disp('Figure saved!')
     case 'No'
         disp('Figure not saved.')

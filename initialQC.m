@@ -10,7 +10,7 @@
 % 
 % DATE:
 % First created: 11/9/2023
-% Last updated: 5/9/2024
+% Last updated: 7/10/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -51,22 +51,22 @@ switch site
         label = {'Deployment 1','Deployment 2','Deployment 5','Deployment 6',...
             'Deployment 7','Deployment 8','Deployment 9','Deployment 10',...
             'Deployment 11','Deployment 12','Deployment 13','Deployment 14',...
-            'Deployment 15','Deployment 16','Deployment 17'};
+            'Deployment 15','Deployment 16','Deployment 17','Deployment 18'};
     case 'North'
         label = {'Deployment 2','Deployment 6','Deployment 7','Deployment 8',...
             'Deployment 9','Deployment 10','Deployment 11','Deployment 12',...
-            'Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17'};
+            'Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17','Deployment 18'};
     case 'South'
         switch sonde
             case 'BC'
                 label = {'Deployment 1','Deployment 2','Deployment 4','Deployment 5',...
                     'Deployment 6','Deployment 7','Deployment 8','Deployment 9',...
                     'Deployment 10','Deployment 11','Deployment 12','Deployment 13',...
-                    'Deployment 14','Deployment 16','Deployment 17'};
+                    'Deployment 14','Deployment 16','Deployment 17','Deployment 18'};
             case 'ERDC'
                 label = {'Deployment 1','Deployment 2','Deployment 5','Deployment 7',...
                     'Deployment 8','Deployment 9','Deployment 10','Deployment 11',...
-                    'Deployment 12','Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17'};
+                    'Deployment 12','Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17','Deployment 18'};
         end
 end
 
@@ -120,7 +120,9 @@ switch site
                 oow10 = (122403:122405)';   % Dep 14 --> 15
                 oow11 = (130652:130661)';   % Dep 15 --> 16
                 oow12 = (143717:143719)';   % Dep 16 --> 17
-                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12];
+                oow13 = (150787:150799)';   % Dep 17 --> 18
+                oow14 = (163889:163911)';   % Dep 18 --> end
+                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12;oow13;oow14];
 
                 % Isolated points during large gap from 7/30/21 (during Dep 1) to start of Dep 2
                 ind_dropout1 = (7420:12590)';
@@ -141,7 +143,9 @@ switch site
                 oow10 = (121978:121982)'; % Dep 14 --> 15
                 oow11 = (130230:130231)'; % Dep 15 --> 16
                 oow12 = 143288;         % Dep 16 --> 17
-                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12];
+                oow13 = (150357:150360)';   % Dep 17 --> 18
+                oow14 = (163450:163470)';   % Dep 18 --> end
+                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12;oow13;oow14];
 
                 % Isolated points during large gap from 7/30/21 (during Dep 1) to start of Dep 2
                 ind_dropout1 = (7420:12589)';
@@ -165,7 +169,9 @@ switch site
                 oow10 = (96663:96669)';     % Dep 14 --> 15
                 oow11 = (104890:104899)';   % Dep 15 --> 16
                 oow12 = (117837:117842)';   % Dep 16 --> 17
-                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12];
+                oow13 = (125024:125025)';   % Dep 17 --> 18
+                oow14 = (137984:138002)';   % Dep 18 --> end
+                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12;oow13;oow14];
 
                 % Isolated points during Deployment 2
                 ind_dropout1 = (7250:7280)';
@@ -185,7 +191,9 @@ switch site
                 oow9 = (80118:80124)'; % Dep 14 --> 15
                 oow10 = (88346:88355)'; % Dep 15 --> 16
                 oow11 = (101293:101296)'; % Dep 16 --> 17
-                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11];
+                oow12 = (108478:108480)'; % Dep 17 --> 18
+                oow13 = (121439:121462)';   % Dep 18 --> end
+                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12;oow13];
 
                 % Isolated points during Deployment 2
                 ind_dropout1 = (7250:7280)';
@@ -209,12 +217,12 @@ switch site
                 oow10 = (105582:105590)'; % Dep 13 --> 14
                 oow11 = (114699:114713)'; % Dep 14 --> 16
                 oow12 = (127949:127969)'; % Dep 16 --> 17
-                oow13 = (134757:134758)'; % Dep 17 --> 18
-                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12;oow13];
+                oow13 = (134757:134758)'; % Dep 17 --> 18 
+                oow14 = (147838:147850)';   % Dep 18 --> end
+                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12;oow13;oow14];
+
 
                 % Isolated points during large gap from 7/30/21 (during Dep 1) to start of Dep 2
-                % DEP 14 LOOKS FUNKY - TIDAL AMPLITDUE MUCH SMALLER??
-
                 ind_dropout1 = (18395:18419)';
                 ind_dropout2 = find(dat.depth(1:ind_dep(2)) < 0);
                 ind_dropout = unique([ind_dropout1;ind_dropout2]);
@@ -234,7 +242,8 @@ switch site
                 oow11 = (105534:105537)'; % Dep 15 --> 16
                 oow12 = (118263:118268)'; % Dep 16 --> 17
                 oow13 = (125056:125058)'; % Dep 17 --> 18
-                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12;oow13];
+                oow14 = (138138:138149)';   % Dep 18 --> end
+                ind_oow = [oow1;oow2;oow3;oow4;oow5;oow6;oow7;oow8;oow9;oow10;oow11;oow12;oow13;oow14];
 
                 % Isolated points during Deployment 2
                 ind_dropout1 = (18395:18419)';
@@ -243,7 +252,7 @@ switch site
         end
 end
         
-clearvars oow1 oow2 oow3 oow4 oow5 oow6 oow7 oow8 oow9 oow10 oow11 oow12 oow13
+clearvars oow1 oow2 oow3 oow4 oow5 oow6 oow7 oow8 oow9 oow10 oow11 oow12 oow13 oow14
 
 ind_manual = [ind_dropout;ind_oow];
 

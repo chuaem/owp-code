@@ -48,7 +48,7 @@ for i = 1:length(timeData3)
     v10_3(i,1) = v10(1,1,i);
 end
 
-fileName = '1-2_2024.nc';
+fileName = '1-3_2024.nc';
 timeData4 = ncread(fileName,'time');
 timeData4 = double(timeData4);
 u10 = ncread(fileName,'u10');
@@ -58,7 +58,7 @@ for i = 1:length(timeData4)
     v10_4(i,1) = v10(1,1,i);
 end
 
-fileName = '3-5_2024.nc';
+fileName = '4-6_2024.nc';
 timeData5 = ncread(fileName,'time');
 timeData5 = double(timeData5);
 u10 = ncread(fileName,'u10');

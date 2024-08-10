@@ -8,7 +8,7 @@
 % 
 % DATE:
 % First created: 5/3/2024
-% Last updated: 
+% Last updated: 6/26/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -52,10 +52,10 @@ wink = table2timetable(wink);
 ind_wink = find(ismember(wink.platform,site));
 
 %====Import windspeed data==============================================
-cd([rootpath,'physical-data\wind-speed'])
-load('windSpeed.mat')
+cd([rootpath,'physical-data\final-dataset'])
+load('windspeed.mat')
 
-cd([rootpath,'physical-data\PAR'])
+cd([rootpath,'physical-data\final-dataset'])
 load('par.mat')
 
 %====Create final QC data table============================================
@@ -70,7 +70,7 @@ var8 = timetable(dat_syn.datetime_utc,dat_syn.turbidity,'VariableNames',{'turbid
 
 finalQC = synchronize(var1,var2,var3,var4,var5,var6,var7,var8);
 
-%====Calculate DO %sat and add to final QC tabl============================
+%====Calculate DO %sat and add to final QC table===========================
 DOeqbm = O2sol(finalQC.salinity,finalQC.temperature);    % [umol/kg]
 % Convert units - density function from https://www.mbari.org/technology/matlab-scripts/oceanographic-calculations/
 rho = density(finalQC.salinity,finalQC.temperature);    % [g/mL]
@@ -78,40 +78,10 @@ DOeqbm = DOeqbm.*rho;    % [umol/L]
 
 DOsat = finalQC.DOconc./DOeqbm * 100;  % [%]
 
-figure,clf
-yyaxis left; plot(finalQC.datetime_utc,finalQC.DOconc)
-hold on
-yyaxis right; plot(finalQC.datetime_utc,DOsat)
-
 finalQC = addvars(finalQC,DOsat,'After','DOconc');
 finalQC.Properties.VariableUnits = {'','m','psu','degC','umol/L','%sat','','RFU','NTU'};
 
-%====Global plotting settings===========================================
-red = [0.8500 0.3250 0.0980];   % BC sonde
-blue = [0 0.4470 0.7410];       % ERDC sonde
-fontsize = 14;
-linewidth = 1;
-dotsize = 6;
-circlesize = 6;
-
-switch site
-    case 'Gull'
-        label = {'Deployment 1','Deployment 2','Deployment 5','Deployment 6',...
-            'Deployment 7','Deployment 8','Deployment 9','Deployment 10',...
-            'Deployment 11','Deployment 12','Deployment 13','Deployment 14',...
-            'Deployment 15','Deployment 16','Deployment 17'};
-    case 'North'
-        label = {'Deployment 2','Deployment 6','Deployment 7','Deployment 8',...
-            'Deployment 9','Deployment 10','Deployment 11','Deployment 12',...
-            'Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17'};
-    case 'South'
-        label = {'Deployment 1','Deployment 2','Deployment 4','Deployment 5',...
-            'Deployment 6','Deployment 7','Deployment 8','Deployment 9',...
-            'Deployment 10','Deployment 11','Deployment 12','Deployment 13',...
-            'Deployment 14','Deployment 15','Deployment 16','Deployment 17'};
-end
-
-% Find indices of deployment changes
+%====Find the indices of deployment changes================================
 ind_dep = find(diff(finalQC.deployment) > 0);
 switch site
     case 'Gull'
@@ -123,8 +93,33 @@ switch site
 end
 dep.Properties.VariableNames = {'depNum','ind'};
 
+switch site
+    case 'Gull'
+        label = {'Deployment 1','Deployment 2','Deployment 5','Deployment 6',...
+            'Deployment 7','Deployment 8','Deployment 9','Deployment 10',...
+            'Deployment 11','Deployment 12','Deployment 13','Deployment 14',...
+            'Deployment 15','Deployment 16','Deployment 17','Deployment 18'};
+    case 'North'
+        label = {'Deployment 2','Deployment 6','Deployment 7','Deployment 8',...
+            'Deployment 9','Deployment 10','Deployment 11','Deployment 12',...
+            'Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17','Deployment 18'};
+    case 'South'
+        label = {'Deployment 1','Deployment 2','Deployment 4','Deployment 5',...
+            'Deployment 6','Deployment 7','Deployment 8','Deployment 9',...
+            'Deployment 10','Deployment 11','Deployment 12','Deployment 13',...
+            'Deployment 14','Deployment 15','Deployment 16','Deployment 17','Deployment 18'};
+end
+
+%====Global plotting settings===========================================
+red = [0.8500 0.3250 0.0980];   % BC sonde
+blue = [0 0.4470 0.7410];       % ERDC sonde
+fontsize = 14;
+linewidth = 1;
+dotsize = 6;
+circlesize = 6;
+
 %====Plot all parameters in linked figure==================================
-figure('units','inches','position',[5 9 14 10])
+fig1 = figure('units','inches','position',[5 9 14 10]);
 
 t = tiledlayout(4,2,'TileSpacing','compact');
 
@@ -187,4 +182,17 @@ switch option
         disp('File not saved.')
 end
 
-cd([rootpath,'figures\open-water-platform\',site,'\data-qc\synchronized\all'])
+%====Save the plot=========================================================
+option = questdlg('Save plot as .png and .fig?','Save plot','Yes','No','Yes');
+
+switch option
+    case 'Yes'
+        cd([rootpath,'figures\open-water-platform\final-qc'])
+        saveas(fig1,[site,'-finalQC.png'])
+        saveas(fig1,[site,'-finalQC.fig'])
+        
+        disp('Plots saved!')
+    
+    case 'No'
+        disp('Plots not saved.')
+end

@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% getBPandAT.m
+% getBP_AT.m
 % This script combines BP (barometric pressure) and AT (air temperature) data from 
 % the Gull met station and the HOBO water-level logger at TWI to produce data (.mat)
 % that span the sonde measurement record.

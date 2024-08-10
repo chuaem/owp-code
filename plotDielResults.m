@@ -7,7 +7,7 @@
 % 
 % DATE:
 % First created: 2/9/2024
-% Last updated: 5/31/2024
+% Last updated: 7/11/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -20,21 +20,21 @@ rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 % Load the MATLAB detided diel analysis results for all sites
 % Gull
 site = 'Gull';
-cd([rootpath,'\diel-method\matlab-results\final-qc\',site])
+cd([rootpath,'diel-method\matlab-results\final-qc\',site])
 load('diel_res.mat')
 diel_dtd.dayend_dt = [];
 daily.gull = diel_dtd;
 
 % North
 site = 'North';
-cd([rootpath,'\diel-method\matlab-results\final-qc\',site])
+cd([rootpath,'diel-method\matlab-results\final-qc\',site])
 load('diel_res.mat')
 diel_dtd.dayend_dt = [];
 daily.north = diel_dtd;
 
 % South
 site = 'South';
-cd([rootpath,'\diel-method\matlab-results\final-qc\',site])
+cd([rootpath,'diel-method\matlab-results\final-qc\',site])
 load('diel_res.mat')
 diel_dtd.dayend_dt = [];
 daily.south = diel_dtd;
@@ -51,8 +51,7 @@ mauve = '#756bb1';
 
 % Define dates for plots
 start_date = datetime(2021,08,01,'TimeZone','UTC');
-% end_date = datetime(2024,02,01,'TimeZone','UTC');
-end_date = datetime(2024,03,05,'TimeZone','UTC');
+end_date = datetime(2024,06,04,'TimeZone','UTC');
 
 clearvars diel_dtd diel_obs
 
@@ -63,37 +62,16 @@ clearvars diel_dtd diel_obs
 anomER = find(daily.gull.ER > 0);
 anomGPP = find(daily.gull.GPP < 0);
 daily.gull{[anomER;anomGPP],:} = NaN;
-% ind1 = 447;
-% ind_manual = ind1;
-% ind_rm = [anomER; anomGPP; ind_manual];
-% daily.gull{ind_rm,:} = NaN;
 
 % North
 anomER = find(daily.north.ER > 0);
 anomGPP = find(daily.north.GPP < 0);
 daily.north{[anomER;anomGPP],:} = NaN;
-% ind1 = 248;
-% ind2 = 257;
-% ind_manual = [ind1;ind2];
-% ind_rm = [anomER; anomGPP; ind_manual];
-% daily.north{ind_rm,:} = NaN;
 
-% South (DO data really funky for this sonde, hence all the manual removals -- see day-night_obs.fig)
+% South
 anomER = find(daily.south.ER > 0);
 anomGPP = find(daily.south.GPP < 0);
 daily.south{[anomER;anomGPP],:} = NaN;
-% ind1 = (109:111)';
-% ind2 = 261;
-% ind3 = 274;
-% ind4 = (309:319)';
-% ind5 = 362;
-% ind6 = (452:454)';
-% ind7 = (598:657)';
-% ind8 = (682:720)';
-% ind9 = 782;
-% ind_manual = [ind1;ind2;ind3;ind4;ind5;ind6;ind7;ind8;ind9];
-% ind_rm = [anomER; anomGPP; ind_manual];
-% daily.south{ind_rm,:} = NaN;
 
 %==========================================================================
 %   Do calculations
@@ -124,19 +102,48 @@ monthlystd.south.Properties.VariableNames(1) = {'month'};
 %  Calculate overall rates (average of all values for each site)
 %==========================================================================
 % Units: [mmol O2 m-2 d-1]
+overallGPP_gull = mean(daily.gull.GPP,'omitmissing');
+overallGPP_north = mean(daily.north.GPP,'omitmissing');
+overallGPP_south = mean(daily.south.GPP,'omitmissing');
+
+overallER_gull = mean(daily.gull.ER,'omitmissing');
+overallER_north = mean(daily.north.ER,'omitmissing');
+overallER_south = mean(daily.south.ER,'omitmissing');
+
 overallNEM_gull = mean(daily.gull.NEM,'omitmissing');
 overallNEM_north = mean(daily.north.NEM,'omitmissing');
 overallNEM_south = mean(daily.south.NEM,'omitmissing');
 
 % Convert to [mol O2 m-2 y-1]
-overallNEM_gull = overallNEM_gull*365/1000;
-overallNEM_north = overallNEM_north*365/1000;
-overallNEM_south  = overallNEM_south*365/1000;
+% overallNEM_gull = overallNEM_gull*365/1000;
+% overallNEM_north = overallNEM_north*365/1000;
+% overallNEM_south  = overallNEM_south*365/1000;
 
+% Find minimum absolute rates and corresponding months
+min_rates.GPP = table(NaN(2,1),NaN(2,1),NaN(2,1),'VariableNames',{'North','Gull','South'});
+[min_rates.GPP.North(1),min_rates.GPP.North(2)] = min(monthlyavg.north.mean_GPP);
+[min_rates.GPP.Gull(1),min_rates.GPP.Gull(2)] = min(monthlyavg.gull.mean_GPP);
+[min_rates.GPP.South(1),min_rates.GPP.South(2)] = min(monthlyavg.south.mean_GPP);
+
+min_rates.ER = table(NaN(2,1),NaN(2,1),NaN(2,1),'VariableNames',{'North','Gull','South'});
+[~,min_rates.ER.North(2)] = min(abs(monthlyavg.north.mean_ER));
+[~,min_rates.ER.Gull(2)] = min(abs(monthlyavg.gull.mean_ER));
+[~,min_rates.ER.South(2)] = min(abs(monthlyavg.south.mean_ER));
+min_rates.ER.North(1) = monthlyavg.north.mean_ER(min_rates.ER.North(2));
+min_rates.ER.Gull(1) = monthlyavg.north.mean_ER(min_rates.ER.Gull(2));
+min_rates.ER.South(1) = monthlyavg.north.mean_ER(min_rates.ER.South(2));
+
+min_rates.NEM = table(NaN(2,1),NaN(2,1),NaN(2,1),'VariableNames',{'North','Gull','South'});
+[~,min_rates.NEM.North(2)] = min(abs(monthlyavg.north.mean_NEM));
+[~,min_rates.NEM.Gull(2)] = min(abs(monthlyavg.gull.mean_NEM));
+[~,min_rates.NEM.South(2)] = min(abs(monthlyavg.south.mean_NEM));
+min_rates.NEM.North(1) = monthlyavg.north.mean_NEM(min_rates.NEM.North(2));
+min_rates.NEM.Gull(1) = monthlyavg.north.mean_NEM(min_rates.NEM.Gull(2));
+min_rates.NEM.South(1) = monthlyavg.north.mean_NEM(min_rates.NEM.South(2));
+%%
 %==========================================================================
 %   Daily and monthly bar plots of detided data
 %==========================================================================
-cd('G:\My Drive\Postdoc\Work\SMIIL\figures\diel-analysis\final-qc')
 
 %====Gull==================================================================
 site = 'Gull';
@@ -158,11 +165,11 @@ yyaxis right
     ylim([-100 100])
 % Customize the x-axis format
 xlim([start_date end_date])
-xticks = get(ax1,'XTick');
-xticksMid = mean([xticks(1:end-1); xticks(2:end)],1);
-dt1 = datetime(2021,10,01,'TimeZone','UTC');
-xticksNew = sort([dt1 xticks xticksMid]);
-set(ax1,'XTick',xticksNew,'FontSize',15)
+% xticks = get(ax1,'XTick');
+% xticksMid = mean([xticks(1:end-1); xticks(2:end)],1);
+% dt1 = datetime(2021,10,01,'TimeZone','UTC');
+% xticksNew = sort([dt1 xticks xticksMid]);
+% set(ax1,'XTick',xticksNew,'FontSize',15)
 xtickformat('MMM yyyy')
 % Make the y-axes black
 ax = gca;
@@ -170,7 +177,7 @@ ax.YAxis(1).Color = 'k';
 ax.YAxis(2).Color = 'k';
 set(gca,'FontSize',15)
 % Add legend
-legend({'GPP','ER','NEM'},'FontSize',15,'Location',[0.8527,0.7806,0.06028,0.1028])
+legend({'GPP','ER','NEM'},'FontSize',15,'Location',[0.0870,0.7795,0.0602,0.1028])
 
 % Monthly plot
 ax2 = nexttile;
@@ -186,7 +193,7 @@ yyaxis right
     ylim([-100 100])
 % Customize the x-axis format
 xlim([start_date end_date])
-set(ax2,'XTick',xticksNew)
+% set(ax2,'XTick',xticksNew)
 xtickformat('MMM yyyy')
 % Make the y-axes black
 ax = gca;
@@ -243,18 +250,18 @@ yyaxis right
     ylim([-100 100])
 % Customize the x-axis format
 xlim([start_date end_date])
-xticks = get(ax1,'XTick');
-xticksMid = mean([xticks(1:end-1); xticks(2:end)],1);
-dt1 = datetime(2021,10,01,'TimeZone','UTC');
-xticksNew = sort([dt1 xticks xticksMid]);
-set(ax1,'XTick',xticksNew,'FontSize',15)
-xtickformat('MMM yyyy')
+% xticks = get(ax1,'XTick');
+% xticksMid = mean([xticks(1:end-1); xticks(2:end)],1);
+% dt1 = datetime(2021,10,01,'TimeZone','UTC');
+% xticksNew = sort([dt1 xticks xticksMid]);
+% set(ax1,'XTick',xticksNew,'FontSize',15)
+% xtickformat('MMM yyyy')
 % Make the y-axes black
 ax = gca;
 ax.YAxis(1).Color = 'k';
 ax.YAxis(2).Color = 'k';
 % Add legend
-legend({'GPP','ER','NEM'},'FontSize',14,'Location',[0.8527,0.7806,0.06028,0.1028])
+legend({'GPP','ER','NEM'},'FontSize',14,'Location',[0.0870,0.7795,0.0602,0.1028])
 
 % Monthly plot
 ax2 = nexttile;
@@ -270,7 +277,7 @@ yyaxis right
     ylim([-100 100])
 % Customize the x-axis format
 xlim([start_date end_date])
-set(ax2,'XTick',xticksNew)
+% set(ax2,'XTick',xticksNew)
 xtickformat('MMM yyyy')
 % Make the y-axes black
 ax = gca;
@@ -327,18 +334,18 @@ yyaxis right
     ylim([-100 100])
 % Customize the x-axis format
 xlim([start_date end_date])
-xticks = get(ax1,'XTick');
-xticksMid = mean([xticks(1:end-1); xticks(2:end)],1);
-dt1 = datetime(2021,10,01,'TimeZone','UTC');
-xticksNew = sort([dt1 xticks xticksMid]);
-set(ax1,'XTick',xticksNew,'FontSize',15)
+% xticks = get(ax1,'XTick');
+% xticksMid = mean([xticks(1:end-1); xticks(2:end)],1);
+% dt1 = datetime(2021,10,01,'TimeZone','UTC');
+% xticksNew = sort([dt1 xticks xticksMid]);
+% set(ax1,'XTick',xticksNew,'FontSize',15)
 xtickformat('MMM yyyy')
 % Make the y-axes black
 ax = gca;
 ax.YAxis(1).Color = 'k';
 ax.YAxis(2).Color = 'k';
 % Add legend
-legend({'GPP','ER','NEM'},'FontSize',14,'Location',[0.8527,0.7806,0.06028,0.1028])
+legend({'GPP','ER','NEM'},'FontSize',14,'Location',[0.0870,0.7795,0.0602,0.1028])
 
 % Monthly plot
 ax2 = nexttile;
@@ -354,7 +361,7 @@ yyaxis right
     ylim([-100 100])
 % Customize the x-axis format
 xlim([start_date end_date])
-set(ax2,'XTick',xticksNew)
+% set(ax2,'XTick',xticksNew)
 xtickformat('MMM yyyy')
 % Make the y-axes black
 ax = gca;
@@ -409,7 +416,44 @@ ylabel('NEM (mmol O_2 m^{-2} d^{-1})','FontSize',20,'Color','k')
 xlabel('Month','Fontsize',20)
 title('All Sites','FontSize',36,'FontName','Helvetica','FontWeight','bold')
 
+%==========================================================================
+%   Compare seasonality in GPP, ER, and NEM across sites -- without errorbars
+%==========================================================================
+NEMavg = [monthlyavg.north.mean_NEM'; monthlyavg.gull.mean_NEM'; monthlyavg.south.mean_NEM']';
+GPPavg = [monthlyavg.north.mean_GPP'; monthlyavg.gull.mean_GPP'; monthlyavg.south.mean_GPP']';
+ERavg = [monthlyavg.north.mean_ER'; monthlyavg.gull.mean_ER'; monthlyavg.south.mean_ER']';
+month = monthlyavg.gull.month;
 
+fig5 = figure(5);clf
+t1 = tiledlayout(2,1,'TileSpacing','tight');
+fig5.WindowState = 'maximized';
+ax1 = nexttile;
+b = bar(month,GPPavg,1);
+b(1).FaceColor = teal;
+b(2).FaceColor = brown;
+b(3).FaceColor = mauve;
+set(gca,'FontSize',18)
+title('All Sites','FontSize',32,'FontName','Helvetica','FontWeight','bold')
+
+hold on
+
+b = bar(month,ERavg,1);
+b(1).FaceColor = teal;
+b(2).FaceColor = brown;
+b(3).FaceColor = mauve;
+ylabel('GPP, ER (mmol O_2 m^{-2} d^{-1})')
+
+ax3 = nexttile;
+b = bar(month,NEMavg,1);
+b(1).FaceColor = teal;
+b(2).FaceColor = brown;
+b(3).FaceColor = mauve;
+set(gca,'FontSize',18)
+legend('North','Gull','South','location','southeast','Location',[0.8415,0.8062,0.0639,0.0964])
+ylabel('NEM (mmol O_2 m^{-2} d^{-1})')
+xlabel('Month')
+
+%%
 % % Compare seasonality in NEM across sites -- with errorbars
 % % Errorbars -- % https://www.mathworks.com/matlabcentral/answers/1582304-putting-error-bars-on-bar-plot?s_tid=srchtitle
 % NEMavg = [monthlyavg.north.mean_NEM'; monthlyavg.gull.mean_NEM'; monthlyavg.south.mean_NEM']';
@@ -446,22 +490,22 @@ title('All Sites','FontSize',36,'FontName','Helvetica','FontWeight','bold')
 %==========================================================================
 option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');
 
-cd([rootpath,'figures\diel-analysis\final-qc\'])
+% cd([rootpath,'figures\diel-analysis\matlab-results\final-qc\'])
 switch option
     case 'Yes'
-        cd([rootpath,'figures\diel-analysis\final-qc\gull\matlab-results'])
+        cd([rootpath,'figures\diel-analysis\matlab-results\final-qc\gull'])
         saveas(fig1,'daily_monthly_dtd.fig')
         saveas(fig1,'daily_monthly_dtd.png')
         
-        cd([rootpath,'figures\diel-analysis\final-qc\north\matlab-results'])
+        cd([rootpath,'figures\diel-analysis\matlab-results\final-qc\north'])
         saveas(fig2,'daily_monthly_dtd.fig')
         saveas(fig2,'daily_monthly_dtd.png')
         
-        cd([rootpath,'figures\diel-analysis\final-qc\south\matlab-results'])
+        cd([rootpath,'figures\diel-analysis\matlab-results\final-qc\south'])
         saveas(fig3,'daily_monthly_dtd.fig')
         saveas(fig3,'daily_monthly_dtd.png')
 
-        cd([rootpath,'figures\diel-analysis\final-qc\site-comparison'])
+        cd([rootpath,'figures\diel-analysis\matlab-results\final-qc\all-sites'])
         saveas(fig4,'monthlyavg_allsites.fig')
         saveas(fig4,'monthlyavg_allsites.png')
         

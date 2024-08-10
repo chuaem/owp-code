@@ -8,7 +8,7 @@
 %
 % DATE:
 % First created: 10/12/2023
-% Last amended: 4/11/2024
+% Last amended: 6/26/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -30,7 +30,7 @@ depNum = sonde1.deployment(1);
 
 %===Read in USGS data======================================================
 paramNames = ["agency","site_no","datetime_local","timezone","tidal_elev","qual-code"];
-usgs = readtable([rootpath,'usgs-data\tidal-elev.txt'],'TextType','string');
+usgs = readtable([rootpath,'physical-data\usgs\tidal-elev.txt'],'TextType','string');
 usgs.Properties.VariableNames = paramNames;
 
 usgs.datetime_local.TimeZone = 'America/New_York';

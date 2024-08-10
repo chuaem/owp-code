@@ -11,7 +11,7 @@
 % 
 % DATE:
 % First created: 4/10/2024
-% Last updated: 5/15/2024
+% Last updated: 6/26/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -21,52 +21,21 @@ site = questdlg(prompt,'Platform Selection','Gull','North','South','Gull');
 
 rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 
+%====Import cleaned BC and ERDC data=======================================
 cd([rootpath,'open-water-platform-data\',site,'\cleaned\movmed'])
 load([site,'-bc-cleaned.mat']);
 load([site,'-erdc-cleaned.mat'])
 dat1 = sonde1_cleaned;
 dat2 = sonde2_cleaned;
-
-% Find indices of deployment changes
-ind_dep1 = find(diff(dat1.deployment) > 0);
-ind_dep2 = find(diff(dat2.deployment) > 0);
-
-%====Global plotting settings==============================================
-dt1 = datetime('29-Jun-2021','TimeZone','UTC');     % Make all plots have same start date
-dt2 = dat1.datetime_utc(end);
-red = [0.8500 0.3250 0.0980];   % BC sonde
-blue = [0 0.4470 0.7410];       % ERDC sonde
-fontsize = 14;
-linewidth = 1;
-dotsize = 6;
-circlesize = 4;
-
-switch site
-    case 'Gull'
-        label = {'Deployment 1','Deployment 2','Deployment 5','Deployment 6',...
-            'Deployment 7','Deployment 8','Deployment 9','Deployment 10',...
-            'Deployment 11','Deployment 12','Deployment 13','Deployment 14',...
-            'Deployment 15','Deployment 16','Deployment 17'};
-    case 'North'
-        label = {'Deployment 2','Deployment 6','Deployment 7','Deployment 8',...
-            'Deployment 9','Deployment 10','Deployment 11','Deployment 12',...
-            'Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17'};
-    case 'South'
-        label = {'Deployment 1','Deployment 2','Deployment 4','Deployment 5',...
-            'Deployment 6','Deployment 7','Deployment 8','Deployment 9',...
-            'Deployment 10','Deployment 11','Deployment 12','Deployment 13',...
-            'Deployment 14','Deployment 15','Deployment 16','Deployment 17'};
-end
-
 % Synchronize the BC and ERDC data to a common datetime vector
 dat_syn = synchronize(dat1,dat2);
 dt_utc = dat_syn.datetime_utc;
 
 clearvars dat1 dat2 sonde1_cleaned sonde2_cleaned
 
-% Find the indices of deployment changes
+%====Find the indices of deployment changes================================
 switch site
-    case 'South'
+    case 'South'    % South BC Dep. 15 is missing, so need to manually add in dep number
         ind_d15 = find(dat_syn.deployment_dat2 == 15,1);
         ind_d16 = find(dat_syn.deployment_dat1 == 16,1);
         dat_syn.deployment_dat1(ind_d15:ind_d16) = 15;
@@ -86,6 +55,33 @@ switch site
 end
 dep.Properties.VariableNames = {'depNum','ind'};
 
+switch site
+    case 'Gull'
+        label = {'Deployment 1','Deployment 2','Deployment 5','Deployment 6',...
+            'Deployment 7','Deployment 8','Deployment 9','Deployment 10',...
+            'Deployment 11','Deployment 12','Deployment 13','Deployment 14',...
+            'Deployment 15','Deployment 16','Deployment 17','Deployment 18'};
+    case 'North'
+        label = {'Deployment 2','Deployment 6','Deployment 7','Deployment 8',...
+            'Deployment 9','Deployment 10','Deployment 11','Deployment 12',...
+            'Deployment 13','Deployment 14','Deployment 15','Deployment 16','Deployment 17','Deployment 18'};
+    case 'South'
+        label = {'Deployment 1','Deployment 2','Deployment 4','Deployment 5',...
+            'Deployment 6','Deployment 7','Deployment 8','Deployment 9',...
+            'Deployment 10','Deployment 11','Deployment 12','Deployment 13',...
+            'Deployment 14','Deployment 15','Deployment 16','Deployment 17','Deployment 18'};
+end
+
+%====Global plotting settings==============================================
+dt1 = datetime('29-Jun-2021','TimeZone','UTC');     % Make all plots have same start date
+dt2 = dat_syn.datetime_utc(end);
+red = [0.8500 0.3250 0.0980];   % BC sonde
+blue = [0 0.4470 0.7410];       % ERDC sonde
+fontsize = 14;
+linewidth = 1;
+dotsize = 6;
+circlesize = 4;
+
 %====SALINITY==============================================================
 cd([rootpath,'figures\open-water-platform\',site,'\data-qc\synchronized\salinity'])
 % Check agreement between BC and ERDC sondes
@@ -104,8 +100,8 @@ mmed_erdc = movmedian(S_erdc,window,'omitmissing');
 mmed_all = [mmed_bc,mmed_erdc];
 mmed_mean = mean(mmed_all,2);
 
-fig = figure(1);clf
-fig.WindowState = 'maximized';
+fig1 = figure(1);clf
+fig1.WindowState = 'maximized';
 plot(dt_utc,S_bc,'.','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
 hold on
 plot(dt_utc,S_erdc,'.','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
@@ -128,7 +124,7 @@ switch site
         ind_d6 = ind_diverge(kk);
 
         % Choose "better" deployment
-        d1 = mmed_erdc(dep.ind(1):dep.ind(2));               % Dep 1
+        d1 = mmed_erdc(dep.ind(1):dep.ind(2));        % Dep 1
         d2 = mmed_mean(dep.ind(2)+1:dep.ind(3));      % Dep 2
         d5 = mmed_mean(dep.ind(3)+1:dep.ind(4));      % Dep 5
         d6 = [mmed_mean(dep.ind(4)+1:ind_d6(1)); mmed_erdc(ind_d6(1)+1:dep.ind(5))];  % Dep 6
@@ -136,15 +132,16 @@ switch site
         d8 = [mmed_mean(dep.ind(6)+1:41331); mmed_erdc(41332:dep.ind(7))];        % Dep 8
         d9 = mmed_erdc(dep.ind(7)+1:dep.ind(8));      % Dep 9
         d10 = mmed_bc(dep.ind(8)+1:dep.ind(9));       % Dep 10
-        d11 = mmed_mean(dep.ind(9)+1:dep.ind(10));     % Dep 11
-        d12 = mmed_mean(dep.ind(10)+1:dep.ind(11));    % Dep 12
+        d11 = mmed_mean(dep.ind(9)+1:dep.ind(10));    % Dep 11
+        d12 = mmed_mean(dep.ind(10)+1:dep.ind(11));   % Dep 12
         d13 = mmed_mean(dep.ind(11)+1:dep.ind(12));   % Dep 13
         d14 = mmed_bc(dep.ind(12)+1:dep.ind(13));     % Dep 14
         d15 = mmed_bc(dep.ind(13)+1:dep.ind(14));     % Dep 15
         d16 = mmed_bc(dep.ind(14)+1:dep.ind(15));     % Dep 16
-        d17 = mmed_mean(dep.ind(15)+1:end);             % Dep 17
+        d17 = mmed_mean(dep.ind(15)+1:dep.ind(16));   % Dep 17
+        d18 = mmed_mean(dep.ind(16)+1:end);           % Dep 18
 
-        S_bestguess = [d1;d2;d5;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17];
+        S_bestguess = [d1;d2;d5;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
 
         % Calculate standard deviation for Deployments 11 & 12
         stdev_S  = std(mmed_all(dep.ind(9):dep.ind(11),:),0,2,'omitmissing');
@@ -171,9 +168,10 @@ switch site
         d14 = mmed_erdc(dep.ind(10)+1:dep.ind(11));     % Dep 14
         d15 = [mmed_erdc(dep.ind(11)+1:80182); NaN(dep.ind(12)-80182,1)]; % Dep 15
         d16 = mmed_mean(dep.ind(12)+1:dep.ind(13));     % Dep 16
-        d17 = mmed_mean(dep.ind(13)+1:end);             % Dep 17
+        d17 = mmed_mean(dep.ind(13)+1:dep.ind(14));     % Dep 17
+        d18 = mmed_mean(dep.ind(14)+1:end);             % Dep 18
 
-        S_bestguess = [d2;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17];
+        S_bestguess = [d2;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
 
         % Remove "obvious" outliers
         S_bestguess(11090:15492) = NaN;
@@ -210,9 +208,10 @@ switch site
         d14 = mmed_erdc(dep.ind(13)+1:dep.ind(14));   % Dep 14
         d15 = mmed_erdc(dep.ind(14)+1:dep.ind(15));   % Dep 15
         d16 = mmed_mean(dep.ind(15)+1:dep.ind(16));   % Dep 16
-        d17 = mmed_erdc(dep.ind(16)+1:end);           % Dep 17
+        d17 = mmed_erdc(dep.ind(16)+1:dep.ind(17));   % Dep 17
+        d18 = mmed_mean(dep.ind(17)+1:end);           % Dep 18
         
-        S_bestguess = [d1;d2;d4;d5;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17];
+        S_bestguess = [d1;d2;d4;d5;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
         
         % Remove "obvious" outliers
         S_bestguess(5896:5898) = NaN;
@@ -228,10 +227,10 @@ switch site
         stdev.S = mean(stdev_S,'omitmissing');
 end
 
-clearvars d1 d2 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17
+clearvars d1 d2 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18
 
-fig = figure(2);clf
-fig.WindowState = 'maximized';
+fig2 = figure(2);clf
+fig2.WindowState = 'maximized';
 plot(dt_utc,mmed_mean,'.','Color',rgb('magenta'),'DisplayName','Mean Moving Median')
 hold on
 plot(dt_utc(1:length(S_bestguess)),S_bestguess,'.k','DisplayName','"Best guess"')
@@ -242,8 +241,8 @@ xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 legend('show')
 
-fig = figure(3);clf
-fig.WindowState = 'maximized';
+fig3 = figure(3);clf
+fig3.WindowState = 'maximized';
 plot(dt_utc(1:length(S_bestguess)),S_bestguess,'.k','DisplayName','"Best guess"')
 hold on
 plot(dt_utc(1:length(S_bestguess)),S_bestguess+stdev.S,'--','Color',red','DisplayName','+ standard deviation')
@@ -282,8 +281,8 @@ bc_mean = mean(depth_bc,'omitmissing');     % [m]
 erdc_mean = mean(depth_erdc,'omitmissing'); % [m]
 delta = abs(bc_mean - erdc_mean);           % [m]
 
-fig = figure(4);clf
-fig.WindowState = 'maximized';
+fig4 = figure(4);clf
+fig4.WindowState = 'maximized';
 plot(dt_utc,depth_bc,'.-','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
 hold on
 plot(dt_utc,depth_erdc,'.-','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
@@ -311,6 +310,9 @@ switch site
         % Dep 13 -- replace the mean depth for entire deployment
         ind_d13 = (dep.ind(9):dep.ind(10))';
         depth_bestguess(ind_d13) = depth_bc(ind_d13) + delta/2;
+        
+        % Remove "obvious" outliers
+        depth_bestguess(30420:30429) = NaN;
 
         % Calculate standard deviation for Deployments 11 & 12
         stdev_d = std(depth_all(dep.ind(7):dep.ind(9),:),0,2,'omitmissing');
@@ -343,8 +345,8 @@ switch site
 
 end
 
-fig = figure(5);clf
-fig.WindowState = 'maximized';
+fig5 = figure(5);clf
+fig5.WindowState = 'maximized';
 plot(dt_utc,depth_bc,'.-','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
 hold on
 plot(dt_utc,depth_erdc,'.-','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
@@ -381,6 +383,8 @@ switch site
         stdev_T = std(T_all(dep.ind(9):dep.ind(11),:),0,2,'omitmissing');
         stdev.T = mean(stdev_T,'omitmissing');
     case 'North'
+        T_bestguess(30420:30430) = NaN;
+
         % Calculate standard deviation for Deployments 11 & 12
         stdev_T = std(T_all(dep.ind(7):dep.ind(9),:),0,2,'omitmissing');
         stdev.T = mean(stdev_T,'omitmissing');
@@ -392,8 +396,8 @@ switch site
         stdev.T = mean(stdev_T,'omitmissing'); 
 end
 
-fig = figure(6);clf
-fig.WindowState = 'maximized';
+fig6 = figure(6);clf
+fig6.WindowState = 'maximized';
 plot(dt_utc,T_bc,'.-','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
 hold on
 plot(dt_utc,T_erdc,'.-','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
@@ -405,8 +409,8 @@ title([site,' - After Initial QC and Moving Median Test'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
-fig = figure(7);clf
-fig.WindowState = 'maximized';
+fig7 = figure(7);clf
+fig7.WindowState = 'maximized';
 plot(dt_utc,T_mean,'-','Color',rgb('magenta'),'DisplayName','Mean Value')
 hold on
 plot(dt_utc,T_bestguess,'-k','MarkerSize',dotsize,'DisplayName','Best Guess')
@@ -437,4 +441,31 @@ switch option
         disp('File saved!')
     case 'No'
         disp('File not saved.')
+end
+
+%====Save the plots=======================================================
+option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');
+
+switch option
+    case 'Yes'
+        cd([rootpath,'figures\open-water-platform\',site,'\data-qc\synchronized\salinity'])
+        saveas(fig1,'duplicateComparison.png')
+        saveas(fig1,'duplicateComparison.fig')
+        saveas(fig2,'bestGuessComparison.png')
+        saveas(fig2,'bestGuessComparison.fig')
+        cd([rootpath,'figures\open-water-platform\',site,'\data-qc\synchronized\depth'])
+        saveas(fig4,'duplicateComparison.png')
+        saveas(fig4,'duplicateComparison.fig')
+        saveas(fig5,'bestGuessComparison.png')
+        saveas(fig5,'bestGuessComparison.fig')
+        cd([rootpath,'figures\open-water-platform\',site,'\data-qc\synchronized\temperature'])
+        saveas(fig6,'duplicateComparison.png')
+        saveas(fig6,'duplicateComparison.fig')
+        saveas(fig7,'bestGuessComparison.png')
+        saveas(fig7,'bestGuessComparison.fig')
+        
+        disp('Plots saved!')
+    
+    case 'No'
+        disp('Plots not saved.')
 end
