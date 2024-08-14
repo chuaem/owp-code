@@ -7,14 +7,16 @@
 %
 % DATE:
 % First created: 8/6/2024
-% Last updated:
+% Last updated: 8/11/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
 
 rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 
-%====Import final QC'd data & diel analysis results========================
+%==========================================================================
+% Import data
+%==========================================================================
 site = 'gull';
 cd([rootpath,'open-water-platform-data\',site,'\cleaned\final-qc'])
 load([site,'-cleaned.mat']);
@@ -84,13 +86,15 @@ daily_south(daily_south.datetime_utc < datetime(2021,6,29,"TimeZone","UTC"),:) =
 daily_south(daily_south.datetime_utc > datetime(2024,6,4,"TimeZone","UTC"),:) = [];
 
 %%
-%====Perform ANOVA=========================================================
+%==========================================================================
+% Perform ANOVA
+%==========================================================================
+
 % Create a grouping variable
 group = {'North','Gull','South'};
 
-% Perform one-way ANOVA for GPP
+%====Perform one-way ANOVA for GPP=========================================
 data = [daily_north.GPP, daily_gull.GPP, daily_south.GPP];
-
 [p, tbl, stats] = anova1(data, group);
 
 % Perform multiple comparisons if the ANOVA is significant
@@ -101,9 +105,8 @@ if p < 0.05
     tbl1.("Group B") = gnames(tbl1.("Group B"));
 end
 
-% Perform one-way ANOVA for ER
+%====Perform one-way ANOVA for ER=========================================
 data = [daily_north.ER, daily_gull.ER, daily_south.ER];
-
 [p, tbl, stats] = anova1(data, group);
 
 % Perform multiple comparisons if the ANOVA is significant
@@ -114,9 +117,8 @@ if p < 0.05
     tbl2.("Group B") = gnames(tbl2.("Group B"));
 end
 
-% Perform one-way ANOVA for NEM
+%====Perform one-way ANOVA for NEM=========================================
 data = [daily_north.NEM, daily_gull.NEM, daily_south.NEM];
-
 [p, tbl, stats] = anova1(data, group);
 
 % Perform multiple comparisons if the ANOVA is significant

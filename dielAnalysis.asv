@@ -8,7 +8,7 @@
 %
 % DATE:
 % First created: 1/3/2024
-% Last updated: 8/14/2024
+% Last updated: 8/13/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -340,7 +340,7 @@ NEM = GPP + ER;         % [mmol O2 m-2 d-1]
 
 diel_dtd = table(daystart_dt,dayend_dt,daylength,R_hourly,P_hourly,R_daily,P_daily,GPP,ER,NEM);
 diel_dtd = table2timetable(diel_dtd);
-
+%%
 %==========================================================================
 %   Make summary statistics tables
 %==========================================================================
@@ -349,23 +349,21 @@ diel_obs = rmmissing(diel_obs);
 diel_dtd = rmmissing(diel_dtd);
 
 % Observed data
-anomGPP = length(find(diel_obs.GPP < 0)) / length(diel_obs.GPP) * 100;
-anomER = length(find(diel_obs.ER > 0)) / length(diel_obs.ER) * 100;
-meanGPP = mean(diel_obs.GPP);
-sdGPP = std(diel_obs.GPP);
-meanER = mean(diel_obs.ER);
-sdER = std(diel_obs.ER);
-summStats.obs = table(meanGPP,sdGPP,anomGPP,meanER,sdER,anomER);
+anomGPP_obs = length(find(diel_obs.GPP < 0)) / length(diel_obs.GPP) * 100;
+anomER_obs = length(find(diel_obs.ER > 0)) / length(diel_obs.ER) * 100;
+meanGPP_obs = mean(diel_obs.GPP,'omitmissing');
+meanER = mean(diel_obs.ER,'omitmissing');
 
 % Detided data
-anomGPP = length(find(diel_dtd.GPP < 0)) / length(diel_dtd.GPP) * 100;
-anomER = length(find(diel_dtd.ER > 0)) / length(diel_dtd.ER) * 100;
-meanGPP = mean(diel_dtd.GPP);
-sdGPP = std(diel_dtd.GPP);
-meanER = mean(diel_dtd.ER);
-sdER = std(diel_dtd.ER);
-summStats.dtd = table(meanGPP,sdGPP,anomGPP,meanER,sdER,anomER);
+anomGPP = find(diel_dtd.GPP < 0);
+anomER = find(diel_dtd.ER > 0);
 
+summStats.obs = table();
+
+% daily.gull{[anomER;anomGPP],:} = NaN;
+% daily.north{[anomER;anomGPP],:} = NaN;
+% daily.south{[anomER;anomGPP],:} = NaN;
+%%
 %==========================================================================
 %   Plot results from R ecometab and MATLAB diel analysis
 %==========================================================================
@@ -454,7 +452,7 @@ option = questdlg('Save diel analysis results?','Save File','Yes','No','Yes');
 switch option
     case 'Yes'
         cd([rootpath,'diel-method\matlab-results\final-qc\',site])
-        save('diel_res.mat','diel_obs','diel_dtd','summStats')
+        save('diel_res.mat','diel_obs','diel_dtd')
         disp('Files saved!')
     case 'No'
         disp('Files not saved.')
