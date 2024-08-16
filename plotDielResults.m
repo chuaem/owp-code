@@ -97,7 +97,7 @@ monthlystd.south = groupsummary(daily.south,'daystart_dt','monthofyear','std');
 monthlystd.gull.Properties.VariableNames(1) = {'month'};
 monthlystd.north.Properties.VariableNames(1) = {'month'};
 monthlystd.south.Properties.VariableNames(1) = {'month'};
-
+%%
 %==========================================================================
 %  Calculate overall rates (average of all values for each site)
 %==========================================================================

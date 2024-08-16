@@ -138,7 +138,7 @@ legend('',[eqn,newline,'R^2 = ',R2],'1:1 line','Location','southeast')
 xlabel('Re-calculated DO Conc (\mumol/L)','interpreter','tex')          
 ylabel('Winkler DO Conc (\mumol/L)','interpreter','tex')  
 title([site,' BC DO Validation'])
-daspect([1 1 1])
+pbaspect([1 1 1]); % Make relative lengths of axes equal
 
 %====ERDC linear regression================================================
 DOerdc = table(DOcorr.erdc.datetime_utc,DOcorr.erdc.DOconc);
@@ -181,7 +181,7 @@ legend('',[eqn,newline,'R^2 = ',R2],'1:1 line','Location','southeast')
 xlabel('Re-calculated DO Conc (\mumol/L)','interpreter','tex')                                                                                                                                     
 ylabel('Winkler DO Conc (\mumol/L)','interpreter','tex')  
 title([site,' ERDC DO Validation'])
-daspect([1 1 1])
+pbaspect([1 1 1]); % Make relative lengths of axes equal
 
 %====Best-guess linear regression==========================================
 DObestguess = table(finalQC.datetime_utc,finalQC.DOconc);
@@ -223,7 +223,7 @@ legend('Data',[eqn,newline,'R^2 = ',R2],'1:1 line','Location','southeast')
 xlabel('"Best-Guess" DO Conc (\mumol/L)','interpreter','tex')                                                                                                                                     
 ylabel('Winkler DO Conc (\mumol/L)','interpreter','tex')    
 title([site,' Best Guess DO Validation'])
-daspect([1 1 1])
+pbaspect([1 1 1]); % Make relative lengths of axes equal
 
 %====Save the plots========================================================
 option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');

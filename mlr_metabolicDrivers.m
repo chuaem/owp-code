@@ -8,7 +8,7 @@
 %
 % DATE:
 % First created: 7/22/2024
-% Last updated: 8/11/2024
+% Last updated: 8/14/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -46,6 +46,25 @@ south_metab = diel_dtd;
 
 clearvars finalQC diel_dtd diel_obs
 
+% Find daily tidal range for each site
+gull_range = groupsummary(gull_params,"datetime_utc","day","range","depth");
+gull_range.day_datetime_utc = datetime(cellstr(gull_range.day_datetime_utc),'TimeZone','UTC');
+gull_range = table2timetable(gull_range);
+gull_range.GroupCount = [];
+gull_range.Properties.VariableNames = {'tidal'};
+
+north_range = groupsummary(north_params,"datetime_utc","day","range","depth");
+north_range.day_datetime_utc = datetime(cellstr(north_range.day_datetime_utc),'TimeZone','UTC');
+north_range = table2timetable(north_range);
+north_range.GroupCount = [];
+north_range.Properties.VariableNames = {'tidal'};
+
+south_range = groupsummary(south_params,"datetime_utc","day","range","depth");
+south_range.day_datetime_utc = datetime(cellstr(south_range.day_datetime_utc),'TimeZone','UTC');
+south_range = table2timetable(south_range);
+south_range.GroupCount = [];
+south_range.Properties.VariableNames = {'tidal'};
+
 %====Import windspeed and PAR data=========================================
 cd([rootpath,'physical-data\final-dataset'])
 load('windspeed.mat')
@@ -67,7 +86,7 @@ cd([rootpath,'figures\stats-analyses'])
 %----Gull------------------------------------------------------------------
 dt2 = dateshift(gull_metab.daystart_dt,'start','day');
 gull_metab.daystart_dt = dt2;
-gull_TT = synchronize(gull_dailyAvg,wspd_dailyAvg,par_dailyAvg,gull_metab);
+gull_TT = synchronize(gull_dailyAvg,gull_range,wspd_dailyAvg,par_dailyAvg,gull_metab);
 gull_TT = removevars(gull_TT,{'deployment','dayend_dt','daylength','R_hourly','P_hourly','R_daily','P_daily','datetime_local','Tair','light_lux'});
 gull_TT(gull_TT.datetime_utc < datetime(2021,6,29,"TimeZone","UTC"),:) = [];
 gull_TT(gull_TT.datetime_utc > datetime(2024,6,4,"TimeZone","UTC"),:) = [];
@@ -78,7 +97,7 @@ anomGPP = find(gull_TT.GPP < 0);
 gull_TT{[anomER;anomGPP],:} = NaN;
 
 % Remove row if any explanatory or response variable is NaN
-gull_TT = rmmissing(gull_TT,'DataVariables',{'depth','salinity','temperature','chla','turbidity','wspd','GPP','ER','NEM'});
+gull_TT = rmmissing(gull_TT,'DataVariables',{'tidal','salinity','temperature','chla','turbidity','wspd','GPP','ER','NEM'});
 
 % Get month numbers
 mo = month(gull_TT.datetime_utc);
@@ -108,7 +127,7 @@ gull_TT.site = categorical(gull_TT.site);
 %----North-----------------------------------------------------------------
 dt2 = dateshift(north_metab.daystart_dt,'start','day');
 north_metab.daystart_dt = dt2;
-north_TT = synchronize(north_dailyAvg,wspd_dailyAvg,par_dailyAvg,north_metab);
+north_TT = synchronize(north_dailyAvg,north_range,wspd_dailyAvg,par_dailyAvg,north_metab);
 north_TT = removevars(north_TT,{'deployment','dayend_dt','daylength','R_hourly','P_hourly','R_daily','P_daily','datetime_local','Tair','light_lux'});
 north_TT(north_TT.datetime_utc < datetime(2021,6,29,"TimeZone","UTC"),:) = [];
 north_TT(north_TT.datetime_utc > datetime(2024,6,4,"TimeZone","UTC"),:) = [];
@@ -119,7 +138,7 @@ anomGPP = find(north_TT.GPP < 0);
 north_TT{[anomER;anomGPP],:} = NaN;
 
 % Remove row if any explanatory or response variable is NaN
-north_TT = rmmissing(north_TT,'DataVariables',{'depth','salinity','temperature','chla','turbidity','wspd','GPP','ER','NEM'});
+north_TT = rmmissing(north_TT,'DataVariables',{'tidal','salinity','temperature','chla','turbidity','wspd','GPP','ER','NEM'});
 
 % Get month numbers
 mo = month(north_TT.datetime_utc);
@@ -149,7 +168,7 @@ north_TT.site = categorical(north_TT.site);
 %----South-----------------------------------------------------------------
 dt2 = dateshift(south_metab.daystart_dt,'start','day');
 south_metab.daystart_dt = dt2;
-south_TT = synchronize(south_dailyAvg,wspd_dailyAvg,par_dailyAvg,south_metab);
+south_TT = synchronize(south_dailyAvg,south_range,wspd_dailyAvg,par_dailyAvg,south_metab);
 south_TT = removevars(south_TT,{'deployment','dayend_dt','daylength','R_hourly','P_hourly','R_daily','P_daily','datetime_local','Tair','light_lux'});
 south_TT(south_TT.datetime_utc < datetime(2021,6,29,"TimeZone","UTC"),:) = [];
 south_TT(south_TT.datetime_utc > datetime(2024,6,4,"TimeZone","UTC"),:) = [];
@@ -160,7 +179,7 @@ anomGPP = find(south_TT.GPP < 0);
 south_TT{[anomER;anomGPP],:} = NaN;
 
 % Remove row if any explanatory or response variable is NaN
-south_TT = rmmissing(south_TT,'DataVariables',{'depth','salinity','temperature','chla','turbidity','wspd','GPP','ER','NEM'});
+south_TT = rmmissing(south_TT,'DataVariables',{'tidal','salinity','temperature','chla','turbidity','wspd','GPP','ER','NEM'});
 
 % Get month numbers
 mo = month(south_TT.datetime_utc);
@@ -231,28 +250,28 @@ data = allSites_dat;
 
 % (1) By season
 % GPP
-allSites_mdl.winter.GPP = fitlm(data.winter,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl.spring.GPP = fitlm(data.spring,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl.summer.GPP = fitlm(data.summer,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl.fall.GPP = fitlm(data.fall,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl.winter.GPP = fitlm(data.winter,'GPP ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl.spring.GPP = fitlm(data.spring,'GPP ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl.summer.GPP = fitlm(data.summer,'GPP ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl.fall.GPP = fitlm(data.fall,'GPP ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
 % ER
-allSites_mdl.winter.ER = fitlm(data.winter,'ER ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl.spring.ER = fitlm(data.spring,'ER ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl.summer.ER = fitlm(data.summer,'ER ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl.fall.ER = fitlm(data.fall,'ER ~ depth + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl.winter.ER = fitlm(data.winter,'ER ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl.spring.ER = fitlm(data.spring,'ER ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl.summer.ER = fitlm(data.summer,'ER ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl.fall.ER = fitlm(data.fall,'ER ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
 % NEM
-allSites_mdl.winter.NEM = fitlm(data.winter,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl.spring.NEM = fitlm(data.spring,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl.summer.NEM = fitlm(data.summer,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl.fall.NEM = fitlm(data.fall,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl.winter.NEM = fitlm(data.winter,'NEM ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl.spring.NEM = fitlm(data.spring,'NEM ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl.summer.NEM = fitlm(data.summer,'NEM ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl.fall.NEM = fitlm(data.fall,'NEM ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
 
 % (2) Across all seasons
 % GPP
-allSites_mdl.all.GPP = fitlm(data.all,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity + season*site'); % Include interactions
+allSites_mdl.all.GPP = fitlm(data.all,'GPP ~ tidal + wspd + temperature + salinity + chla + turbidity + season*site'); % Include interactions
 % ER
-allSites_mdl.all.ER = fitlm(data.all,'ER ~ depth + wspd + temperature + salinity + chla + turbidity + season*site'); % Include interactions
+allSites_mdl.all.ER = fitlm(data.all,'ER ~ tidal + wspd + temperature + salinity + chla + turbidity + season*site'); % Include interactions
 % NEM
-allSites_mdl.all.NEM = fitlm(data.all,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity + season*site'); % Include interactions
+allSites_mdl.all.NEM = fitlm(data.all,'NEM ~ tidal + wspd + temperature + salinity + chla + turbidity + season*site'); % Include interactions
 
 %----Scaled data-----------------------------------------------------------
 % Scale response and explanatory variables to center 0 and std 1 (Lowe et al., 2019)
@@ -272,33 +291,33 @@ data_norm = allSites_dat_norm;
 
 % (1) By season
 % GPP
-allSites_mdl_norm.winter.GPP = fitlm(data_norm.winter,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl_norm.spring.GPP = fitlm(data_norm.spring,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl_norm.summer.GPP = fitlm(data_norm.summer,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl_norm.fall.GPP = fitlm(data_norm.fall,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl_norm.winter.GPP = fitlm(data_norm.winter,'GPP ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl_norm.spring.GPP = fitlm(data_norm.spring,'GPP ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl_norm.summer.GPP = fitlm(data_norm.summer,'GPP ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl_norm.fall.GPP = fitlm(data_norm.fall,'GPP ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
 % ER
-allSites_mdl_norm.winter.ER = fitlm(data_norm.winter,'ER ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl_norm.spring.ER = fitlm(data_norm.spring,'ER ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl_norm.summer.ER = fitlm(data_norm.summer,'ER ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl_norm.fall.ER = fitlm(data_norm.fall,'ER ~ depth + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl_norm.winter.ER = fitlm(data_norm.winter,'ER ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl_norm.spring.ER = fitlm(data_norm.spring,'ER ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl_norm.summer.ER = fitlm(data_norm.summer,'ER ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl_norm.fall.ER = fitlm(data_norm.fall,'ER ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
 % NEM
-allSites_mdl_norm.winter.NEM = fitlm(data_norm.winter,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl_norm.spring.NEM = fitlm(data_norm.spring,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl_norm.summer.NEM = fitlm(data_norm.summer,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity + site');
-allSites_mdl_norm.fall.NEM = fitlm(data_norm.fall,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl_norm.winter.NEM = fitlm(data_norm.winter,'NEM ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl_norm.spring.NEM = fitlm(data_norm.spring,'NEM ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl_norm.summer.NEM = fitlm(data_norm.summer,'NEM ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
+allSites_mdl_norm.fall.NEM = fitlm(data_norm.fall,'NEM ~ tidal + wspd + temperature + salinity + chla + turbidity + site');
 
 % (2) Across all seasons
 % GPP
-allSites_mdl_norm.all.GPP = fitlm(data_norm.all,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity + season*site'); % Include interactions
+allSites_mdl_norm.all.GPP = fitlm(data_norm.all,'GPP ~ tidal + wspd + temperature + salinity + chla + turbidity + season*site'); % Include interactions
 % ER
-allSites_mdl_norm.all.ER = fitlm(data_norm.all,'ER ~ depth + wspd + temperature + salinity + chla + turbidity + season*site'); % Include interactions
+allSites_mdl_norm.all.ER = fitlm(data_norm.all,'ER ~ tidal + wspd + temperature + salinity + chla + turbidity + season*site'); % Include interactions
 % NEM
-allSites_mdl_norm.all.NEM = fitlm(data_norm.all,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity + season*site'); % Include interactions
+allSites_mdl_norm.all.NEM = fitlm(data_norm.all,'NEM ~ tidal + wspd + temperature + salinity + chla + turbidity + season*site'); % Include interactions
 
 % % MIXED EFFECTS MODEL
-% allSites_mdl_norm_MIXED.all.GPP = fitlme(data_norm.all,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity + site*season'); % Gives same thing as fitlm
+% allSites_mdl_norm_MIXED.all.GPP = fitlme(data_norm.all,'GPP ~ tidal + wspd + temperature + salinity + chla + turbidity + site*season'); % Gives same thing as fitlm
 %
-% allSites_mdl_norm_MIXED2.all.GPP = fitlme(data_norm.all,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity + season*site + (site|season)');
+% allSites_mdl_norm_MIXED2.all.GPP = fitlme(data_norm.all,'GPP ~ tidal + wspd + temperature + salinity + chla + turbidity + season*site + (site|season)');
 %%
 %==========================================================================
 % Plot results
@@ -307,29 +326,66 @@ data = allSites_dat;
 mdl = allSites_mdl;
 
 respNames = {'GPP','ER','NEM'};
-% predNames = {'depth','wspd','temperature','salinity','chla','turbidity'};
-predNames = {'depth','salinity','temperature','chla','turbidity','wspd'};
+predNames = {'salinity','temperature','chla','turbidity','tidal','wspd'};
+xlblNames = {'Salinity','Temperature (^oC)','Chl a (RFU)','Turbidity (NTU)','Tidal (m)','Wind speed (m/s)'};
 
-% xlblNames = {'Depth (m)','Wind speed (m/s)','Temperature (^oC)','Salinity','Chl a (RFU)','Turbidity (NTU)'};
-xlblNames = {'Depth (m)','Salinity','Temperature (^oC)','Chl a (RFU)','Turbidity (NTU)','Wind speed (m/s)'};
+% Find means of each variable for plotting individual regression lines
+for k = 1:length(predNames)
+    meanVal.all.(predNames{k}) = mean(data.all.(predNames{k}),'omitmissing');
+    meanVal.winter.(predNames{k}) = mean(data.winter.(predNames{k}),'omitmissing');
+    meanVal.spring.(predNames{k}) = mean(data.spring.(predNames{k}),'omitmissing');
+    meanVal.summer.(predNames{k}) = mean(data.summer.(predNames{k}),'omitmissing');
+    meanVal.fall.(predNames{k}) = mean(data.fall.(predNames{k}),'omitmissing');
+end
 
 %====GPP, ER, NEM vs. Explanatory Variables================================
-for i = 1:length(respNames)   % Order: 1) GPP 2) ER 3) NEM
+for i = 1:length(respNames)   % Loop through plots for GPP, ER, and NEM
     fig = figure(i);clf
     fig.Position = [363.4 905.0 676.8 957.6];
     t = tiledlayout(3,2,'Padding','none','TileSpacing','loose');
+    
+    % Coefficient estimates
+    % Model with all data
+    b0.all = mdl.all.(respNames{i}).Coefficients.Estimate(1);
+    b1.all = mdl.all.(respNames{i}).Coefficients.Estimate(2);
+    b2.all = mdl.all.(respNames{i}).Coefficients.Estimate(3);
+    b3.all = mdl.all.(respNames{i}).Coefficients.Estimate(4);
+    b4.all = mdl.all.(respNames{i}).Coefficients.Estimate(5);
+    b5.all = mdl.all.(respNames{i}).Coefficients.Estimate(6);
+    b6.all = mdl.all.(respNames{i}).Coefficients.Estimate(7);
 
-    for j = 1:length(predNames)
+    % Model with Winter data
+    b0.winter = mdl.winter.(respNames{i}).Coefficients.Estimate(1);
+    b1.winter = mdl.winter.(respNames{i}).Coefficients.Estimate(2);
+    b2.winter = mdl.winter.(respNames{i}).Coefficients.Estimate(3);
+    b3.winter = mdl.winter.(respNames{i}).Coefficients.Estimate(4);
+    b4.winter = mdl.winter.(respNames{i}).Coefficients.Estimate(5);
+    b5.winter = mdl.winter.(respNames{i}).Coefficients.Estimate(6);
+    b6.winter = mdl.winter.(respNames{i}).Coefficients.Estimate(7);
+
+    for j = 1:length(predNames) % Loop through plotting each predictor
         t1 = tiledlayout(t,2,2,'Tilespacing','none');
         t1.Layout.Tile = j;
 
+        x = data.all.(predNames{j});
+
         % Winter
         ax1 = nexttile(t1);
-        plot(data.all.(predNames{j}),data.all.(respNames{i}),'.','color',rgb('lightgrey'))
+        plot(data.all.(predNames{j}),data.all.(respNames{i}),'.','color',rgb('lightgrey'))   % Plot All data in grey
         hold on
-        plot(data.all.(predNames{j}),mdl.all.(respNames{i}).Coefficients.Estimate(1) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*data.all.(predNames{j}),'color',rgb('grey'))
-        plot(data.winter.(predNames{j}),data.winter.(respNames{i}),'.k')
-        plot(data.all.(predNames{j}),mdl.winter.(respNames{i}).Coefficients.Estimate(1) + mdl.winter.(respNames{i}).Coefficients.Estimate(j+1)*data.all.(predNames{j}),'k')
+        switch predNames{j} % Plot regression line for All data in grey
+            case 'salinity'
+                plot(x, b0.all + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b2.all*meanVal.all.(predNames{2}) + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}),'color',rgb('grey'))
+        end
+        plot(data.winter.(predNames{j}),data.winter.(respNames{i}),'.k') % Plot Winter data in black
+        switch predNames{j} % Plot regression line for Winter data in black
+            case 'salinity'
+                plot(x, b0.winter + mdl.winter.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b2.winter*meanVal.winter.(predNames{2}) + b3.winter*meanVal.winter.(predNames{3}) + b4.winter*meanVal.winter.(predNames{4})...
+                    + b5.winter*meanVal.winter.(predNames{5}),'k')
+        end        
         pbaspect(ax1,[1 1 1]); % Make relative lengths of axes equal
         % make a text object for the title
         xl = get(gca(),'Xlim');
@@ -355,7 +411,10 @@ for i = 1:length(respNames)   % Order: 1) GPP 2) ER 3) NEM
         plot(data.all.(predNames{j}),data.all.(respNames{i}),'.','color',rgb('lightgrey'))
         hold on
         plot(data.summer.(predNames{j}),data.summer.(respNames{i}),'.k')
-        ylim([-300 100])
+        plot(data.all.(predNames{j}),mdl.all.(respNames{i}).Coefficients.Estimate(1) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*data.all.(predNames{j}),'color',rgb('grey'))
+        plot(data.summer.(predNames{j}),data.summer.(respNames{i}),'.k')
+        plot(data.all.(predNames{j}),mdl.summer.(respNames{i}).Coefficients.Estimate(1) + mdl.summer.(respNames{i}).Coefficients.Estimate(j+1)*data.all.(predNames{j}),'k')
+        % ylim([-300 100])
         pbaspect(ax3,[1 1 1]); % Make relative lengths of axes equal
         % make a text object for the title
         xl = get(gca(),'Xlim');
@@ -367,6 +426,9 @@ for i = 1:length(respNames)   % Order: 1) GPP 2) ER 3) NEM
         plot(data.all.(predNames{j}),data.all.(respNames{i}),'.','color',rgb('lightgrey'))
         hold on
         plot(data.fall.(predNames{j}),data.fall.(respNames{i}),'.k')
+        plot(data.all.(predNames{j}),mdl.all.(respNames{i}).Coefficients.Estimate(1) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*data.all.(predNames{j}),'color',rgb('grey'))
+        plot(data.fall.(predNames{j}),data.fall.(respNames{i}),'.k')
+        plot(data.all.(predNames{j}),mdl.fall.(respNames{i}).Coefficients.Estimate(1) + mdl.fall.(respNames{i}).Coefficients.Estimate(j+1)*data.all.(predNames{j}),'k')
         % ylim([-300 100])
         pbaspect(ax4,[1 1 1]); % Make relative lengths of axes equal
         % make a text object for the title
