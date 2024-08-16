@@ -49,9 +49,9 @@ par1     =    co2sys.(site).TA; % Value of the first parameter
 par2type =    2; % Type "2" = "DIC"
 par2     =    co2sys.(site).DIC; % Value of the second parameter
 sal      =    co2sys.(site).Field_Salinity; % Salinity of the sample
-tempin   =    21; % Lab temperature
+tempin   =    co2sys.(site).Field_Temp; % In situ temperature
 presin   =    0; % Lab pressure
-tempout  =    co2sys.(site).Field_Temp; % In situ temperature
+tempout  =    0; % Doesn't matter here
 presout  =    1; % In situ pressure
 sil      =   50; % Concentration of silicate  in the sample (in umol/kg)
 po4      =    2; % Concentration of phosphate in the sample (in umol/kg)
@@ -126,15 +126,18 @@ ylabel('pH')
 title(site,'FontSize',fontsize)
 
 % Linear regression
+% Remove rows with missing pH values
+finalQC_trimmed = rmmissing(finalQC,'DataVariables',"pH");
+
 % Find closest matching indices
 t1 = pH_discrete.datetime_utc;
-t2 = finalQC.datetime_utc;
+t2 = finalQC_trimmed.datetime_utc;
 ind_sonde = interp1(t2,1:length(t2),t1,'nearest','extrap');
 
 ind_discrete = 1:1:height(pH_discrete);
 % If closest matching samples are more than 25 minutes off, do not include
 for i = 1:length(ind_sonde(~isnan(ind_sonde)))
-    dt = between(finalQC.datetime_utc(ind_sonde(i)),pH_discrete.datetime_utc(i));
+    dt = between(finalQC_trimmed.datetime_utc(ind_sonde(i)),pH_discrete.datetime_utc(i));
     if abs(time(dt)) > minutes(25)
         ind_sonde(i) = NaN;
         ind_discrete(i) = NaN;
@@ -145,9 +148,12 @@ ind_sonde = rmmissing(ind_sonde);
 ind_discrete = rmmissing(ind_discrete);
 
 % Create the model
-x = finalQC.pH(ind_sonde);
+x = finalQC_trimmed.pH(ind_sonde);
 y = pH_discrete.pH(ind_discrete);
 mdl = fitlm(x,y,'y~x1-1');  % Force intercept through zero; see Wilkinson notation
+
+tbl = table(finalQC_trimmed.datetime_utc(ind_sonde),pH_discrete.datetime_utc(ind_discrete),x,y);
+tbl.Properties.VariableNames = {'AquaTroll datetime','Discrete datetime','AquaTroll pH','Discrete pH'};
 
 % Create equation string for plot
 eqn = ['y = ',num2str(mdl.Coefficients.Estimate,3),'x'];
@@ -159,7 +165,6 @@ h = plot(mdl,'marker','.','markersize',20);
 delete(h([3 4]))    % Delete confidence bounds on plot
 hold on
 plot([min(min([x,y])) max(max([x,y]))], [min(min([x,y])) max(max([x,y]))],'--k')
-% errorbar(x,y,wink.DO_std(ind_matching.ind_wink),'.b','MarkerSize',dotsize,'LineWidth',2)
 legend('',[eqn,newline,'R^2 = ',R2],'1:1 line','Location','southeast')
 xlabel('AquaTroll pH')          
 ylabel('Discrete pH')  
