@@ -7,7 +7,7 @@
 % 
 % DATE:
 % First created: 5/25/2024
-% Last Updated: 
+% Last Updated: 8/26/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -112,14 +112,14 @@ datetime.TimeZone = 'UTC';
 wspd = sqrt(u10.^2 + v10.^2);
 
 %====Create time table of ERA5 data========================================
-era5Dat = timetable(datetime,wspd);
-era5Dat.Properties.VariableUnits = {'m/s'};
+era5Dat = timetable(datetime,u10,v10,wspd);
+era5Dat.Properties.VariableUnits = {'m/s','m/s','m/s'};
 
 %====Plot the ERA5 data====================================================
 cd([rootpath,'figures\physical-data'])
 
-fig4 = figure(4);clf
-fig4.WindowState = 'maximized';
+fig1 = figure(1);clf
+fig1.WindowState = 'maximized';
 plot(era5Dat.datetime,era5Dat.wspd,'.','DisplayName','ERA5')
 hold off
 ylabel('Wind speed (m/s)')

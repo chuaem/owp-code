@@ -331,7 +331,7 @@ for j = 1:numel(fn)
     % Merge individual season tables
     seasonal.(fn{j}) = sortrows([winterYrMean; springYrMean; summerYrMean; fallYrMean]);
 end
-%%
+
 fig3 = figure(3);clf
 t3 = tiledlayout(4,2,'TileSpacing','tight');
 xaxisLbl = {'Summer 2021','Fall 2021','Winter 2022','Spring 2022','Summer 2022','Fall 2022','Winter 2023','Spring 2023','Summer 2023','Fall 2023','Winter 2024','Spring 2024','Summer 2024'};

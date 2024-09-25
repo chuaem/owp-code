@@ -1,13 +1,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% plotTimeseries.m
-% This script...
+% conductAnova.m
+% This script performs (1) One-way ANOVAs to see if mean GPP, ER, and NEM are
+% different depending on site, and (2) Pairwise comparisons using a
+% multiple comparison test to identify the sites that have significantly
+% different means.
 %
 % AUTHOR:
 % Emily Chua
 %
 % DATE:
 % First created: 8/6/2024
-% Last updated: 8/11/2024
+% Last updated: 8/19/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -85,7 +88,6 @@ daily_south = removevars(daily_south,{'deployment','dayend_dt','daylength','R_ho
 daily_south(daily_south.datetime_utc < datetime(2021,6,29,"TimeZone","UTC"),:) = [];
 daily_south(daily_south.datetime_utc > datetime(2024,6,4,"TimeZone","UTC"),:) = [];
 
-%%
 %==========================================================================
 % Perform ANOVA
 %==========================================================================
@@ -128,12 +130,3 @@ if p < 0.05
     tbl3.("Group A") = gnames(tbl3.("Group A"));
     tbl3.("Group B") = gnames(tbl3.("Group B"));
 end
-
-%% Old
-% Environmental drivers
-% data = [daily_north.temperature, daily_gull.temperature, daily_south.temperature];
-% data = [daily_north.salinity, daily_gull.salinity, daily_south.salinity];
-% data = [daily_north.pH, daily_gull.pH, daily_south.pH];
-% data = [daily_north.DOsat, daily_gull.DOsat, daily_south.DOsat];
-% data = [daily_north.chla, daily_gull.chla, daily_south.chla];
-% data = [daily_north.turbidity, daily_gull.turbidity, daily_south.turbidity];

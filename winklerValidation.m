@@ -164,15 +164,15 @@ ind_matching = rmmissing(ind_matching);
 % ERDC linear model
 x = DOerdc.DOconc(ind_matching.ind_sonde);
 y = wink.DO_mean(ind_matching.ind_wink);
-mdl_bc = fitlm(x,y,'y~x1-1');  % Force intercept through zero; see Wilkinson notation
+mdl_erdc = fitlm(x,y,'y~x1-1');  % Force intercept through zero; see Wilkinson notation
 
 % Create equation string for plot
-eqn = ['y = ',num2str(mdl_bc.Coefficients.Estimate,3),'x'];
-R2 = num2str(mdl_bc.Rsquared.Ordinary,2);
+eqn = ['y = ',num2str(mdl_erdc.Coefficients.Estimate,3),'x'];
+R2 = num2str(mdl_erdc.Rsquared.Ordinary,2);
 
 fig3 = figure(3);clf
 fig3.WindowState = 'maximized';
-h = plot(mdl_bc,'marker','.');
+h = plot(mdl_erdc,'marker','.');
 delete(h([3 4]))    % Delete confidence bounds on plot
 hold on
 plot([0 ylim], [0 ylim],'--k')
@@ -224,6 +224,17 @@ xlabel('"Best-Guess" DO Conc (\mumol/L)','interpreter','tex')
 ylabel('Winkler DO Conc (\mumol/L)','interpreter','tex')    
 title([site,' Best Guess DO Validation'])
 pbaspect([1 1 1]); % Make relative lengths of axes equal
+
+%====Save regression model results=========================================
+option = questdlg('Save regression model?','Save File','Yes','No','Yes');
+switch option
+    case 'Yes'
+        cd([rootpath,'open-water-platform-data\',site,'\cleaned\validation'])
+        save([site,'-winklerValid.mat'],'mdl')
+        disp('File saved!')
+    case 'No'
+        disp('File not saved.')
+end
 
 %====Save the plots========================================================
 option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');

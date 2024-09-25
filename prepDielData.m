@@ -8,7 +8,7 @@
 %
 % DATE:
 % First created: 2/8/2024
-% Last updated: 5/30/2024
+% Last updated: 9/24/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -30,13 +30,11 @@ load BP&AT.mat
 
 % Retime physical data to same datetimes as sonde data
 newTimes = dat.datetime_utc(1):minutes(10):dat.datetime_utc(end);
-era5Dat_rt = retime(era5Dat,newTimes,'previous');
-
+era5dat_rt = retime(era5Dat,newTimes,'previous');
 BP_AT_dat_rt = retime(BP_AT_dat,newTimes,'previous');
 
-% Horizontally concatenate sonde and physical data (already have common time vector)
-dat = synchronize(dat,BP_AT_dat_rt);
-dat = synchronize(dat,era5Dat_rt);
+% Horizontally concatenate sonde and physical data
+dat = synchronize(dat,BP_AT_dat_rt,era5dat_rt);
 
 % Check how many days of data remain in synchronized data
 dataPoints = daysact(dat.datetime_utc(1),dat.datetime_utc);

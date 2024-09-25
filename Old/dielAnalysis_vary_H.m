@@ -1,14 +1,20 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% dielAnalysis.m
+%%%%%%%%%%%%%%%%%/%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% dielAnalysis_vary_H.m
 % This script uses the diel oxygen method to calculate GPP, ER, and NEM
-% following Beck et al. (2015)
+% following Caffrey et al. (2014) and Beck et al. (2015).
+% 
+% Computes summary statistics for both the observed and detided data.
+%
+% Output diel analysis results from the detided data (diel_dtd) include
+% anomalous values, but have endpoints around big gaps of data removed.
+%
 %
 % AUTHOR:
 % Emily Chua
 %
 % DATE:
-% First created: 1/3/2024
-% Last updated: 8/14/2024
+% First created: 9/4/2024
+% Last updated: 9/6/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -342,6 +348,50 @@ diel_dtd = table(daystart_dt,dayend_dt,daylength,R_hourly,P_hourly,R_daily,P_dai
 diel_dtd = table2timetable(diel_dtd);
 
 %==========================================================================
+%   Compare using time-varying H with constant mean H -- this part is
+%   different from dielAnalysis.m
+%==========================================================================
+daily_depth = groupsummary(dat,"datetime_utc","day","mean","depth");
+switch site
+    case 'Gull'
+        H = daily_depth.mean_depth + 0.42;
+    case 'North'
+        H = daily_depth.mean_depth + 0.47;
+    case 'South'
+        H = daily_depth.mean_depth + 0.80;
+end
+
+% Convert volumetric rates to depth-integrated (areal) estimates using daily H
+GPP_vary = P_daily .* H(2:end-1);
+ER_vary = R_daily .* H(2:end-1);
+NEM_vary = GPP_vary + ER_vary;
+diel_dtd_vary = table(daystart_dt,dayend_dt,daylength,R_hourly,P_hourly,R_daily,P_daily,GPP_vary,ER_vary,NEM_vary);
+
+figure,clf
+plot(diel_dtd.daystart_dt,diel_dtd.GPP,'DisplayName','Constant H')
+hold on
+plot(diel_dtd_vary.daystart_dt,diel_dtd_vary.GPP_vary,'DisplayName','Time-varying H')
+ylabel('GPP (mmol O_2 m^{-2} d^{-1})','FontSize',14)
+legend('show')
+title(site)
+
+figure,clf
+plot(diel_dtd.daystart_dt,diel_dtd.ER,'DisplayName','Constant H')
+hold on
+plot(diel_dtd_vary.daystart_dt,diel_dtd_vary.ER_vary,'DisplayName','Time-varying H')
+ylabel('ER (mmol O_2 m^{-2} d^{-1})','FontSize',14)
+legend('show')
+title(site)
+
+figure,clf
+plot(diel_dtd.daystart_dt,diel_dtd.NEM,'DisplayName','Constant H')
+hold on
+plot(diel_dtd_vary.daystart_dt,diel_dtd_vary.NEM_vary,'DisplayName','Time-varying H')
+ylabel('NEM (mmol O_2 m^{-2} d^{-1})','FontSize',14)
+legend('show')
+title(site)
+
+%==========================================================================
 %   Make summary statistics tables
 %==========================================================================
 % Remove rows with missing data
@@ -422,9 +472,8 @@ set(gca,'FontSize',14,'LineWidth',2)
 title([site,': MATLAB Results Using Detided Data'])
 % ylim([-500 500])
 
-% Don't include endpoint values for big gaps in data 
+% Delete endpoint values of GPP, ER, and NEM around big gaps in data 
 % (happens for North and South -- gaps accompanied by large NEM absolute values)
-diel_dtd = rmmissing(diel_dtd,'DataVariables','NEM');
 threshold = duration(days(7));
 gap = diff(diel_dtd.daystart_dt);
 idx = find(gap > threshold);

@@ -8,7 +8,7 @@
 %
 % DATE:
 % First created: 8/15/2024
-% Last updated: 8/16/2024
+% Last updated: 8/19/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -22,34 +22,36 @@ site = questdlg(prompt,'Platform Selection','Gull','North','South','Gull');
 %   Calculate pH from DIC and TA via CO2SYS
 %==========================================================================
 
-% Load the discrete DIC/TA data
+%----Load the discrete DIC/TA data-----------------------------------------
 cd([rootpath,'discrete-samples'])
-load('DICTA_SMIIL_sample_output.mat')
+
+load('DICTA_SMIIL_sample_output090424');    % Downloaded from Lab_Sample_Processing/SMIIL GitHub
 
 % Create a table of just the OWP data
 idx = find(strcmp(site,sample_output.Location_ID));
 
-co2sys.(site) = sample_output(idx,:);
+discrete_samples = sample_output(idx,:);
 
 % Make into timetable
-date = datetime(co2sys.(site).Date_Sampled);
-timeOfDay = datetime(co2sys.(site).Sampling_Time,'ConvertFrom','datenum');
+date = datetime(discrete_samples.Date_Sampled);
+timeOfDay = datetime(discrete_samples.Sampling_Time,'ConvertFrom','datenum');
 datetime_local = date + timeofday(timeOfDay);
 datetime_local.TimeZone = 'America/New_York';
 datetime_utc = datetime_local;
 datetime_utc.TimeZone = 'UTC';
 
-co2sys.(site).datetime_utc = datetime_utc;
+discrete_samples.datetime_utc = datetime_utc;
+discrete_samples.Sampling_Time = timeofday(timeOfDay);
 
-co2sys.(site) = table2timetable(co2sys.(site),"RowTimes","datetime_utc");
+discrete_samples = table2timetable(discrete_samples,"RowTimes","datetime_utc");
 
-% Calculate pH from discrete DIC/TA samples
+%----Calculate [H+] from discrete DIC/TA samples-----------------------------
 par1type =    1; % Type "1" = "alkalinity"
-par1     =    co2sys.(site).TA; % Value of the first parameter
+par1     =    discrete_samples.TA; % Values of the first parameter
 par2type =    2; % Type "2" = "DIC"
-par2     =    co2sys.(site).DIC; % Value of the second parameter
-sal      =    co2sys.(site).Field_Salinity; % Salinity of the sample
-tempin   =    co2sys.(site).Field_Temp; % In situ temperature
+par2     =    discrete_samples.DIC; % Values of the second parameter
+sal      =    discrete_samples.Field_Salinity; % Salinity of the sample
+tempin   =    discrete_samples.Field_Temp; % In situ temperature
 presin   =    0; % Lab pressure
 tempout  =    0; % Doesn't matter here
 presout  =    1; % In situ pressure
@@ -60,18 +62,63 @@ k1k2c    =    4; % Choice of H2CO3 and HCO3- dissociation constants K1 and K2 ("
 kso4c    =    1; % Choice of HSO4- dissociation constants KSO4 ("1" means "Dickson")
 
 % Do the calculation. See CO2SYS's help for syntax and output format
-A = CO2SYS(par1,par2,par1type,par2type,sal,tempin,tempout,presin,presout,sil,po4,pHscale,k1k2c,kso4c);
+[carb_sys.results,headers,units] = CO2SYS(par1,par2,par1type,par2type,sal,tempin,tempout,presin,presout,sil,po4,pHscale,k1k2c,kso4c);
 
-% Make a structure with tables containing the discrete pH values for each site
-pH_discrete = table(datetime_utc,A(:,18));
-pH_discrete.Properties.VariableNames = {'datetime_utc','pH'};
+carb_sys.results = array2table(carb_sys.results);
+carb_sys.results.Properties.VariableNames = headers';
+
+%----Estimate error--------------------------------------------------------
+% For error in DIC, use the max of DIC_std and DIC_drift
+for i = 1:length(discrete_samples.DIC)
+    eDIC(i,1) = max(discrete_samples.DIC_std(i),discrete_samples.DIC_drift(i));
+end
+
+epar1     =    discrete_samples.TA_std; % Error for the first parameter
+epar2     =    eDIC; % Error for the second parameter
+esal      =    0;
+etemp     =    0;
+esil      =    0;
+epo4      =    0;
+epk       =    0;
+ebt       =    0;
+er        =    0;
+% Do the calculation. See CO2SYS error.m help for syntax and output format
+[err, headers, units] = errors(par1,par2,par1type,par2type,sal,tempin,tempout,presin,presout,sil,po4,...
+                                    epar1,epar2,esal,etemp,esil,epo4,epk,ebt,er,...
+                                    pHscale,k1k2c,kso4c);
+
+carb_sys.errors = array2table(err);
+carb_sys.errors.Properties.VariableNames = headers';
+carb_sys.errors.Properties.VariableUnits = units';
+
+% Make a table with just the discrete [H+] values and errors
+Hfree = carb_sys.results.("Hfreeout")/10^6; % Convert Hfreeout from umol/kg to mol/kg
+uHfree = carb_sys.errors.("u(Hout)")/10^9; % Convert u(Hout) from nmol/kg to to mol/kg
+H_calc = table(datetime_utc,Hfree,uHfree);
+H_calc.Properties.VariableNames = {'datetime_utc','Hfree','error'};
 
 %==========================================================================
-%   Compare discrete pH and AquaTroll pH
+%   Compare discrete sample and AquaTroll [H+]
 %==========================================================================
-% Load the AquaTroll data
+% Load the final QC'd AquaTroll data (best guess data)
 cd([rootpath,'open-water-platform-data\',site,'\cleaned\final-qc'])
 load([site,'-cleaned.mat']);
+
+% Load the cleaned BC and ERDC data for comparison
+cd([rootpath,'open-water-platform-data\',site,'\cleaned\movmed\'])
+load([site,'-bc-cleaned'])
+load([site,'-erdc-cleaned'])
+dat1 = sonde1_cleaned;
+dat2 = sonde2_cleaned;
+% Synchronize the BC and ERDC data to a common datetime vector
+dat_syn = synchronize(dat1,dat2);
+
+clearvars dat1 dat2 sonde1_cleaned sonde2_cleaned
+
+% Convert sensor pH to [H+]
+finalQC.Hfree = 10.^-finalQC.pH;
+dat_syn.Hfree1 = 10.^-dat_syn.pH_dat1;
+dat_syn.Hfree2 = 10.^-dat_syn.pH_dat2;
 
 % Global plotting settings
 dt1 = datetime('29-Jun-2021','TimeZone','UTC');     % Make all plots have same start date
@@ -114,30 +161,37 @@ dep.Properties.VariableNames = {'depNum','ind'};
 
 cd([rootpath,'figures\open-water-platform\',site,'\validation\dic_ta'])
 
-% Plot AquaTroll pH data with discrete pH on top
-figure(1),clf
-plot(finalQC.datetime_utc,finalQC.pH,'.k','MarkerSize',8)
+% Plot AquaTroll pH data with discrete [H+] on top
+fig1 = figure(1);clf
+fig1.WindowState = 'maximized';
+plot(dat_syn.datetime_utc,dat_syn.Hfree1,'o','MarkerSize',8,'color',red,'DisplayName','BC')
 hold on
-plot(pH_discrete.datetime_utc,pH_discrete.pH,'x');
+plot(dat_syn.datetime_utc,dat_syn.Hfree2,'o','MarkerSize',8,'color',blue,'DisplayName','ERDC')
+plot(finalQC.datetime_utc,finalQC.Hfree,'.k','MarkerSize',12,'DisplayName','"Best Guess"')
+errorbar(H_calc.datetime_utc,H_calc.Hfree,H_calc.error,'o','color',rgb('gold'),'MarkerSize',8,'LineWidth',2,'DisplayName','Discrete Sample')
 xline(finalQC.datetime_utc(dep.ind),'--',label,'HandleVisibility','off')
 xlim([dt1 dt2])    % Use same x limits
 xlabel('UTC')
-ylabel('pH')
+ylabel('[H+] (mol/kg)')
 title(site,'FontSize',fontsize)
+legend('show','location','best')
+ylim([0 6E-8])
 
 % Linear regression
 % Remove rows with missing pH values
 finalQC_trimmed = rmmissing(finalQC,'DataVariables',"pH");
 
 % Find closest matching indices
-t1 = pH_discrete.datetime_utc;
+t1 = H_calc.datetime_utc;
 t2 = finalQC_trimmed.datetime_utc;
 ind_sonde = interp1(t2,1:length(t2),t1,'nearest','extrap');
 
-ind_discrete = 1:1:height(pH_discrete);
+ind_discrete = 1:1:height(H_calc);
+
+%%
 % If closest matching samples are more than 25 minutes off, do not include
 for i = 1:length(ind_sonde(~isnan(ind_sonde)))
-    dt = between(finalQC_trimmed.datetime_utc(ind_sonde(i)),pH_discrete.datetime_utc(i));
+    dt = between(finalQC_trimmed.datetime_utc(ind_sonde(i)),H_calc.datetime_utc(i));
     if abs(time(dt)) > minutes(25)
         ind_sonde(i) = NaN;
         ind_discrete(i) = NaN;
@@ -148,12 +202,12 @@ ind_sonde = rmmissing(ind_sonde);
 ind_discrete = rmmissing(ind_discrete);
 
 % Create the model
-x = finalQC_trimmed.pH(ind_sonde);
-y = pH_discrete.pH(ind_discrete);
+x = finalQC_trimmed.Hfree(ind_sonde);
+y = H_calc.Hfree(ind_discrete);
 mdl = fitlm(x,y,'y~x1-1');  % Force intercept through zero; see Wilkinson notation
 
-tbl = table(finalQC_trimmed.datetime_utc(ind_sonde),pH_discrete.datetime_utc(ind_discrete),x,y);
-tbl.Properties.VariableNames = {'AquaTroll datetime','Discrete datetime','AquaTroll pH','Discrete pH'};
+tbl = table(finalQC_trimmed.datetime_utc(ind_sonde),H_calc.datetime_utc(ind_discrete),x,y);
+tbl.Properties.VariableNames = {'AquaTroll datetime','Discrete datetime','AquaTroll [H+]','Discrete [H+]'};
 
 % Create equation string for plot
 eqn = ['y = ',num2str(mdl.Coefficients.Estimate,3),'x'];
@@ -162,13 +216,40 @@ R2 = num2str(mdl.Rsquared.Ordinary,2);
 fig2 = figure(2);clf
 fig2.WindowState = 'maximized';
 h = plot(mdl,'marker','.','markersize',20);
-delete(h([3 4]))    % Delete confidence bounds on plot
+% delete(h([3 4]))    % Delete confidence bounds on plot
 hold on
 plot([min(min([x,y])) max(max([x,y]))], [min(min([x,y])) max(max([x,y]))],'--k')
-legend('',[eqn,newline,'R^2 = ',R2],'1:1 line','Location','southeast')
-xlabel('AquaTroll pH')          
-ylabel('Discrete pH')  
+errorbar(x,y,H_calc.error(ind_discrete),'.b','MarkerSize',dotsize,'LineWidth',2)
+% x1=0:0.1:8.5;
+% y1=mdl.Coefficients.Estimate*x1;
+% plot(x1,y1,'-r')
+% plot([min(min([x1,y1])) max(max([x1,y1]))], [min(min([x1,y1])) max(max([x1,y1]))],'--k')
+legend('',[eqn,newline,'R^2 = ',R2],'95% confidence interval','','1:1 line','Location','southeast')
+xlabel('AquaTroll [H+] (mol/kg)')
+ylabel('Discrete [H+] (mol/kg)')
 title(site)
 daspect([1 1 1])
 ylim([min(min([x,y])) max(max([x,y]))])
 xlim([min(min([x,y])) max(max([x,y]))])
+%%
+% % See Table 2, Rule 16 for propagation of uncertainty for y = A + log10(x)
+% % https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3387884/
+% abs_uncert = carb_sys.errors.("u(Hout)")*10^-9; % Factor of 10^-9 to convert nmol/kg to mol/kg
+% abs_val = 10.^(-carb_sys.results.pHout);        % [H+] in mol/kg
+% rel_uncert = 0.4343 * abs_uncert ./ abs_val;  % Unitless
+% pHerr = rel_uncert .* carb_sys.results.("pHout");    % pH units
+
+%====Save the plots========================================================
+option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');
+
+switch option
+    case 'Yes'
+        cd([rootpath,'figures\open-water-platform\',site,'\validation\dic_ta'])
+        saveas(fig1,[site,'_timeseries.png'])
+        saveas(fig1,[site,'_timeseries.fig'])
+        saveas(fig2,[site,'_linreg.png'])
+        saveas(fig2,[site,'_linreg.fig'])
+        disp('Plots saved!')
+    case 'No'
+        disp('Plots not saved.')
+end

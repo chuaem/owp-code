@@ -411,7 +411,7 @@ b(1).FaceColor = teal;
 b(2).FaceColor = brown;
 b(3).FaceColor = mauve;
 set(gca,'FontSize',15)
-legend('North','Gull','South','location','southeast','Location',[0.8415,0.8062,0.0639,0.0964])
+legend('North','Gull','South','Location',[0.8415,0.8062,0.0639,0.0964])
 ylabel('NEM (mmol O_2 m^{-2} d^{-1})','FontSize',20,'Color','k')
 xlabel('Month','Fontsize',20)
 title('All Sites','FontSize',36,'FontName','Helvetica','FontWeight','bold')
@@ -432,7 +432,7 @@ b = bar(month,GPPavg,1);
 b(1).FaceColor = teal;
 b(2).FaceColor = brown;
 b(3).FaceColor = mauve;
-set(gca,'FontSize',18)
+set(gca,'FontSize',16)
 title('All Sites','FontSize',32,'FontName','Helvetica','FontWeight','bold')
 
 hold on
@@ -448,20 +448,19 @@ b = bar(month,NEMavg,1);
 b(1).FaceColor = teal;
 b(2).FaceColor = brown;
 b(3).FaceColor = mauve;
-set(gca,'FontSize',18)
-legend('North','Gull','South','location','southeast','Location',[0.8415,0.8062,0.0639,0.0964])
+set(gca,'FontSize',16)
+legend('North','Gull','South','Location',[0.8493,0.803,0.0639,0.0964])
 ylabel('NEM (mmol O_2 m^{-2} d^{-1})')
 xlabel('Month')
 
-%%
 % % Compare seasonality in NEM across sites -- with errorbars
 % % Errorbars -- % https://www.mathworks.com/matlabcentral/answers/1582304-putting-error-bars-on-bar-plot?s_tid=srchtitle
 % NEMavg = [monthlyavg.north.mean_NEM'; monthlyavg.gull.mean_NEM'; monthlyavg.south.mean_NEM']';
 % NEMstd = [monthlystd.north.std_NEM'; monthlystd.gull.std_NEM'; monthlystd.south.std_NEM']';
 % month = monthlyavg.gull.month;
 % 
-% fig5 = figure(5);clf
-% fig5.WindowState = 'maximized';
+% fig6 = figure(6);clf
+% fig6.WindowState = 'maximized';
 % b = bar(month,NEMavg);
 % b(1).FaceColor = teal;
 % b(2).FaceColor = brown;
@@ -506,12 +505,11 @@ switch option
         saveas(fig3,'daily_monthly_dtd.png')
 
         cd([rootpath,'figures\diel-analysis\matlab-results\final-qc\all-sites'])
-        saveas(fig4,'monthlyavg_allsites.fig')
-        saveas(fig4,'monthlyavg_allsites.png')
+        saveas(fig4,'monthlyavg_allsites_NEMonly.fig')
+        saveas(fig4,'monthlyavg_allsites_NEMonly.png')
         
-        % cd('site-comparison')
-        % saveas(fig5,'monthlyavg_allsites_err.fig')
-        % saveas(fig5,'monthlyavg_allsites_err.png')
+        saveas(fig5,'monthlyavg_allsites.fig')
+        saveas(fig5,'monthlyavg_allsites.png')
 
         disp('Plots saved!')
     

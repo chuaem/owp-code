@@ -81,20 +81,21 @@ wspd_dailyAvg = retime(era5Dat,'daily','mean');
 par_dailyAvg = retime(parDat,'daily','mean');
 
 cd([rootpath,'figures\stats-analyses'])
-
+%%
 %====Create time tables for each site======================================
 %----Gull------------------------------------------------------------------
 dt2 = dateshift(gull_metab.daystart_dt,'start','day');
 gull_metab.daystart_dt = dt2;
 gull_TT = synchronize(gull_dailyAvg,gull_range,wspd_dailyAvg,par_dailyAvg,gull_metab);
-gull_TT = removevars(gull_TT,{'deployment','dayend_dt','daylength','R_hourly','P_hourly','R_daily','P_daily','datetime_local','Tair','light_lux'});
+gull_TT = removevars(gull_TT,{'deployment','daystart_dt','dayend_dt','daylength','R_hourly','P_hourly','R_daily','P_daily','datetime_local','Tair','light_lux'});
 gull_TT(gull_TT.datetime_utc < datetime(2021,6,29,"TimeZone","UTC"),:) = [];
 gull_TT(gull_TT.datetime_utc > datetime(2024,6,4,"TimeZone","UTC"),:) = [];
 
 % Set anomalous GPP and ER values to NaN
 anomER = find(gull_TT.ER > 0);
 anomGPP = find(gull_TT.GPP < 0);
-gull_TT{[anomER;anomGPP],:} = NaN;
+% gull_TT{[anomER;anomGPP],:} = NaN;
+gull_TT([anomER;anomGPP],:) = [];
 
 % Remove row if any explanatory or response variable is NaN
 gull_TT = rmmissing(gull_TT,'DataVariables',{'tidal','salinity','temperature','chla','turbidity','wspd','GPP','ER','NEM'});
@@ -128,14 +129,15 @@ gull_TT.site = categorical(gull_TT.site);
 dt2 = dateshift(north_metab.daystart_dt,'start','day');
 north_metab.daystart_dt = dt2;
 north_TT = synchronize(north_dailyAvg,north_range,wspd_dailyAvg,par_dailyAvg,north_metab);
-north_TT = removevars(north_TT,{'deployment','dayend_dt','daylength','R_hourly','P_hourly','R_daily','P_daily','datetime_local','Tair','light_lux'});
+north_TT = removevars(north_TT,{'deployment','daystart_dt','dayend_dt','daylength','R_hourly','P_hourly','R_daily','P_daily','datetime_local','Tair','light_lux'});
 north_TT(north_TT.datetime_utc < datetime(2021,6,29,"TimeZone","UTC"),:) = [];
 north_TT(north_TT.datetime_utc > datetime(2024,6,4,"TimeZone","UTC"),:) = [];
 
 % Set anomalous GPP and ER values to NaN
 anomER = find(north_TT.ER > 0);
 anomGPP = find(north_TT.GPP < 0);
-north_TT{[anomER;anomGPP],:} = NaN;
+% north_TT{[anomER;anomGPP],:} = NaN;
+north_TT([anomER;anomGPP],:) = [];
 
 % Remove row if any explanatory or response variable is NaN
 north_TT = rmmissing(north_TT,'DataVariables',{'tidal','salinity','temperature','chla','turbidity','wspd','GPP','ER','NEM'});
@@ -169,14 +171,15 @@ north_TT.site = categorical(north_TT.site);
 dt2 = dateshift(south_metab.daystart_dt,'start','day');
 south_metab.daystart_dt = dt2;
 south_TT = synchronize(south_dailyAvg,south_range,wspd_dailyAvg,par_dailyAvg,south_metab);
-south_TT = removevars(south_TT,{'deployment','dayend_dt','daylength','R_hourly','P_hourly','R_daily','P_daily','datetime_local','Tair','light_lux'});
+south_TT = removevars(south_TT,{'deployment','daystart_dt','dayend_dt','daylength','R_hourly','P_hourly','R_daily','P_daily','datetime_local','Tair','light_lux'});
 south_TT(south_TT.datetime_utc < datetime(2021,6,29,"TimeZone","UTC"),:) = [];
 south_TT(south_TT.datetime_utc > datetime(2024,6,4,"TimeZone","UTC"),:) = [];
 
 % Set anomalous GPP and ER values to NaN
 anomER = find(south_TT.ER > 0);
 anomGPP = find(south_TT.GPP < 0);
-south_TT{[anomER;anomGPP],:} = NaN;
+% south_TT{[anomER;anomGPP],:} = NaN;
+south_TT([anomER;anomGPP],:) = [];
 
 % Remove row if any explanatory or response variable is NaN
 south_TT = rmmissing(south_TT,'DataVariables',{'tidal','salinity','temperature','chla','turbidity','wspd','GPP','ER','NEM'});
@@ -276,7 +279,7 @@ allSites_mdl.all.NEM = fitlm(data.all,'NEM ~ tidal + wspd + temperature + salini
 %----Scaled data-----------------------------------------------------------
 % Scale response and explanatory variables to center 0 and std 1 (Lowe et al., 2019)
 VN = data.all.Properties.VariableNames;
-colNr = find(strcmp(VN,'NEM'));   % Find column number for GPP
+colNr = find(strcmp(VN,'NEM'));   % Find column number for NEM
 allSites_dat_norm.all = normalize(allSites_dat.all(:,1:colNr)); % Normalize all parameters except "season" and "site"
 allSites_dat_norm.all.("season") = data.all.season; % Add "season" column back in
 allSites_dat_norm.all.("site") = data.all.site; % Add "site" column back in
@@ -316,8 +319,9 @@ allSites_mdl_norm.all.NEM = fitlm(data_norm.all,'NEM ~ tidal + wspd + temperatur
 
 % % MIXED EFFECTS MODEL
 % allSites_mdl_norm_MIXED.all.GPP = fitlme(data_norm.all,'GPP ~ tidal + wspd + temperature + salinity + chla + turbidity + site*season'); % Gives same thing as fitlm
-%
+% 
 % allSites_mdl_norm_MIXED2.all.GPP = fitlme(data_norm.all,'GPP ~ tidal + wspd + temperature + salinity + chla + turbidity + season*site + (site|season)');
+
 %%
 %==========================================================================
 % Plot results
@@ -327,6 +331,7 @@ mdl = allSites_mdl;
 
 respNames = {'GPP','ER','NEM'};
 predNames = {'salinity','temperature','chla','turbidity','tidal','wspd'};
+seasonNames = {'all','winter','spring','summer','fall'};
 xlblNames = {'Salinity','Temperature (^oC)','Chl a (RFU)','Turbidity (NTU)','Tidal (m)','Wind speed (m/s)'};
 
 % Find means of each variable for plotting individual regression lines
@@ -337,31 +342,26 @@ for k = 1:length(predNames)
     meanVal.summer.(predNames{k}) = mean(data.summer.(predNames{k}),'omitmissing');
     meanVal.fall.(predNames{k}) = mean(data.fall.(predNames{k}),'omitmissing');
 end
-
+%%
 %====GPP, ER, NEM vs. Explanatory Variables================================
 for i = 1:length(respNames)   % Loop through plots for GPP, ER, and NEM
-    fig = figure(i);clf
-    fig.Position = [363.4 905.0 676.8 957.6];
+    fig(i) = figure(i);clf
+    % fig(i).Position = [363.4 905.0 676.8 957.6];
+    % fig(i).Position = [363.4 875.4 655.2 957.6];
+    fig(i).Position = [-1337.4 -189.4 664 957.6];
     t = tiledlayout(3,2,'Padding','none','TileSpacing','loose');
-    
-    % Coefficient estimates
-    % Model with all data
-    b0.all = mdl.all.(respNames{i}).Coefficients.Estimate(1);
-    b1.all = mdl.all.(respNames{i}).Coefficients.Estimate(2);
-    b2.all = mdl.all.(respNames{i}).Coefficients.Estimate(3);
-    b3.all = mdl.all.(respNames{i}).Coefficients.Estimate(4);
-    b4.all = mdl.all.(respNames{i}).Coefficients.Estimate(5);
-    b5.all = mdl.all.(respNames{i}).Coefficients.Estimate(6);
-    b6.all = mdl.all.(respNames{i}).Coefficients.Estimate(7);
 
-    % Model with Winter data
-    b0.winter = mdl.winter.(respNames{i}).Coefficients.Estimate(1);
-    b1.winter = mdl.winter.(respNames{i}).Coefficients.Estimate(2);
-    b2.winter = mdl.winter.(respNames{i}).Coefficients.Estimate(3);
-    b3.winter = mdl.winter.(respNames{i}).Coefficients.Estimate(4);
-    b4.winter = mdl.winter.(respNames{i}).Coefficients.Estimate(5);
-    b5.winter = mdl.winter.(respNames{i}).Coefficients.Estimate(6);
-    b6.winter = mdl.winter.(respNames{i}).Coefficients.Estimate(7);
+    % Coefficient estimates for each "season"
+    for m = 1:length(seasonNames)
+        % Model with all data
+        b0.(seasonNames{m}) = mdl.(seasonNames{m}).(respNames{i}).Coefficients.Estimate(1);
+        b1.(seasonNames{m}) = mdl.(seasonNames{m}).(respNames{i}).Coefficients.Estimate(2);
+        b2.(seasonNames{m}) = mdl.(seasonNames{m}).(respNames{i}).Coefficients.Estimate(3);
+        b3.(seasonNames{m}) = mdl.(seasonNames{m}).(respNames{i}).Coefficients.Estimate(4);
+        b4.(seasonNames{m}) = mdl.(seasonNames{m}).(respNames{i}).Coefficients.Estimate(5);
+        b5.(seasonNames{m}) = mdl.(seasonNames{m}).(respNames{i}).Coefficients.Estimate(6);
+        b6.(seasonNames{m}) = mdl.(seasonNames{m}).(respNames{i}).Coefficients.Estimate(7);
+    end
 
     for j = 1:length(predNames) % Loop through plotting each predictor
         t1 = tiledlayout(t,2,2,'Tilespacing','none');
@@ -373,68 +373,269 @@ for i = 1:length(respNames)   % Loop through plots for GPP, ER, and NEM
         ax1 = nexttile(t1);
         plot(data.all.(predNames{j}),data.all.(respNames{i}),'.','color',rgb('lightgrey'))   % Plot All data in grey
         hold on
-        switch predNames{j} % Plot regression line for All data in grey
+        % Plot regression line for All data in grey
+        switch predNames{j}
             case 'salinity'
                 plot(x, b0.all + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x...
                     + b2.all*meanVal.all.(predNames{2}) + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
-                    + b5.all*meanVal.all.(predNames{5}),'color',rgb('grey'))
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'temperature'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'chla'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'turbidity'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + b3.all*meanVal.all.(predNames{3}) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'tidal'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'wspd'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x,'color',rgb('grey'))
         end
-        plot(data.winter.(predNames{j}),data.winter.(respNames{i}),'.k') % Plot Winter data in black
-        switch predNames{j} % Plot regression line for Winter data in black
+        % Plot Winter data in black
+        plot(data.winter.(predNames{j}),data.winter.(respNames{i}),'.k')
+        % Plot regression line for Winter data in black
+        switch predNames{j}
             case 'salinity'
                 plot(x, b0.winter + mdl.winter.(respNames{i}).Coefficients.Estimate(j+1)*x...
                     + b2.winter*meanVal.winter.(predNames{2}) + b3.winter*meanVal.winter.(predNames{3}) + b4.winter*meanVal.winter.(predNames{4})...
                     + b5.winter*meanVal.winter.(predNames{5}),'k')
-        end        
+            case 'temperature'
+                plot(x, b0.winter + b1.winter*meanVal.winter.(predNames{1}) + mdl.winter.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b3.winter*meanVal.winter.(predNames{3}) + b4.winter*meanVal.winter.(predNames{4})...
+                    + b5.winter*meanVal.winter.(predNames{5}),'k')
+            case 'chla'
+                plot(x, b0.winter + b1.winter*meanVal.winter.(predNames{1}) + b2.winter*meanVal.winter.(predNames{2})...
+                    + mdl.winter.(respNames{i}).Coefficients.Estimate(j+1)*x + b4.winter*meanVal.winter.(predNames{4})...
+                    + b5.winter*meanVal.winter.(predNames{5}) + b6.winter*meanVal.winter.(predNames{6}),'k')
+            case 'turbidity'
+                plot(x, b0.winter + b1.winter*meanVal.winter.(predNames{1}) + b2.winter*meanVal.winter.(predNames{2})...
+                    + b3.winter*meanVal.winter.(predNames{3}) + mdl.winter.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b5.winter*meanVal.winter.(predNames{5}) + b6.winter*meanVal.winter.(predNames{6}),'k')
+            case 'tidal'
+                plot(x, b0.winter + b1.winter*meanVal.winter.(predNames{1}) + b2.winter*meanVal.winter.(predNames{2})...
+                    + b3.winter*meanVal.winter.(predNames{3}) + b4.winter*meanVal.winter.(predNames{4})...
+                    + mdl.winter.(respNames{i}).Coefficients.Estimate(j+1)*x + b6.winter*meanVal.winter.(predNames{6}),'k')
+            case 'wspd'
+                plot(x, b0.winter + b1.winter*meanVal.winter.(predNames{1}) + b2.winter*meanVal.winter.(predNames{2})...
+                    + b3.winter*meanVal.winter.(predNames{3}) + b4.winter*meanVal.winter.(predNames{4})...
+                    + b5.winter*meanVal.winter.(predNames{5}) + mdl.winter.(respNames{i}).Coefficients.Estimate(j+1)*x,'k')
+        end
         pbaspect(ax1,[1 1 1]); % Make relative lengths of axes equal
         % make a text object for the title
         xl = get(gca(),'Xlim');
         yl = get(gca(),'Ylim');
         text(xl(1),yl(2),'Winter','VerticalAlignment','top','HorizontalAlignment','left','FontSize',12)
+        % text(xl(1)*1.05,yl(2)*0.95,'Winter','VerticalAlignment','top','HorizontalAlignment','left','FontSize',12)
 
         % Spring
         ax2 = nexttile(t1);
         plot(data.all.(predNames{j}),data.all.(respNames{i}),'.','color',rgb('lightgrey'))
         hold on
-        plot(data.all.(predNames{j}),mdl.all.(respNames{i}).Coefficients.Estimate(1) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*data.all.(predNames{j}),'color',rgb('grey'))
+        % Plot regression line for All data in grey
+        switch predNames{j}
+            case 'salinity'
+                plot(x, b0.all + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b2.all*meanVal.all.(predNames{2}) + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'temperature'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'chla'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'turbidity'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + b3.all*meanVal.all.(predNames{3}) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'tidal'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'wspd'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x,'color',rgb('grey'))
+        end
+        % Plot Spring data in black
         plot(data.spring.(predNames{j}),data.spring.(respNames{i}),'.k')
-        plot(data.all.(predNames{j}),mdl.spring.(respNames{i}).Coefficients.Estimate(1) + mdl.spring.(respNames{i}).Coefficients.Estimate(j+1)*data.all.(predNames{j}),'k')
-        % ylim([-300 100])
+        % Plot regression line for Spring data in black
+        switch predNames{j}
+            case 'salinity'
+                plot(x, b0.spring + mdl.spring.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b2.spring*meanVal.spring.(predNames{2}) + b3.spring*meanVal.spring.(predNames{3}) + b4.spring*meanVal.spring.(predNames{4})...
+                    + b5.spring*meanVal.spring.(predNames{5}),'k')
+            case 'temperature'
+                plot(x, b0.spring + b1.spring*meanVal.spring.(predNames{1}) + mdl.spring.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b3.spring*meanVal.spring.(predNames{3}) + b4.spring*meanVal.spring.(predNames{4})...
+                    + b5.spring*meanVal.spring.(predNames{5}),'k')
+            case 'chla'
+                plot(x, b0.spring + b1.spring*meanVal.spring.(predNames{1}) + b2.spring*meanVal.spring.(predNames{2})...
+                    + mdl.spring.(respNames{i}).Coefficients.Estimate(j+1)*x + b4.spring*meanVal.spring.(predNames{4})...
+                    + b5.spring*meanVal.spring.(predNames{5}) + b6.spring*meanVal.spring.(predNames{6}),'k')
+            case 'turbidity'
+                plot(x, b0.spring + b1.spring*meanVal.spring.(predNames{1}) + b2.spring*meanVal.spring.(predNames{2})...
+                    + b3.spring*meanVal.spring.(predNames{3}) + mdl.spring.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b5.spring*meanVal.spring.(predNames{5}) + b6.spring*meanVal.spring.(predNames{6}),'k')
+            case 'tidal'
+                plot(x, b0.spring + b1.spring*meanVal.spring.(predNames{1}) + b2.spring*meanVal.spring.(predNames{2})...
+                    + b3.spring*meanVal.spring.(predNames{3}) + b4.spring*meanVal.spring.(predNames{4})...
+                    + mdl.spring.(respNames{i}).Coefficients.Estimate(j+1)*x + b6.spring*meanVal.spring.(predNames{6}),'k')
+            case 'wspd'
+                plot(x, b0.spring + b1.spring*meanVal.spring.(predNames{1}) + b2.spring*meanVal.spring.(predNames{2})...
+                    + b3.spring*meanVal.spring.(predNames{3}) + b4.spring*meanVal.spring.(predNames{4})...
+                    + b5.spring*meanVal.spring.(predNames{5}) + mdl.spring.(respNames{i}).Coefficients.Estimate(j+1)*x,'k')
+        end
         pbaspect(ax2,[1 1 1]); % Make relative lengths of axes equal
         % make a text object for the title
         xl = get(gca(),'Xlim');
         yl = get(gca(),'Ylim');
         text(xl(1),yl(2),'Spring','VerticalAlignment','top','HorizontalAlignment','left','FontSize',12)
-        
+        % text(xl(1)*1.05,yl(2)*0.95,'Spring','VerticalAlignment','top','HorizontalAlignment','left','FontSize',12)
+
         % Summer
         ax3 = nexttile(t1);
         plot(data.all.(predNames{j}),data.all.(respNames{i}),'.','color',rgb('lightgrey'))
         hold on
+        % Plot regression line for All data in grey
+        switch predNames{j}
+            case 'salinity'
+                plot(x, b0.all + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b2.all*meanVal.all.(predNames{2}) + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'temperature'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'chla'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'turbidity'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + b3.all*meanVal.all.(predNames{3}) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'tidal'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'wspd'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x,'color',rgb('grey'))
+        end
+        % Plot Summer data in black
         plot(data.summer.(predNames{j}),data.summer.(respNames{i}),'.k')
-        plot(data.all.(predNames{j}),mdl.all.(respNames{i}).Coefficients.Estimate(1) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*data.all.(predNames{j}),'color',rgb('grey'))
-        plot(data.summer.(predNames{j}),data.summer.(respNames{i}),'.k')
-        plot(data.all.(predNames{j}),mdl.summer.(respNames{i}).Coefficients.Estimate(1) + mdl.summer.(respNames{i}).Coefficients.Estimate(j+1)*data.all.(predNames{j}),'k')
-        % ylim([-300 100])
+        % Plot regression line for Summer data in black
+        switch predNames{j}
+            case 'salinity'
+                plot(x, b0.summer + mdl.summer.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b2.summer*meanVal.summer.(predNames{2}) + b3.summer*meanVal.summer.(predNames{3}) + b4.summer*meanVal.summer.(predNames{4})...
+                    + b5.summer*meanVal.summer.(predNames{5}),'k')
+            case 'temperature'
+                plot(x, b0.summer + b1.summer*meanVal.summer.(predNames{1}) + mdl.summer.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b3.summer*meanVal.summer.(predNames{3}) + b4.summer*meanVal.summer.(predNames{4})...
+                    + b5.summer*meanVal.summer.(predNames{5}),'k')
+            case 'chla'
+                plot(x, b0.summer + b1.summer*meanVal.summer.(predNames{1}) + b2.summer*meanVal.summer.(predNames{2})...
+                    + mdl.summer.(respNames{i}).Coefficients.Estimate(j+1)*x + b4.summer*meanVal.summer.(predNames{4})...
+                    + b5.summer*meanVal.summer.(predNames{5}) + b6.summer*meanVal.summer.(predNames{6}),'k')
+            case 'turbidity'
+                plot(x, b0.summer + b1.summer*meanVal.summer.(predNames{1}) + b2.summer*meanVal.summer.(predNames{2})...
+                    + b3.summer*meanVal.summer.(predNames{3}) + mdl.summer.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b5.summer*meanVal.summer.(predNames{5}) + b6.summer*meanVal.summer.(predNames{6}),'k')
+            case 'tidal'
+                plot(x, b0.summer + b1.summer*meanVal.summer.(predNames{1}) + b2.summer*meanVal.summer.(predNames{2})...
+                    + b3.summer*meanVal.summer.(predNames{3}) + b4.summer*meanVal.summer.(predNames{4})...
+                    + mdl.summer.(respNames{i}).Coefficients.Estimate(j+1)*x + b6.summer*meanVal.summer.(predNames{6}),'k')
+            case 'wspd'
+                plot(x, b0.summer + b1.summer*meanVal.summer.(predNames{1}) + b2.summer*meanVal.summer.(predNames{2})...
+                    + b3.summer*meanVal.summer.(predNames{3}) + b4.summer*meanVal.summer.(predNames{4})...
+                    + b5.summer*meanVal.summer.(predNames{5}) + mdl.summer.(respNames{i}).Coefficients.Estimate(j+1)*x,'k')
+        end
         pbaspect(ax3,[1 1 1]); % Make relative lengths of axes equal
         % make a text object for the title
         xl = get(gca(),'Xlim');
         yl = get(gca(),'Ylim');
         text(xl(1),yl(2),'Summer','VerticalAlignment','top','HorizontalAlignment','left','FontSize',12)
+        % text(xl(1)+.5,yl(2)-5,'Summer','VerticalAlignment','top','HorizontalAlignment','left','FontSize',12)
 
         % Fall
         ax4 = nexttile(t1);
         plot(data.all.(predNames{j}),data.all.(respNames{i}),'.','color',rgb('lightgrey'))
         hold on
+        % Plot regression line for All data in grey
+        switch predNames{j}
+            case 'salinity'
+                plot(x, b0.all + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b2.all*meanVal.all.(predNames{2}) + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'temperature'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'chla'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'turbidity'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + b3.all*meanVal.all.(predNames{3}) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b5.all*meanVal.all.(predNames{5}) + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'tidal'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x + b6.all*meanVal.all.(predNames{6}),'color',rgb('grey'))
+            case 'wspd'
+                plot(x, b0.all + b1.all*meanVal.all.(predNames{1}) + b2.all*meanVal.all.(predNames{2})...
+                    + b3.all*meanVal.all.(predNames{3}) + b4.all*meanVal.all.(predNames{4})...
+                    + b5.all*meanVal.all.(predNames{5}) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*x,'color',rgb('grey'))
+        end
+        % Plot Fall data in black
         plot(data.fall.(predNames{j}),data.fall.(respNames{i}),'.k')
-        plot(data.all.(predNames{j}),mdl.all.(respNames{i}).Coefficients.Estimate(1) + mdl.all.(respNames{i}).Coefficients.Estimate(j+1)*data.all.(predNames{j}),'color',rgb('grey'))
-        plot(data.fall.(predNames{j}),data.fall.(respNames{i}),'.k')
-        plot(data.all.(predNames{j}),mdl.fall.(respNames{i}).Coefficients.Estimate(1) + mdl.fall.(respNames{i}).Coefficients.Estimate(j+1)*data.all.(predNames{j}),'k')
-        % ylim([-300 100])
+        % Plot regression line for Fall data in black
+        switch predNames{j}
+            case 'salinity'
+                plot(x, b0.fall + mdl.fall.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b2.fall*meanVal.fall.(predNames{2}) + b3.fall*meanVal.fall.(predNames{3}) + b4.fall*meanVal.fall.(predNames{4})...
+                    + b5.fall*meanVal.fall.(predNames{5}),'k')
+            case 'temperature'
+                plot(x, b0.fall + b1.fall*meanVal.fall.(predNames{1}) + mdl.fall.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b3.fall*meanVal.fall.(predNames{3}) + b4.fall*meanVal.fall.(predNames{4})...
+                    + b5.fall*meanVal.fall.(predNames{5}),'k')
+            case 'chla'
+                plot(x, b0.fall + b1.fall*meanVal.fall.(predNames{1}) + b2.fall*meanVal.fall.(predNames{2})...
+                    + mdl.fall.(respNames{i}).Coefficients.Estimate(j+1)*x + b4.fall*meanVal.fall.(predNames{4})...
+                    + b5.fall*meanVal.fall.(predNames{5}) + b6.fall*meanVal.fall.(predNames{6}),'k')
+            case 'turbidity'
+                plot(x, b0.fall + b1.fall*meanVal.fall.(predNames{1}) + b2.fall*meanVal.fall.(predNames{2})...
+                    + b3.fall*meanVal.fall.(predNames{3}) + mdl.fall.(respNames{i}).Coefficients.Estimate(j+1)*x...
+                    + b5.fall*meanVal.fall.(predNames{5}) + b6.fall*meanVal.fall.(predNames{6}),'k')
+            case 'tidal'
+                plot(x, b0.fall + b1.fall*meanVal.fall.(predNames{1}) + b2.fall*meanVal.fall.(predNames{2})...
+                    + b3.fall*meanVal.fall.(predNames{3}) + b4.fall*meanVal.fall.(predNames{4})...
+                    + mdl.fall.(respNames{i}).Coefficients.Estimate(j+1)*x + b6.fall*meanVal.fall.(predNames{6}),'k')
+            case 'wspd'
+                plot(x, b0.fall + b1.fall*meanVal.fall.(predNames{1}) + b2.fall*meanVal.fall.(predNames{2})...
+                    + b3.fall*meanVal.fall.(predNames{3}) + b4.fall*meanVal.fall.(predNames{4})...
+                    + b5.fall*meanVal.fall.(predNames{5}) + mdl.fall.(respNames{i}).Coefficients.Estimate(j+1)*x,'k')
+        end
         pbaspect(ax4,[1 1 1]); % Make relative lengths of axes equal
         % make a text object for the title
         xl = get(gca(),'Xlim');
         yl = get(gca(),'Ylim');
         text(xl(1),yl(2),'Fall','VerticalAlignment','top','HorizontalAlignment','left','FontSize',12)
+        % text(xl(1)+.5,yl(2)-5,'Fall','VerticalAlignment','top','HorizontalAlignment','left','FontSize',12)
 
         % Control x- and y-tick labels
         ax = t1.Children;
@@ -452,62 +653,94 @@ for i = 1:length(respNames)   % Loop through plots for GPP, ER, and NEM
     ylabel(t,strcat(respNames(i),' (mmol O_2 m^{-2} d^{-1})'),'FontSize',14)
 end
 
+%====Save the plots========================================================
+option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');
+
+switch option
+    case 'Yes'
+        cd([rootpath,'figures\stats-analyses\metabolism\3x2 Seasonal Plots\All Sites'])
+        saveas(fig(1),'GPP.png')
+        saveas(fig(1),'GPP.fig')
+        saveas(fig(2),'ER.png')
+        saveas(fig(2),'ER.fig')
+        saveas(fig(3),'NEM.png')
+        saveas(fig(3),'NEM.fig')
+        disp('Plots saved!')
+    case 'No'
+        disp('Plots not saved.')
+end
+
 %%
-%====MLRs of site average: (1) for each season and (2) across all seasons==
-dat_syn = synchronize(north_TT,south_TT,gull_TT,'daily');
-mean_depth = mean([dat_syn.depth_north_TT,dat_syn.depth_gull_TT,dat_syn.depth_south_TT],2,'omitmissing');
+% Create a table for ease of copying results to manuscript
 
-% meanSites_dat =
+mdl = allSites_mdl_norm.summer; % Change the seasons
 
-%%
-%===MLR for Gull by season=================================================
+for i = 1:length(respNames)
+    coeffs.(respNames{i}) = table('RowNames',{'Estimate','p-value'});
+    coeffs.(respNames{i}).S = [mdl.(respNames{i}).Coefficients.Estimate(2); mdl.(respNames{i}).Coefficients.pValue(2)];
+    coeffs.(respNames{i}).T = [mdl.(respNames{i}).Coefficients.Estimate(3); mdl.(respNames{i}).Coefficients.pValue(3)];
+    coeffs.(respNames{i}).chla = [mdl.(respNames{i}).Coefficients.Estimate(4); mdl.(respNames{i}).Coefficients.pValue(4)];
+    coeffs.(respNames{i}).turbidity = [mdl.(respNames{i}).Coefficients.Estimate(5); mdl.(respNames{i}).Coefficients.pValue(5)];
+    coeffs.(respNames{i}).tidal = [mdl.(respNames{i}).Coefficients.Estimate(6); mdl.(respNames{i}).Coefficients.pValue(6)];
+    coeffs.(respNames{i}).wspd = [mdl.(respNames{i}).Coefficients.Estimate(7); mdl.(respNames{i}).Coefficients.pValue(7)];
+end
 
-%----Original (not scaled) data--------------------------------------------
-% Break data into seasons
-gull_dat.winter = gull_dat.all(indWinter,:);
-gull_dat.spring = gull_dat.all(indSpring,:);
-gull_dat.summer = gull_dat.all(indSummer,:);
-gull_dat.fall = gull_dat.all(indFall,:);
+    %%
+    %====MLRs of site average: (1) for each season and (2) across all seasons==
+    dat_syn = synchronize(north_TT,south_TT,gull_TT,'daily');
+    mean_depth = mean([dat_syn.depth_north_TT,dat_syn.depth_gull_TT,dat_syn.depth_south_TT],2,'omitmissing');
 
-% Compute models with original data
-gull_mdl.winter.GPP = fitlm(gull_dat.winter,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl.spring.GPP = fitlm(gull_dat.spring,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl.summer.GPP = fitlm(gull_dat.summer,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl.fall.GPP = fitlm(gull_dat.fall,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
+    % meanSites_dat =
 
-gull_mdl.winter.ER = fitlm(gull_dat.winter,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl.spring.ER = fitlm(gull_dat.spring,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl.summer.ER = fitlm(gull_dat.summer,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl.fall.ER = fitlm(gull_dat.fall,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
+    %%
+    %===MLR for Gull by season=================================================
 
-gull_mdl.winter.NEM = fitlm(gull_dat.winter,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl.spring.NEM = fitlm(gull_dat.spring,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl.summer.NEM = fitlm(gull_dat.summer,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl.fall.NEM = fitlm(gull_dat.fall,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');
+    %----Original (not scaled) data--------------------------------------------
+    % Break data into seasons
+    gull_dat.winter = gull_dat.all(indWinter,:);
+    gull_dat.spring = gull_dat.all(indSpring,:);
+    gull_dat.summer = gull_dat.all(indSummer,:);
+    gull_dat.fall = gull_dat.all(indFall,:);
 
-%----Scaled data-----------------------------------------------------------
-% Scale response and explanatory variables to center 0 and std 1 (Lowe et al., 2019)
-gull_dat_norm.all = normalize(gull_dat.all(:,1:13)); % Normalize all parameters except "season" and "site"
-gull_dat_norm.all.("season") = gull_dat.all.season; % Add "season" column back in
+    % Compute models with original data
+    gull_mdl.winter.GPP = fitlm(gull_dat.winter,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl.spring.GPP = fitlm(gull_dat.spring,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl.summer.GPP = fitlm(gull_dat.summer,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl.fall.GPP = fitlm(gull_dat.fall,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
 
-% Break normalized data into seasons
-gull_dat_norm.winter = gull_dat_norm.all(indWinter,:);
-gull_dat_norm.spring = gull_dat_norm.all(indSpring,:);
-gull_dat_norm.summer = gull_dat_norm.all(indSummer,:);
-gull_dat_norm.fall = gull_dat_norm.all(indFall,:);
+    gull_mdl.winter.ER = fitlm(gull_dat.winter,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl.spring.ER = fitlm(gull_dat.spring,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl.summer.ER = fitlm(gull_dat.summer,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl.fall.ER = fitlm(gull_dat.fall,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
 
-% Compute models with scaled data
-gull_mdl_norm.winter.GPP = fitlm(gull_dat_norm.winter,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl_norm.spring.GPP = fitlm(gull_dat_norm.spring,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl_norm.summer.GPP = fitlm(gull_dat_norm.summer,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl_norm.fall.GPP = fitlm(gull_dat_norm.fall,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl.winter.NEM = fitlm(gull_dat.winter,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl.spring.NEM = fitlm(gull_dat.spring,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl.summer.NEM = fitlm(gull_dat.summer,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl.fall.NEM = fitlm(gull_dat.fall,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');
 
-gull_mdl_norm.winter.ER = fitlm(gull_dat_norm.winter,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl_norm.spring.ER = fitlm(gull_dat_norm.spring,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl_norm.summer.ER = fitlm(gull_dat_norm.summer,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl_norm.fall.ER = fitlm(gull_dat_norm.fall,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
+    %----Scaled data-----------------------------------------------------------
+    % Scale response and explanatory variables to center 0 and std 1 (Lowe et al., 2019)
+    gull_dat_norm.all = normalize(gull_dat.all(:,1:13)); % Normalize all parameters except "season" and "site"
+    gull_dat_norm.all.("season") = gull_dat.all.season; % Add "season" column back in
 
-gull_mdl_norm.winter.NEM = fitlm(gull_dat_norm.winter,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl_norm.spring.NEM = fitlm(gull_dat_norm.spring,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl_norm.summer.NEM = fitlm(gull_dat_norm.summer,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');
-gull_mdl_norm.fall.NEM = fitlm(gull_dat_norm.fall,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');
+    % Break normalized data into seasons
+    gull_dat_norm.winter = gull_dat_norm.all(indWinter,:);
+    gull_dat_norm.spring = gull_dat_norm.all(indSpring,:);
+    gull_dat_norm.summer = gull_dat_norm.all(indSummer,:);
+    gull_dat_norm.fall = gull_dat_norm.all(indFall,:);
+
+    % Compute models with scaled data
+    gull_mdl_norm.winter.GPP = fitlm(gull_dat_norm.winter,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl_norm.spring.GPP = fitlm(gull_dat_norm.spring,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl_norm.summer.GPP = fitlm(gull_dat_norm.summer,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl_norm.fall.GPP = fitlm(gull_dat_norm.fall,'GPP ~ depth + wspd + temperature + salinity + chla + turbidity');
+
+    gull_mdl_norm.winter.ER = fitlm(gull_dat_norm.winter,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl_norm.spring.ER = fitlm(gull_dat_norm.spring,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl_norm.summer.ER = fitlm(gull_dat_norm.summer,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl_norm.fall.ER = fitlm(gull_dat_norm.fall,'ER ~ depth + wspd + temperature + salinity + chla + turbidity');
+
+    gull_mdl_norm.winter.NEM = fitlm(gull_dat_norm.winter,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl_norm.spring.NEM = fitlm(gull_dat_norm.spring,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl_norm.summer.NEM = fitlm(gull_dat_norm.summer,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');
+    gull_mdl_norm.fall.NEM = fitlm(gull_dat_norm.fall,'NEM ~ depth + wspd + temperature + salinity + chla + turbidity');

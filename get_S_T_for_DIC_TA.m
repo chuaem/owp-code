@@ -9,16 +9,17 @@
 %
 % DATE:
 % First created: 7/31/2024
-% Last updated: 8/13/2024
+% Last updated: 9/19/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
 
-rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
+rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';   
 
 %====Import data===========================================================
-cd([rootpath,'discrete-samples'])
-filename = 'DICTARecord_SMIIL.xlsx';
+% Load the salinity inventory sheet, which now lives in the shared drive
+cd('G:\Shared drives\SMIIL\Shared Data\')
+filename = 'SMIIL DIC_TA Sample Salinities.xlsx';
 sampleLog = readtable(filename,'Sheet','DataProcessing');
 
 % Load North data and add to structure
@@ -71,5 +72,5 @@ for i = 1:numel(fn)
 end
 
 % Write table to Excel spreadsheet
-cd([rootpath,'discrete-samples'])
+cd('G:\Shared drives\SMIIL\Shared Data\')
 writetable(sampleLog,filename,'Sheet','DataProcessing')

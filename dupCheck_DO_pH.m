@@ -9,7 +9,7 @@
 % 
 % DATE:
 % First created: 4/26/2024
-% Last updated: 6/26/2024
+% Last updated: 9/23/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -126,8 +126,8 @@ ind_d11 = interp1(t2,1:length(t2),t1,'nearest');    % Find start index for Dep 1
 t1 = dat_syn.datetime_utc(ind_dep(10));
 ind_d13 = interp1(t2,1:length(t2),t1,'nearest');    % Find end index for Dep 12
 
-stdev_DO = std(DOcorr_syn(ind_d11:ind_d13,1:2),0,2,'omitmissing');
-stdev.DO = mean(stdev_DO.std,'omitmissing');
+stdev_DOconc = std(DOcorr_syn(ind_d11:ind_d13,1:2),0,2,'omitmissing');
+stdev.DOconc = mean(stdev_DOconc.std,'omitmissing');
 
 % Find indices of deployment changes in synchronized, corrected DO data
 t1 = dat_syn.datetime_utc(dep.ind);
