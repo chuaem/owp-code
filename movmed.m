@@ -10,7 +10,7 @@
 % 
 % DATE:
 % First created: 
-% Last updated: 6/26/2024
+% Last updated: 9/30/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -23,7 +23,7 @@ rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 cd([rootpath,'open-water-platform-data\',site,'\cleaned\initial-qc'])
 
 prompt = {'Choose which sonde to QC'};
-sonde = questdlg(prompt,'Sonde Selection','BC','ERDC','Cancel','Cancel');
+sonde = questdlg(prompt,'Sonde Selection','BC','ERDC','Cancel','BC');
 
 switch sonde
     case 'BC'
@@ -71,7 +71,7 @@ end
 % Find indices of deployment changes
 ind_dep = find(diff(dat.deployment) > 0);
 
-% (3) Double Moving Median Test
+% Double Moving Median Test
 window = 144;
 C = 1; % Consistency constant (should be 1.4826 for normally distributed values)
 k = 3;
@@ -406,7 +406,7 @@ switch sonde
         upper = mmed_high + k*mmad_high;
         ind_bad_high = ind_high(dat.turbidity(ind_high) > upper);
 
-        fig11 = figure(11);clf
+        fig11 = figure(13);clf
         fig11.WindowState = 'maximized';
         plot(dat.datetime_utc,dat.turbidity,'.k','DisplayName','Initially Cleaned Data')
         hold on
@@ -462,30 +462,9 @@ end
 %====Plot the cleaned data after movmed test===============================
 cd([rootpath,'\figures\open-water-platform\',site,'\data-qc\',sonde,'\movmed'])
 
-% Depth
+% DO Concentration
 fig13 = figure(13);clf
 fig13.WindowState = 'maximized';
-plot(dat.datetime_utc,dat.depth,'.k','MarkerSize',dotsize);
-xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
-ylabel('Depth (m)')
-title([site,' ',sonde,' - After Moving Median Test'])
-xlim([dt1 dt2])                 % Use same x limits for comparing sites
-% ylim([-.5 3])
-set(gca,'FontSize',fontsize)
-
-% Temperature
-fig14 = figure(14);clf
-fig14.WindowState = 'maximized';
-plot(dat.datetime_utc,dat.temperature,'.k','MarkerSize',dotsize);
-xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
-ylabel('Temperature (^oC)')
-title([site,' ',sonde,' - After Moving Median Test'])
-xlim([dt1 dt2])                 % Use same x limits for comparing sites
-set(gca,'FontSize',fontsize)
-
-% DO Concentration
-fig15 = figure(15);clf
-fig15.WindowState = 'maximized';
 plot(dat.datetime_utc,dat.DO_conc,'.k','MarkerSize',dotsize);
 xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 ylabel('DO Concentration (\mumol/L)')
@@ -494,8 +473,8 @@ xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
 % Salinity
-fig16 = figure(16);clf
-fig16.WindowState = 'maximized';
+fig14 = figure(14);clf
+fig14.WindowState = 'maximized';
 plot(dat.datetime_utc,dat.salinity,'.k','MarkerSize',dotsize);
 xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 ylabel('Salinity (psu)')
@@ -505,8 +484,8 @@ xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
 % pH
-fig17 = figure(17);clf
-fig17.WindowState = 'maximized';
+fig15 = figure(15);clf
+fig15.WindowState = 'maximized';
 plot(dat.datetime_utc,dat.pH,'.k','MarkerSize',dotsize);
 xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
 ylabel('pH')
@@ -517,8 +496,8 @@ set(gca,'FontSize',fontsize)
 switch sonde
     case 'BC'
         % Chl a
-        fig18 = figure(18);clf
-        fig18.WindowState = 'maximized';
+        fig16 = figure(16);clf
+        fig16.WindowState = 'maximized';
         plot(dat.datetime_utc,dat.chla,'.k','MarkerSize',dotsize);
         xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
         ylabel('Chl a (RFU)')
@@ -528,8 +507,8 @@ switch sonde
 
     case 'ERDC'
         % Turbidity
-        fig18 = figure(18);clf
-        fig18.WindowState = 'maximized';
+        fig16 = figure(16);clf
+        fig16.WindowState = 'maximized';
         plot(dat.datetime_utc,dat.turbidity,'.k','MarkerSize',dotsize);
         xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
         ylabel('Turbidity (NTU)')
@@ -600,23 +579,19 @@ switch option
                 saveas(fig12,'turbidity_histogram.png')
                 saveas(fig12,'turbidity_histogram.fig')
         end
-        saveas(fig13,'depth_cleaned.png')
-        saveas(fig13,'depth_cleaned.fig')
-        saveas(fig14,'T_cleaned.png')
-        saveas(fig14,'T_cleaned.fig')
-        saveas(fig15,'DOconc_cleaned.png')
-        saveas(fig15,'DOconc_cleaned.fig')
-        saveas(fig16,'S_cleaned.png')
-        saveas(fig16,'S_cleaned.fig')
-        saveas(fig17,'pH_cleaned.png')
-        saveas(fig17,'pH_cleaned.fig')
+        saveas(fig13,'DOconc_cleaned.png')
+        saveas(fig13,'DOconc_cleaned.fig')
+        saveas(fig14,'S_cleaned.png')
+        saveas(fig14,'S_cleaned.fig')
+        saveas(fig15,'pH_cleaned.png')
+        saveas(fig15,'pH_cleaned.fig')
         switch sonde
             case 'BC'
-                saveas(fig18,'chla_cleaned.png')
-                saveas(fig18,'chla_cleaned.fig')
+                saveas(fig16,'chla_cleaned.png')
+                saveas(fig16,'chla_cleaned.fig')
             case 'ERDC'
-                saveas(fig18,'turbidity_cleaned.png')
-                saveas(fig18,'turbidity_cleaned.fig')
+                saveas(fig16,'turbidity_cleaned.png')
+                saveas(fig16,'turbidity_cleaned.fig')
         end
         
         disp('Plots saved!')

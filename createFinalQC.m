@@ -39,7 +39,7 @@ cd([rootpath,'open-water-platform-data\',site,'\cleaned\corrected'])
 load([site,'-DOCorr.mat'])
 
 %====Import Winkler data================================================
-cd([rootpath,'discrete-samples'])
+cd('G:\Shared drives\SMIIL\Shared Data')
 wink = readtable('winklers_owp.csv');
 varNames = ["datetime_utc","datetime_local","platform","S_lab","DO_mean","DO_std","DO_%err"];
 varUnits = ["","","","psu","umol/L","umol/L","%"];
@@ -119,7 +119,8 @@ dotsize = 6;
 circlesize = 6;
 
 %====Plot all parameters in linked figure==================================
-fig1 = figure('units','inches','position',[5 9 14 10]);
+% fig1 = figure('units','inches','position',[5 9 14 10]);
+fig1 = figure(1);
 
 t = tiledlayout(4,2,'TileSpacing','compact');
 
@@ -183,16 +184,16 @@ switch option
 end
 
 %====Save the plot=========================================================
-option = questdlg('Save plot as .png and .fig?','Save plot','Yes','No','Yes');
-
-switch option
-    case 'Yes'
-        cd([rootpath,'figures\open-water-platform\final-qc'])
-        saveas(fig1,[site,'-finalQC.png'])
-        saveas(fig1,[site,'-finalQC.fig'])
-        
-        disp('Plots saved!')
-    
-    case 'No'
-        disp('Plots not saved.')
-end
+% option = questdlg('Save plot as .png and .fig?','Save plot','Yes','No','Yes');
+% 
+% switch option
+%     case 'Yes'
+%         cd([rootpath,'figures\open-water-platform\final-qc'])
+%         saveas(fig1,[site,'-finalQC.png'])
+%         saveas(fig1,[site,'-finalQC.fig'])
+% 
+%         disp('Plots saved!')
+% 
+%     case 'No'
+%         disp('Plots not saved.')
+% end

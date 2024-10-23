@@ -19,34 +19,35 @@ rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 %====Import data===========================================================
 % Load the salinity inventory sheet, which now lives in the shared drive
 cd('G:\Shared drives\SMIIL\Shared Data\')
-filename = 'SMIIL DIC_TA Sample Salinities.xlsx';
-sampleLog = readtable(filename,'Sheet','DataProcessing');
+% filename = 'SMIIL DIC_TA Sample Salinities.xlsx';
+filename = 'SMIIL DIC_TA Sample Salinities - OWP.xlsx';
+sampleLog = readtable(filename);
 
 % Load North data and add to structure
-cd([rootpath,'open-water-platform-data\north\cleaned\final-qc'])
-load('north-cleaned.mat');
-tbl_all.north = finalQC;
-% Remove any rows that contain a NaN for salinity or temperature
-idx = [find(isnan(tbl_all.north.salinity)); find(isnan(tbl_all.north.temperature))];
+cd([rootpath,'open-water-platform-data\north\cleaned\dupcheck'])
+load('north-bestGuess.mat');
+tbl_all.north = [bestguess.salinity, bestguess.temperature];
+% Remove any rows that contain a NaN
+idx = find(isnan(tbl_all.north.salinity));
 tbl_all.north(idx,:) = [];
 
 % Load Gull data and add to structure
-cd([rootpath,'open-water-platform-data\gull\cleaned\final-qc'])
-load('gull-cleaned.mat');
-tbl_all.gull = finalQC;
-% Remove any rows that contain a NaN for salinity or temperature
-idx = [find(isnan(tbl_all.gull.salinity)); find(isnan(tbl_all.gull.temperature))];
+cd([rootpath,'open-water-platform-data\gull\cleaned\dupcheck'])
+load('gull-bestGuess.mat');
+tbl_all.gull = [bestguess.salinity, bestguess.temperature];
+% Remove any rows that contain a NaN for salinity
+idx = find(isnan(tbl_all.gull.salinity));
 tbl_all.gull(idx,:) = [];
 
 % Load South data and add to structure
-cd([rootpath,'open-water-platform-data\south\cleaned\final-qc'])
-load('south-cleaned.mat');
-tbl_all.south = finalQC;
-% Remove any rows that contain a NaN for salinity or temperature
-idx = [find(isnan(tbl_all.south.salinity)); find(isnan(tbl_all.south.temperature))];
+cd([rootpath,'open-water-platform-data\south\cleaned\dupcheck'])
+load('south-bestGuess.mat');
+tbl_all.south = [bestguess.salinity, bestguess.temperature];
+% Remove any rows that contain a NaN for salinity
+idx = find(isnan(tbl_all.south.salinity));
 tbl_all.south(idx,:) = [];
 
-clearvars finalQC
+clearvars bestguess
 
 % Create datetimes for all samples in local and UTC format
 T  = datetime(sampleLog.Sampling_Time,'ConvertFrom','datenum','Format','hh:mm:ss');
@@ -67,10 +68,10 @@ for i = 1:numel(fn)
     nearest_ind = interp1(tbl_all.(fn{i}).datetime_utc,1:length(tbl_all.(fn{i}).datetime_utc),datetime_utc(ind.(fn{i})),'nearest');
 
     % Overwrite the QC'd S and T value into the 'sampleLog' table
-    sampleLog.Field_Salinity(ind.(fn{i})) = tbl_all.(fn{i}).salinity(nearest_ind);
+    sampleLog.Final_Salinity(ind.(fn{i})) = tbl_all.(fn{i}).salinity(nearest_ind);  % Take the AquaTroll best-guess S as the "Final Salinity"
     sampleLog.Field_Temp(ind.(fn{i})) = tbl_all.(fn{i}).temperature(nearest_ind);
 end
 
 % Write table to Excel spreadsheet
 cd('G:\Shared drives\SMIIL\Shared Data\')
-writetable(sampleLog,filename,'Sheet','DataProcessing')
+writetable(sampleLog,filename)

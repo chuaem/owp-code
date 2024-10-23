@@ -342,7 +342,7 @@ for k = 1:length(predNames)
     meanVal.summer.(predNames{k}) = mean(data.summer.(predNames{k}),'omitmissing');
     meanVal.fall.(predNames{k}) = mean(data.fall.(predNames{k}),'omitmissing');
 end
-%%
+
 %====GPP, ER, NEM vs. Explanatory Variables================================
 for i = 1:length(respNames)   % Loop through plots for GPP, ER, and NEM
     fig(i) = figure(i);clf

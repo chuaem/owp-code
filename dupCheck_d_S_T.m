@@ -11,7 +11,7 @@
 % 
 % DATE:
 % First created: 4/10/2024
-% Last updated: 6/26/2024
+% Last updated: 10/1/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -32,6 +32,24 @@ dat_syn = synchronize(dat1,dat2);
 dt_utc = dat_syn.datetime_utc;
 
 clearvars dat1 dat2 sonde1_cleaned sonde2_cleaned
+
+%====Import lab S from discrete samples====================================
+cd('G:\Shared drives\SMIIL\Shared Data')
+discreteS = readtable('SMIIL DIC_TA Sample Salinities - OWP.xlsx');
+
+varUnits = ["","","","","","","","","","psu","psu","degC","",""];
+discreteS.Properties.VariableUnits = varUnits;
+
+discreteS.Sampling_Time = datetime(discreteS.Sampling_Time,'ConvertFrom','datenum');
+myDatetime = discreteS.Date_Sampled + timeofday(discreteS.Sampling_Time);
+myDatetime.TimeZone = 'America/New_York';
+datetime_utc = myDatetime;
+datetime_utc.TimeZone = 'UTC';
+discreteS.datetime_utc = datetime_utc;
+discreteS = movevars(discreteS,'datetime_utc','Before','trip_ID');
+
+% Find indices of samples taken from this site
+ind_site = find(ismember(discreteS.Location_ID,site));
 
 %====Find the indices of deployment changes================================
 switch site
@@ -95,7 +113,7 @@ pc_exceed = height(ind_diverge)/height(dat_syn)*100; % Percentage of synchronize
 txt = ['Differs by >',num2str(threshold),' psu (',num2str(pc_exceed,'%.1f'),'%)'];
 
 window = 144;
-mmed_bc = movmedian(dat_syn.salinity_dat1,window,'omitmissing');
+mmed_bc = movmedian(S_bc,window,'omitmissing');
 mmed_erdc = movmedian(S_erdc,window,'omitmissing');
 mmed_all = [mmed_bc,mmed_erdc];
 mmed_mean = mean(mmed_all,2);
@@ -105,10 +123,11 @@ fig1.WindowState = 'maximized';
 plot(dt_utc,S_bc,'.','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
 hold on
 plot(dt_utc,S_erdc,'.','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
-plot(dt_utc(ind_diverge),S_bc(ind_diverge),'o','MarkerSize',circlesize,'DisplayName',txt)
+% plot(dt_utc(ind_diverge),depth_bc(ind_diverge),'o','MarkerSize',circlesize,'Color',rgb('chartreuse'),'DisplayName',txt)
 plot(dt_utc,mmed_bc,'-','Color',rgb('darkred'),'DisplayName','BC Moving Median')
 plot(dt_utc,mmed_erdc,'-','Color',rgb('darkblue'),'DisplayName','ERDC Moving Median')
 plot(dt_utc,mmed_mean,'-','Color',rgb('magenta'),'DisplayName','Mean Moving Median')
+plot(discreteS.datetime_utc(ind_site),discreteS.Lab_Salinity(ind_site),'o','Color',rgb('gold'),'MarkerSize',6,'LineWidth',2,'DisplayName','Lab S')
 xline(dt_utc(dep.ind),'--',label,'HandleVisibility','off')
 ylabel('Salinity (psu)')
 legend('show','location','best')
@@ -134,12 +153,12 @@ switch site
         d10 = mmed_bc(dep.ind(8)+1:dep.ind(9));       % Dep 10
         d11 = mmed_mean(dep.ind(9)+1:dep.ind(10));    % Dep 11
         d12 = mmed_mean(dep.ind(10)+1:dep.ind(11));   % Dep 12
-        d13 = mmed_mean(dep.ind(11)+1:dep.ind(12));   % Dep 13
+        d13 = [mmed_erdc(dep.ind(11)+1:81445); mmed_bc(81446:dep.ind(12))];   % Dep 13
         d14 = mmed_bc(dep.ind(12)+1:dep.ind(13));     % Dep 14
         d15 = mmed_bc(dep.ind(13)+1:dep.ind(14));     % Dep 15
-        d16 = mmed_bc(dep.ind(14)+1:dep.ind(15));     % Dep 16
+        d16 = [mmed_erdc(dep.ind(14)+1:111691); mmed_bc(111692:dep.ind(15))];     % Dep 16
         d17 = mmed_mean(dep.ind(15)+1:dep.ind(16));   % Dep 17
-        d18 = mmed_mean(dep.ind(16)+1:end);           % Dep 18
+        d18 = mmed_bc(dep.ind(16)+1:end);           % Dep 18
 
         S_bestguess = [d1;d2;d5;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
 
@@ -150,32 +169,34 @@ switch site
     case 'North'
         % Funky deployments
         % Dep 7 -- offset adjustment
-        ind_d7 = 19514;
-        mmed_bc_mean_d7 = mean(mmed_bc(dep.ind(3):ind_d7));
-        mmed_mean_d7 = mean(mmed_mean(dep.ind(3):ind_d7));
-        delta_d7 = abs(mmed_mean_d7  - mmed_bc_mean_d7);
+        delta_d7 = mmed_bc(20745) - mmed_erdc(20786);
+
+        % Dep 15 -- offset adjustment
+        delta_d15 = mmed_erdc(76160) - mmed_erdc(76159);
 
         % Choose "better" deployment
-        d2 = mmed_erdc(dep.ind(1):dep.ind(2));          % Dep 2
+        d2 = [mmed_erdc(dep.ind(1):dep.ind(2))];          % Dep 2
         d6 = mmed_bc(dep.ind(2)+1:dep.ind(3));          % Dep 6
         d7 = mmed_bc(dep.ind(3)+1:dep.ind(4)) - delta_d7; % Dep 7
         d8 = mmed_erdc(dep.ind(4)+1:dep.ind(5));        % Dep 8
         d9 = mmed_erdc(dep.ind(5)+1:dep.ind(6));        % Dep 9
         d10 = mmed_erdc(dep.ind(6)+1:dep.ind(7));       % Dep 10
-        d11 = mmed_erdc(dep.ind(7)+1:dep.ind(8));       % Dep 11
+        d11 = mmed_mean(dep.ind(7)+1:dep.ind(8));       % Dep 11
         d12 = mmed_erdc(dep.ind(8)+1:dep.ind(9));       % Dep 12
         d13 = mmed_erdc(dep.ind(9)+1:dep.ind(10));      % Dep 13
         d14 = mmed_erdc(dep.ind(10)+1:dep.ind(11));     % Dep 14
-        d15 = [mmed_erdc(dep.ind(11)+1:80182); NaN(dep.ind(12)-80182,1)]; % Dep 15
+        d15 = mmed_erdc(dep.ind(11)+1:dep.ind(12)) - delta_d15; % Dep 15
         d16 = mmed_mean(dep.ind(12)+1:dep.ind(13));     % Dep 16
         d17 = mmed_mean(dep.ind(13)+1:dep.ind(14));     % Dep 17
-        d18 = mmed_mean(dep.ind(14)+1:end);             % Dep 18
+        d18 = mmed_erdc(dep.ind(14)+1:end);             % Dep 18
 
         S_bestguess = [d2;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
 
         % Remove "obvious" outliers
+        S_bestguess(4351:dep.ind(2)) = NaN;
         S_bestguess(11090:15492) = NaN;
         S_bestguess(20785) = NaN;
+        S_bestguess(80182:dep.ind(12)) = NaN;
         S_bestguess(84381:84385) = NaN;
 
         % Calculate standard deviation for Deployments 11 & 12
@@ -190,7 +211,10 @@ switch site
 
         % Dep 7 -- offset adjustment
         ind = dep.ind(7);
-        delta_d7 = mmed_erdc(ind-11) - mmed_erdc(ind);
+        delta_d7 = mmed_erdc(ind-11) - mmed_erdc(dep.ind(7));
+
+        % Dep 15 -- offset adjustment
+        delta_d15 = S_erdc(98253) - S_erdc(98251);
 
         % Choose "better" deployment
         d1 = mmed_erdc(dep.ind(1):dep.ind(2));        % Dep 1
@@ -205,8 +229,8 @@ switch site
         d11 = mmed_erdc(dep.ind(10)+1:dep.ind(11));   % Dep 11
         d12 = mmed_mean(dep.ind(11)+1:dep.ind(12));   % Dep 12
         d13 = mmed_erdc(dep.ind(12)+1:dep.ind(13));   % Dep 13
-        d14 = mmed_erdc(dep.ind(13)+1:dep.ind(14));   % Dep 14
-        d15 = mmed_erdc(dep.ind(14)+1:dep.ind(15));   % Dep 15
+        d14 = mmed_mean(dep.ind(13)+1:dep.ind(14));   % Dep 14
+        d15 = mmed_erdc(dep.ind(14)+1:dep.ind(15)) + delta_d15;   % Dep 15
         d16 = mmed_mean(dep.ind(15)+1:dep.ind(16));   % Dep 16
         d17 = mmed_erdc(dep.ind(16)+1:dep.ind(17));   % Dep 17
         d18 = mmed_mean(dep.ind(17)+1:end);           % Dep 18
@@ -215,12 +239,14 @@ switch site
         
         % Remove "obvious" outliers
         S_bestguess(5896:5898) = NaN;
+        S_bestguess(11043:dep.ind(3)) = NaN;
         S_bestguess(11928) = NaN;
         S_bestguess(29482) = NaN;
         S_bestguess(33012) = NaN;
         S_bestguess(38194:38204) = NaN;
         S_bestguess(49118:49149) = NaN;
         S_bestguess(77744:77797) = NaN;
+        S_bestguess(80846:80852) = NaN;
         
         % Calculate standard deviation for Deployments 9 & 12
         stdev_S  = std(mmed_all([dep.ind(8):dep.ind(9),dep.ind(11):dep.ind(12)],:),0,2,'omitmissing');
@@ -231,22 +257,12 @@ clearvars d1 d2 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18
 
 fig2 = figure(2);clf
 fig2.WindowState = 'maximized';
+plot(dt_utc,S_bc,'.','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
+hold on
+plot(dt_utc,S_erdc,'.','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
 plot(dt_utc,mmed_mean,'.','Color',rgb('magenta'),'DisplayName','Mean Moving Median')
-hold on
 plot(dt_utc(1:length(S_bestguess)),S_bestguess,'.k','DisplayName','"Best guess"')
-xline(dt_utc(dep.ind),'--',label,'HandleVisibility','off')
-ylabel('Salinity (psu)')
-title([site,' - "Best Guess" Salinity'])
-xlim([dt1 dt2])                 % Use same x limits for comparing sites
-set(gca,'FontSize',fontsize)
-legend('show')
-
-fig3 = figure(3);clf
-fig3.WindowState = 'maximized';
-plot(dt_utc(1:length(S_bestguess)),S_bestguess,'.k','DisplayName','"Best guess"')
-hold on
-plot(dt_utc(1:length(S_bestguess)),S_bestguess+stdev.S,'--','Color',red','DisplayName','+ standard deviation')
-plot(dt_utc(1:length(S_bestguess)),S_bestguess-stdev.S,'--','Color',red','DisplayName','- standard deviation')
+plot(discreteS.datetime_utc(ind_site),discreteS.Lab_Salinity(ind_site),'o','Color',rgb('gold'),'MarkerSize',6,'LineWidth',2,'DisplayName','Lab S')
 xline(dt_utc(dep.ind),'--',label,'HandleVisibility','off')
 ylabel('Salinity (psu)')
 title([site,' - "Best Guess" Salinity'])
@@ -281,12 +297,12 @@ bc_mean = mean(depth_bc,'omitmissing');     % [m]
 erdc_mean = mean(depth_erdc,'omitmissing'); % [m]
 delta = abs(bc_mean - erdc_mean);           % [m]
 
-fig4 = figure(4);clf
-fig4.WindowState = 'maximized';
-plot(dt_utc,depth_bc,'.-','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
+fig3 = figure(3);clf
+fig3.WindowState = 'maximized';
+plot(dt_utc,depth_bc,'.','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
 hold on
-plot(dt_utc,depth_erdc,'.-','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
-plot(dt_utc(ind_diverge),depth_bc(ind_diverge),'o','MarkerSize',circlesize,'DisplayName',txt)
+plot(dt_utc,depth_erdc,'.','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
+plot(dt_utc(ind_diverge),depth_bc(ind_diverge),'o','MarkerSize',circlesize,'Color',rgb('chartreuse'),'DisplayName',txt)
 xline(dt_utc(dep.ind),'--',label,'HandleVisibility','off')
 ylabel('Depth (m)')
 legend('show','location','best')
@@ -345,18 +361,19 @@ switch site
 
 end
 
-fig5 = figure(5);clf
-fig5.WindowState = 'maximized';
-plot(dt_utc,depth_bc,'.-','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
+fig4 = figure(4);clf
+fig4.WindowState = 'maximized';
+plot(dt_utc,depth_bc,'.','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
 hold on
-plot(dt_utc,depth_erdc,'.-','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
+plot(dt_utc,depth_erdc,'.','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
 plot(dt_utc,depth_mean,'-','Color',rgb('magenta'),'DisplayName','Mean Value')
-plot(dt_utc,depth_bestguess,'-k','MarkerSize',dotsize,'DisplayName','Best Guess')
+plot(dt_utc(1:length(depth_bestguess)),depth_bestguess,'-k','DisplayName','"Best guess"')
 xline(dt_utc(dep.ind),'--',label,'HandleVisibility','off')
 ylabel('Depth (m)')
-legend('show','location','best')
 title([site,' - "Best Guess" Depth'])
-xlim([dt1 dt2])                 % Use same x limits
+xlim([dt1 dt2])                 % Use same x limits for comparing sites
+set(gca,'FontSize',fontsize)
+legend('show')
 
 disp('Press enter to continue on to Temperature')
 pause
@@ -396,12 +413,11 @@ switch site
         stdev.T = mean(stdev_T,'omitmissing'); 
 end
 
-fig6 = figure(6);clf
-fig6.WindowState = 'maximized';
-plot(dt_utc,T_bc,'.-','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
+fig5 = figure(5);clf
+fig5.WindowState = 'maximized';
+plot(dt_utc,T_bc,'.','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
 hold on
-plot(dt_utc,T_erdc,'.-','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
-plot(dt_utc(ind_diverge),T_bc(ind_diverge),'o','MarkerSize',circlesize,'DisplayName',txt)
+plot(dt_utc,T_erdc,'.','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
 xline(dt_utc(dep.ind),'--',label,'HandleVisibility','off')
 ylabel('Temperature (^oC)')
 legend('show','location','best')
@@ -409,19 +425,23 @@ title([site,' - After Initial QC and Moving Median Test'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 
-fig7 = figure(7);clf
-fig7.WindowState = 'maximized';
-plot(dt_utc,T_mean,'-','Color',rgb('magenta'),'DisplayName','Mean Value')
+fig6 = figure(6);clf
+fig6.WindowState = 'maximized';
+plot(dt_utc,T_bc,'.','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
 hold on
-plot(dt_utc,T_bestguess,'-k','MarkerSize',dotsize,'DisplayName','Best Guess')
+plot(dt_utc,T_erdc,'.','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
+plot(dt_utc,T_mean,'-','Color',rgb('magenta'),'DisplayName','Mean Value')
+plot(dt_utc(1:length(T_bestguess)),T_bestguess,'-k','DisplayName','"Best guess"')
 xline(dt_utc(dep.ind),'--',label,'HandleVisibility','off')
 ylabel('Temperature (^oC)')
-legend('show','location','best')
 title([site,' - "Best Guess" Temperature'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
+legend('show')
 
+%==========================================================================
 % Save "best-guess" data into a structure
+%==========================================================================
 bestguess.deployment = table(dat_syn.datetime_utc,dat_syn.deployment_dat1,'VariableNames',{'datetime_utc','deployment'});
 bestguess.depth = table(dat_syn.datetime_utc,depth_bestguess,'VariableNames',{'datetime_utc','depth'});
 bestguess.salinity = table(dat_syn.datetime_utc,S_bestguess,'VariableNames',{'datetime_utc','salinity'});
@@ -454,16 +474,15 @@ switch option
         saveas(fig2,'bestGuessComparison.png')
         saveas(fig2,'bestGuessComparison.fig')
         cd([rootpath,'figures\open-water-platform\',site,'\data-qc\synchronized\depth'])
-        saveas(fig4,'duplicateComparison.png')
-        saveas(fig4,'duplicateComparison.fig')
-        saveas(fig5,'bestGuessComparison.png')
-        saveas(fig5,'bestGuessComparison.fig')
+        saveas(fig3,'duplicateComparison.png')
+        saveas(fig3,'duplicateComparison.fig')
+        saveas(fig4,'bestGuessComparison.png')
+        saveas(fig4,'bestGuessComparison.fig')
         cd([rootpath,'figures\open-water-platform\',site,'\data-qc\synchronized\temperature'])
-        saveas(fig6,'duplicateComparison.png')
-        saveas(fig6,'duplicateComparison.fig')
-        saveas(fig7,'bestGuessComparison.png')
-        saveas(fig7,'bestGuessComparison.fig')
-        
+        saveas(fig5,'duplicateComparison.png')
+        saveas(fig5,'duplicateComparison.fig')
+        saveas(fig6,'bestGuessComparison.png')
+        saveas(fig6,'bestGuessComparison.fig')
         disp('Plots saved!')
     
     case 'No'

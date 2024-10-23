@@ -45,8 +45,8 @@ for kk = 1:length(siteNames)
     %====Import final QC'd data & diel analysis results====================
     cd([rootpath,'open-water-platform-data\',siteNames{kk},'\cleaned\final-qc'])
     load([siteNames{kk},'-cleaned.mat']);
-    % cd([rootpath,'diel-method\matlab-results\final-qc\',siteNames{kk}])
-    cd([rootpath,'diel-method\matlab-results\final-qc\',siteNames{kk},'\wanninkhof'])   % HERE
+    cd([rootpath,'diel-method\matlab-results\final-qc\',siteNames{kk}])
+    % cd([rootpath,'diel-method\matlab-results\final-qc\',siteNames{kk},'\wanninkhof'])   % HERE
     params = finalQC;
     load('diel_res.mat')
     metab = diel_dtd;
@@ -97,11 +97,11 @@ for kk = 1:length(siteNames)
     t_thm(2,:) = t_thm(2,:) + days(1);  % Add a day to end of each event
 
     % Remove second storm event for South, because event is cut off by missing data
-    if kk == 3
-        t_thm(:,2) = [];
-    else
-        % Do nothing
-    end
+    % if kk == 3
+    %     t_thm(:,2) = [];
+    % else
+    %     % Do nothing
+    % end
 
     eventDuration = diff(t_thm);
 
@@ -271,7 +271,7 @@ legend('show')
 ax = gca;
 ax.YColor = 'k';
 xlim([dailyAvg.Gull.datetime_utc(events.Gull.pre.start(2) - 2) dailyAvg.Gull.datetime_utc(events.Gull.post.end(2) + 2)])
-ylim([-80 40])
+% ylim([-80 40])
 annotation('textbox',[.3 .1 .1 .1],'String','PRE','FontSize',18,'LineStyle','none')
 annotation('arrow',[.30 .22],[.18 .18])
 annotation('arrow',[.34 .428],[.18 .18])

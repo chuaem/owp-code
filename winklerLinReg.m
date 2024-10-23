@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% winklerValidation.m
+% winklerLinReg.m
 % This script uses the Winkler samples to validate the DO concentration
 % data. Linear regressions are performed for the recalculated BC and ERDC 
 % data, as well as the overall "best-guess" data.
@@ -28,7 +28,7 @@ cd([rootpath,'open-water-platform-data\',site,'\cleaned\final-qc\'])
 load([site,'-cleaned.mat'])
 
 %====Import Winkler data===================================================
-cd([rootpath,'discrete-samples'])
+cd('G:\Shared drives\SMIIL\Shared Data')
 wink = readtable('winklers_owp.csv');
 varNames = ["datetime_utc","datetime_local","platform","S_lab","DO_mean","DO_std","DO_%err"];
 varUnits = ["","","","psu","umol/L","umol/L","%"];
@@ -230,7 +230,7 @@ option = questdlg('Save regression model?','Save File','Yes','No','Yes');
 switch option
     case 'Yes'
         cd([rootpath,'open-water-platform-data\',site,'\cleaned\validation'])
-        save([site,'-winklerValid.mat'],'mdl')
+        save([site,'-winkler_mdl.mat'],'mdl')
         disp('File saved!')
     case 'No'
         disp('File not saved.')
@@ -242,8 +242,6 @@ option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');
 switch option
     case 'Yes'
         cd([rootpath,'figures\open-water-platform\',site,'\validation\winklers'])
-        saveas(fig1,[site,'-timeseries.png'])
-        saveas(fig1,[site,'-timeseries.fig'])
         saveas(fig2,[site,'_bc-linreg.png'])
         saveas(fig2,[site,'_bc-linreg.fig'])
         saveas(fig3,[site,'_erdc-linreg.png'])

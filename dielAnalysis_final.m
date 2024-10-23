@@ -27,7 +27,6 @@ prompt = {'Choose the platform'};
 site = questdlg(prompt,'Platform Selection','Gull','North','South','Gull');
 
 cd([rootpath,'\diel-method\owp-data\final-qc'])
-
 load([site,'_obs.mat'])   % Load the table
 
 % Load R results
@@ -47,17 +46,13 @@ metab_dtd = table2timetable(readtable('metab_dtd.csv'));
 
 %====Define input variables================================================
 dt_utc = wtreg_res_rt.DateTimeStamp;
-dt_local = dt_utc;
-dt_local.TimeZone = 'America/New_York';
 
 % Water
 S = wtreg_res_rt.Sal;
 T = wtreg_res_rt.Temp;
-% p = dat.p;
 p = wtreg_res_rt.Tide;  % Pressure in dbar and depth in meters are approx. equal
 d = wtreg_res_rt.Tide;
-% Mean water column depth, H = d + D [m]
-% See Collab Lab Notebook - Table 2 for manual measurements for D for each site
+% Mean water column depth, H = d + D [m] - see Collab Lab Notebook, Table 2 for manual measurements of D for each site
 switch site
     case 'Gull'
         H_time = dat.depth + 0.42;
@@ -80,35 +75,42 @@ DO_nrm = wtreg_res_rt.DO_nrm*1000/32;   % Detided DO concentration [mmol m-3]
 %==========================================================================
 DO_conc = DO_obs;
 
-%====STEP 1: Calculate DO concentration at equilibrium (DO_sat)============
+%====STEP 1: Determine gas exchange at air-water interface=================
 DO_sat = O2sol(S,T);                % [umol kg-1]
 
 % Use Gibbs Seawater toolbox to calculate seawater density
-rho_sw = gsw_rho(S,T,p); % [kg m-3]
+rho_sw = gsw_rho(S,T,p);            % [kg m-3]c
 
 % Convert DO_sat units
 DO_sat = DO_sat.*rho_sw/1000;       % [mmol m-3]
 
 % Calculate the percent oxygen saturation
-DO_per_sat = DO_conc./DO_sat*100;   % [%]
+% DO_per_sat = DO_conc./DO_sat*100;   % [%]
 
-%====STEP 2: Calculate gas exchange at air-water interface=================
-C = DO_conc/1000;    % [mol m-3]
+% Calculate gas exchange coefficient, k
+C = DO_conc/1000;   % [mol m-3]
 slp = patm/1013.25; % [atm]
 param = 'W14';      % Wanninkhof (2014) parameterization
+
 [Fd, k] = fas_Fd(C,U10,S,T,slp,'O2',param); % Fd: [mol m-2 s-1]; k: [m s-1]
 k = 1./H_time * 3600 .* k;  % Convert to [h-1]
 
 % Calculate air-water diffusive flux
 D = k.*(DO_sat - DO_conc); % [mmol m-3 h-1]
 
+% % Sanity check plot of calculated D
+% figure,clf
+% plot(dat.datetime_utc,Fd./H_time*1000*3600,'.')
+% hold on
+% plot(dat.datetime_utc,D,'.')
+
 % Make a table to save the air-water exchange terms
 fas = table(wtreg_res_rt.DateTimeStamp,k,D,'VariableNames',{'datetime_utc','k','D'});
 fas = table2timetable(fas);
 fas.Properties.VariableUnits = {'h-1','mmol m-3 h-1'};
 
-%====STEP 3: Determine day/night times=====================================
-% Get day/night indices based on lat and lon and Hilary's indexDayNight function
+%====STEP 2: Calculate HOURLY rates of nighttime respiration (R) and apparent primary production (P)
+% Determine day/night times - Get day/night indices based on lat and lon and Hilary's indexDayNight function
 lat = 39.08;
 lon = -74.78;
 time_in = dt_utc;
@@ -125,26 +127,27 @@ dayend = dayind(find(diff(dayind) > 1));
 daylength = dt_utc(dayend(2:end)) - dt_utc(daystart(1:end-1) - 1);
 daylength = hours(daylength);
 
+% Find the actual datetimes for when each day starts and stops
 daystart_dt = dt_utc(daystart(1:end-1));
 dayend_dt = dt_utc(dayend(2:end));
 
-%====STEP 4: Calculate rates===============================================
+% Calculate change in DO over sampling intervals (10 min)
 dCdt = nan(length(DO_conc),1);
 dCdt(2:end,1) = diff(DO_conc) ./ hours(diff(dt_utc));  % [mmol m-3 h-1]
 
 % Mean hourly rates
 for i = 1:length(daylength)
     % During night hours, P = 0
-    R_hourly(i,1) = mean(dCdt(dayend(i+1):daystart(i+1)) - D(dayend(i+1):daystart(i+1)),'omitnan'); % Mean hourly rate of nighttime respiration; [mmol m-3 h-1]
+    R_hourly(i,1) = mean(dCdt(dayend(i+1):daystart(i+1)) - D(dayend(i+1):daystart(i+1)),'omitnan'   ); % Mean hourly rate of nighttime respiration; [mmol m-3 h-1]
     % During day hours, P != 0
     P_hourly(i,1) = mean(dCdt(daystart(i):dayend(i+1)) - D(daystart(i):dayend(i+1)),'omitnan');     % Mean hourly rate of apparent/net production; [mmol m-3 h-1]
 end
 
-% Daily rates
+%====STEP 3: Calculate DAILY rates of respiration and gross production=====
 R_daily = R_hourly .* 24;                      % Daily rate of respiration; [mmol m-3 d-1]
 P_daily = (P_hourly - R_hourly) .* daylength;  % Daily rate of gross production; [mmol m-3 d-1]
 
-% Convert volumetric rates to depth-integrated (areal) estimates
+%====STEP 4: Convert volumetric rates to depth-integrated (areal) estimates
 daily_depth = groupsummary(dat,"datetime_utc","day","mean","depth");
 switch site
     case 'Gull'
@@ -168,7 +171,7 @@ diel_obs = table2timetable(diel_obs);
 %==========================================================================
 DO_conc = DO_nrm;
 
-%====STEP 1: Calculate DO concentration at equilibrium (DO_sat)============
+%====STEP 1: Determine gas exchange at air-water interface=================
 DO_sat = O2sol(S,T);              % [umol kg-1]
 
 % Use Gibbs Seawater toolbox to calculate seawater density
@@ -178,9 +181,9 @@ rho_sw = gsw_rho(S,T,p);          % [kg m-3]
 DO_sat = DO_sat.*rho_sw/1000;     % [mmol m-3]
 
 % Calculate the percent oxygen saturation
-DO_per_sat = DO_conc./DO_sat*100; % [%]
+% DO_per_sat = DO_conc./DO_sat*100; % [%]
 
-%====STEP 2: Calculate gas exchange at air-water interface=================
+% Calculate gas exchange coefficient, k
 C = DO_conc/1000;    % [mol m-3]
 slp = patm/1013.25; % [atm]
 param = 'W14';      % Wanninkhof (2014) parameterization
@@ -195,8 +198,8 @@ fas = table(wtreg_res_rt.DateTimeStamp,k,D,'VariableNames',{'datetime_utc','k','
 fas = table2timetable(fas);
 fas.Properties.VariableUnits = {'h-1','mmol m-3 h-1'};
 
-%====STEP 3: Determine day/night times=====================================
-% Get day/night indices based on lat and lon and Hilary's indexDayNight function
+%====STEP 2: % Calculate HOURLY rates of nighttime respiration (R) and apparent primary production (P)
+% Determine day/night times - Get day/night indices based on lat and lon and Hilary's indexDayNight function
 lat = 39.08;
 lon = -74.78;
 time_in = dt_utc;
@@ -217,11 +220,11 @@ dayend_dt = dt_utc(dayend(2:end));
 daylength = dt_utc(dayend(2:end)) - dt_utc(daystart(1:end-1) - 1);
 daylength = hours(daylength);
 
-%====STEP 4: Calculate rates===============================================
+% Calculate change in DO over sampling intervals (10 min)
 dCdt = nan(length(DO_conc),1);
 dCdt(2:end,1) = diff(DO_conc) ./ hours(diff(dt_utc));  % [mmol m-3 h-1]
 
-% Hourly rates of respiration and net production
+% Mean hourly rates
 for i = 1:length(daylength)
     % During night hours, P = 0
     R_hourly(i,1) = mean(dCdt(dayend(i+1):daystart(i+1)) - D(dayend(i+1):daystart(i+1)),'omitnan'); % Hourly rate of respiration; [mmol m-3 h-1]
@@ -229,11 +232,11 @@ for i = 1:length(daylength)
     P_hourly(i,1) = mean(dCdt(daystart(i):dayend(i+1)) - D(daystart(i):dayend(i+1)),'omitnan');     % Hourly rate of net production; [mmol m-3 h-1]
 end
 
-% Daily rates
+%====STEP 3: Calculate DAILY rates of respiration and gross production=====
 R_daily = R_hourly .* 24;                      % Daily rate of respiration; [mmol m-3 d-1]
 P_daily = (P_hourly - R_hourly) .* daylength;  % Daily rate of gross production; [mmol m-3 d-1]
 
-% Convert volumetric rates to depth-integrated (areal) estimates
+%====STEP 4: Convert volumetric rates to depth-integrated (areal) estimates
 daily_depth = groupsummary(dat,"datetime_utc","day","mean","depth");
 switch site
     case 'Gull'
@@ -251,7 +254,7 @@ date = dateshift(daystart_dt,'start','day');
 date = datetime(date,'TimeZone','UTC');
 diel_dtd = table(date,daystart_dt,dayend_dt,daylength,R_hourly,P_hourly,R_daily,P_daily,GPP,ER,NEM);
 diel_dtd = table2timetable(diel_dtd);
-
+%%
 %==========================================================================
 %   Make summary statistics tables
 %==========================================================================
@@ -270,7 +273,7 @@ summStats.dtd = table(meanGPP,sdGPP,anomGPP,meanER,sdER,anomER);
 %==========================================================================
 %   Delete endpoint values of GPP, ER, and NEM around big gaps in data 
 %==========================================================================
-% (happens for North and South -- gaps accompanied by large NEM absolute values)
+% (happens especially for North and South -- gaps accompanied by large NEM absolute values)
 threshold = duration(days(7));
 gap = diff(diel_dtd.date);
 idx = find(gap > threshold);
@@ -314,7 +317,7 @@ option = questdlg('Save diel analysis results?','Save File','Yes','No','Yes');
 switch option
     case 'Yes'
         cd([rootpath,'diel-method\matlab-results\final-qc\',site])
-        save('diel_res.mat','diel_obs','diel_dtd','summStats')
+        save('diel_res.mat','diel_obs','diel_dtd','summStats','fas')
         disp('Files saved!')
     case 'No'
         disp('Files not saved.')

@@ -10,7 +10,7 @@
 % 
 % DATE:
 % First created: 11/9/2023
-% Last updated: 7/10/2024
+% Last updated: 9/30/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -25,7 +25,7 @@ cd([rootpath,'open-water-platform-data\',site,'\adjusted\merged'])
 load(['alldeps-',site,'-adj.mat'])
 
 prompt = {'Choose which sonde to QC'};
-sonde = questdlg(prompt,'Sonde Selection','BC','ERDC','Cancel','Cancel');
+sonde = questdlg(prompt,'Sonde Selection','BC','ERDC','Cancel','BC');
 
 switch sonde
     case 'BC'
@@ -256,8 +256,9 @@ clearvars oow1 oow2 oow3 oow4 oow5 oow6 oow7 oow8 oow9 oow10 oow11 oow12 oow13 o
 
 ind_manual = [ind_dropout;ind_oow];
 
-%====DEPTH=================================================================
+%====DEPTH & PRESSURE======================================================
 depth_orig = dat.depth;  % Preserve original depth data for plotting
+p_orig = dat.p;     % Preserve original p data for plotting
 
 % (1) Gross Range Test
 % INPUTS
@@ -300,16 +301,27 @@ set(gca,'YScale','log','FontSize',fontsize)
 % Plot original data with flagged points
 fig2 = figure(2);clf
 fig2.WindowState = 'maximized';
+yyaxis left
 plot(dat.datetime_utc,depth_orig,'.k','MarkerSize',dotsize,'DisplayName','Original Data');
 hold on
-plot(dat.datetime_utc(ind_dropout),depth_orig(ind_dropout),'og','MarkerSize',circlesize,'DisplayName','Dropouts');
-plot(dat.datetime_utc(ind_oow),depth_orig(ind_oow),'oc','MarkerSize',circlesize,'DisplayName','Out of Water');
-plot(dat.datetime_utc(ind_grossRange),depth_orig(ind_grossRange),'or','MarkerSize',circlesize,'DisplayName','Gross Range Test');
-plot(dat.datetime_utc(ind_spike),depth_orig(ind_spike),'om','MarkerSize',circlesize,'DisplayName','Spike Test');
+plot(dat.datetime_utc(ind_dropout),depth_orig(ind_dropout),'og','MarkerSize',circlesize,'DisplayName','Dropouts')
+plot(dat.datetime_utc(ind_oow),depth_orig(ind_oow),'oc','MarkerSize',circlesize,'DisplayName','Out of Water')
+plot(dat.datetime_utc(ind_grossRange),depth_orig(ind_grossRange),'or','MarkerSize',circlesize,'DisplayName','Gross Range Test')
+plot(dat.datetime_utc(ind_spike),depth_orig(ind_spike),'om','MarkerSize',circlesize,'DisplayName','Spike Test')
 xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
-hold off
-xlabel('UTC')
 ylabel('Depth (m)')
+yyaxis right
+plot(dat.datetime_utc,p_orig,'.','Color',rgb('darkgrey'),'MarkerSize',dotsize,'HandleVisibility','off')
+hold on
+plot(dat.datetime_utc(ind_dropout),p_orig(ind_dropout),'og','MarkerSize',circlesize,'HandleVisibility','off')
+plot(dat.datetime_utc(ind_oow),p_orig(ind_oow),'oc','MarkerSize',circlesize,'HandleVisibility','off')
+plot(dat.datetime_utc(ind_grossRange),p_orig(ind_grossRange),'or','MarkerSize',circlesize,'HandleVisibility','off')
+plot(dat.datetime_utc(ind_spike),p_orig(ind_spike),'om','MarkerSize',circlesize,'HandleVisibility','off')
+ylabel('Pressure (psi)')
+xlabel('UTC')
+ax = gca;
+ax.YAxis(1).Color = 'k';
+ax.YAxis(2).Color = rgb('darkgrey');
 legend('show','location','best')
 title([site,' ',sonde,' - Flagged Points from Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
@@ -449,6 +461,7 @@ DO_flags = struct('ind_dropout',ind_dropout,'ind_oow',ind_oow,'ind_grossRange',i
 clearvars ind_high ind_low ind_grossRange ind_spike is
 
 %====SALINITY==============================================================
+% For this test, use limits for salinity and 
 S_orig = dat.salinity;  % Preserve original S data for plotting
 
 % (1) Gross Range Test
@@ -492,16 +505,15 @@ set(gca,'YScale','log','FontSize',fontsize)
 % Plot original data with flagged points
 fig8 = figure(8);clf
 fig8.WindowState = 'maximized';
-plot(dat.datetime_utc,S_orig,'.k','MarkerSize',dotsize,'DisplayName','Original Data');
+plot(dat.datetime_utc,S_orig,'.k','MarkerSize',dotsize,'DisplayName','Original Data')
 hold on
-plot(dat.datetime_utc(ind_dropout),S_orig(ind_dropout),'og','MarkerSize',circlesize,'DisplayName','Dropouts');
-plot(dat.datetime_utc(ind_oow),S_orig(ind_oow),'oc','MarkerSize',circlesize,'DisplayName','Out of Water');
-plot(dat.datetime_utc(ind_grossRange),S_orig(ind_grossRange),'or','MarkerSize',circlesize,'DisplayName','Gross Range Test');
-plot(dat.datetime_utc(ind_spike),S_orig(ind_spike),'om','MarkerSize',circlesize,'DisplayName','Spike Test');
+plot(dat.datetime_utc(ind_dropout),S_orig(ind_dropout),'og','MarkerSize',circlesize,'DisplayName','Dropouts')
+plot(dat.datetime_utc(ind_oow),S_orig(ind_oow),'oc','MarkerSize',circlesize,'DisplayName','Out of Water')
+plot(dat.datetime_utc(ind_grossRange),S_orig(ind_grossRange),'or','MarkerSize',circlesize,'DisplayName','Gross Range Test')
+plot(dat.datetime_utc(ind_spike),S_orig(ind_spike),'om','MarkerSize',circlesize,'DisplayName','Spike Test')
 xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
-hold off
-xlabel('UTC')
 ylabel('Salinity (psu)')
+xlabel('UTC')
 legend('show','location','best')
 title([site,' ',sonde,' - Flagged Points from Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
@@ -771,6 +783,11 @@ dat.salinity(S_flags.ind_oow) = NaN;
 dat.salinity(S_flags.ind_grossRange) = NaN;
 dat.salinity(S_flags.ind_spike) = NaN;
 
+% dat.actual_cond(S_flags.ind_dropout) = NaN;
+% dat.actual_cond(S_flags.ind_oow) = NaN;
+% dat.actual_cond(S_flags.ind_grossRange) = NaN;
+% dat.actual_cond(S_flags.ind_spike) = NaN;
+
 dat.pH(pH_flags.ind_dropout) = NaN;
 dat.pH(pH_flags.ind_oow) = NaN;
 dat.pH(pH_flags.ind_grossRange) = NaN;
@@ -803,6 +820,7 @@ flags.DO_sat(ind_fail) = 4;
 
 ind_fail = find(isnan(dat.salinity));
 flags.salinity(ind_fail) = 4;
+flags.actual_cond(ind_fail) = 4;
 
 ind_fail = find(isnan(dat.pH));
 flags.pH(ind_fail) = 4;
@@ -833,12 +851,18 @@ dat_TT = rmmissing(dat_TT,'DataVariables',"deployment");
 ind_dep = find(diff(dat_TT.deployment) > 0);
 
 %====Plot the cleaned data after initial QC tests=======================
-% Depth
+% Depth & Pressure
 fig13 = figure(13);clf
 fig13.WindowState = 'maximized';
 plot(dat_TT.datetime_utc,dat_TT.depth,'.k','MarkerSize',dotsize);
 xline([dat_TT.datetime_utc(1); dat_TT.datetime_utc(ind_dep+1)],'--',label);
 ylabel('Depth (m)')
+yyaxis right
+plot(dat_TT.datetime_utc,dat_TT.p,'.','Color',rgb('darkgrey'),'MarkerSize',dotsize)
+ax = gca;
+ax.YAxis(1).Color = 'k';
+ax.YAxis(2).Color = rgb('darkgrey');
+ylabel('Pressure (psi)')
 title([site,' ',sonde,' - After Initial Data QC'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 % ylim([-.5 3])
@@ -941,8 +965,8 @@ switch option
         cd([rootpath,saveFilePath])
         saveas(fig1,'depth_spike-histogram.png')
         saveas(fig1,'depth_spike-histogram.fig')
-        saveas(fig2,'depth_flagged.png')
-        saveas(fig2,'depth_flagged.fig')
+        saveas(fig2,'depth&p_flagged.png')
+        saveas(fig2,'depth&p_flagged.fig')
         saveas(fig3,'T_spike-histogram.png')
         saveas(fig3,'T_spike-histogram.fig')
         saveas(fig4,'T_flagged.png')
@@ -971,8 +995,8 @@ switch option
                 saveas(fig12,'turbidity_flagged.png')
                 saveas(fig12,'turbidity_flagged.fig')
         end
-        saveas(fig13,'depth_cleaned&retimed.png')
-        saveas(fig13,'depth_cleaned&retimed.fig')
+        saveas(fig13,'depth&p_cleaned&retimed.png')
+        saveas(fig13,'depth&p_cleaned&retimed.fig')
         saveas(fig14,'T_cleaned&retimed.png')
         saveas(fig14,'T_cleaned&retimed.fig')
         saveas(fig15,'DOconc_cleaned&retimed.png')

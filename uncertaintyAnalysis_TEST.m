@@ -20,13 +20,25 @@ site = questdlg(prompt,'Platform Selection','Gull','North','South','Gull');
 %==========================================================================
 % Import data
 %==========================================================================
+% Load final QC'd timeseries data
+cd([rootpath,'diel-method\owp-data\final-qc'])
+load([site,'_obs.mat'])
+
 % Load diel analysis results
 cd([rootpath,'diel-method\matlab-results\final-qc\',site])
 load('diel_res.mat')
 
-% Load final QC'd timeseries data
-cd([rootpath,'diel-method\owp-data\final-qc'])
-load([site,'_obs.mat'])
+% Load R results
+cd([rootpath,'diel-method\R-results\final-qc\',site])
+wtreg_res = readtable('wtreg_res.csv');
+wtreg_res.Properties.DimensionNames{1} = 'datetime_utc';
+wtreg_res.DateTimeStamp.TimeZone = "UTC";
+wtreg_res = table2timetable(wtreg_res);
+
+% Retime weighted regression data to same datetimes as sonde/physical data
+wtreg_res.solar_period = [];
+newTimes = dat.datetime_utc(1):minutes(10):dat.datetime_utc(end);
+wtreg_res_rt = retime(wtreg_res,newTimes,'mean');
 
 % Load results (which include standard deviations) from duplicate sensor comparison
 cd([rootpath,'open-water-platform-data\',site,'\cleaned\dupcheck'])
@@ -75,17 +87,15 @@ k_sd(3) = mean(std([W2b.fas.k, Eb.fas.k],0,2),'omitmissing');   % W-2014 vs E-20
 % Take largest difference between parameterizations
 k_sd = max(k_sd);   % [h-1]
 
-% Define inputs for calculations
-counter = 1000;         % Number of simulations
-param = 'W14';          % Wanninkhof (2014) parameterization
-% DOconc = dat.DOconc/1000;   % Convert from [umol/L] to [mol m-3]
-DOconc = dat.DOconc;    % [mmol m-3]
-U10 = dat.wspd;         % [m/s]
-S = dat.salinity;       % [PSU]
-T = dat.temperature;    % [degC]
-slp = dat.patm/1013.25; % Convert from [hPa] to [atm]
-p = dat.depth;          % [m] (pressure in [dbar] and depth in [m] are approx. equal)
-% Mean water column depth, H = d + D [m] (see Collab Lab Notebook, Table 2 for manual measurements for D for each site)
+%====Define input variables================================================
+dt_utc = wtreg_res_rt.DateTimeStamp;
+
+% Water
+S = wtreg_res_rt.Sal;   % [PSU]
+T = wtreg_res_rt.Temp;  % [degC]
+p = wtreg_res_rt.Tide;  % [m] (pressure in [dbar] and depth in [m] are approx. equal)
+d = wtreg_res_rt.Tide;
+% Mean water column depth, H = d + D [m] - see Collab Lab Notebook, Table 2 for manual measurements of D for each site
 switch site
     case 'Gull'
         H = dat.depth + 0.42;
@@ -94,14 +104,43 @@ switch site
     case 'South'
         H = dat.depth + 0.80;
 end
+% Air
+T = wtreg_res_rt.ATemp;        % [deg C]
+slp = wtreg_res_rt.BP/1013.25; % Convert from [hPa] to [atm]
+U10 = wtreg_res_rt.WSpd;       % [m/s]
+
+% DO concentration conversions
+DOconc = wtreg_res_rt.DO_nrm*1000/32;   % Detided DO concentration [mmol m-3]
+
+
+% Define inputs for calculations
+% counter = 1000;         % Number of simulations
+counter = 3000;
+param = 'W14';          % Wanninkhof (2014) parameterization
+
+% DOconc = dat.DOconc;    % [mmol m-3]
+% U10 = dat.wspd;         % [m/s]
+% S = dat.salinity;       % [PSU]
+% T = dat.temperature;    % [degC]
+% slp = dat.patm/1013.25; % Convert from [hPa] to [atm]
+% p = dat.depth;          % [m] (pressure in [dbar] and depth in [m] are approx. equal)
+% Mean water column depth, H = d + D [m] (see Collab Lab Notebook, Table 2 for manual measurements for D for each site)
+% switch site
+%     case 'Gull'
+%         H = dat.depth + 0.42;
+%     case 'North'
+%         H = dat.depth + 0.47;
+%     case 'South'
+%         H = dat.depth + 0.80;
+% end
 
 % Initialize vectors to hold outputs
-DOsat = NaN(length(dat.datetime_utc),counter);
-k = NaN(length(dat.datetime_utc),counter);
-D = NaN(length(dat.datetime_utc),counter);
+DOsat = NaN(length(dt_utc),counter);
+k = NaN(length(dt_utc),counter);
+D = NaN(length(dt_utc),counter);
 
 % Calculate the solutions for D
-% 1000 simulations = 53 seconds
+% 1000 simulations = 45 seconds
 tic
 for j = 1:counter
     % Randomly draw an input value for each variable every time the calculation is performed
@@ -134,25 +173,24 @@ D_sd = std(D,0,2);
 
 % Sanity check plots with original diel analysis results for k and D
 figure,clf
-plot(dat.datetime_utc,k,'.','DisplayName','MC average')
+plot(dt_utc,k,'.','DisplayName','MC average')
 hold on
 plot(fas.datetime_utc,fas.k,'.','DisplayName','Original diel analysis')
 legend('show')
 ylabel('k (h^{-1})')
 
 figure,clf
-plot(dat.datetime_utc,D_avg,'.','DisplayName','MC average')
+plot(dt_utc,D_avg,'.','DisplayName','MC average')
 hold on
 plot(fas.datetime_utc,fas.D,'.','DisplayName','Original diel analysis')
 legend('show')
 ylabel('D (mmol m^{-3} h^{-1})')
 
-%%
 %====STEP 2: Calculate HOURLY rates of nighttime respiration (R) and apparent primary production (P)
 % Determine day/night times - Get day/night indices based on lat and lon and Hilary's indexDayNight function
 lat = 39.08;
 lon = -74.78;
-time_in = dat.datetime_utc;
+time_in = dt_utc;
 tol = 0;
 UTCoffset = 0;  % Input datetime vector is in UTC
 
@@ -163,17 +201,17 @@ daystart = dayind(find(diff(dayind) > 1) + 1);
 dayend = dayind(find(diff(dayind) > 1));
 
 % Length of each day
-daylength = dat.datetime_utc(dayend(2:end)) - dat.datetime_utc(daystart(1:end-1) - 1);
+daylength = dt_utc(dayend(2:end)) - dt_utc(daystart(1:end-1) - 1);
 daylength = hours(daylength);
 
 % Find the actual datetimes for when each day starts and stops
-daystart_dt = dat.datetime_utc(daystart(1:end-1));
-dayend_dt = dat.datetime_utc(dayend(2:end));
+daystart_dt = dt_utc(daystart(1:end-1));
+dayend_dt = dt_utc(dayend(2:end));
 
 % LOOKS LIKE THIS PART ISN'T NECESSARY
 % % Calculate change in DO over sampling intervals (10 min)
 % % dCdt_orig = nan(length(DOconc),1);
-% % dCdt_orig(2:end,1) = diff(DOconc) ./ hours(diff(dat.datetime_utc));  % [mmol m-3 h-1]
+% % dCdt_orig(2:end,1) = diff(DOconc) ./ hours(diff(dt_utc));  % [mmol m-3 h-1]
 
 % % Initialize vector to hold output
 % dCdt = NaN(length(DOconc),counter);
@@ -184,7 +222,7 @@ dayend_dt = dat.datetime_utc(dayend(2:end));
 %     % Randomly draw an input value for each variable every time the calculation is performed
 %     DOconc_randErr = randn*DOconc_sd;
 % 
-%     dCdt(2:end,j) = (diff(DOconc)+DOconc_randErr) ./ hours(diff(dat.datetime_utc));  % [mmol m-3 h-1]
+%     dCdt(2:end,j) = (diff(DOconc)+DOconc_randErr) ./ hours(diff(dt_utc));  % [mmol m-3 h-1]
 % end
 % toc
 % 
@@ -194,7 +232,7 @@ dayend_dt = dat.datetime_utc(dayend(2:end));
 % 
 % % Sanity check plots with original diel analysis results for k and D
 % figure,clf
-% plot(dat.datetime_utc,dCdt_med,'.','DisplayName','MC average')
+% plot(dt_utc,dCdt_med,'.','DisplayName','MC average')
 % hold on
 % plot(fas.datetime_utc,dCdt_orig,'.','DisplayName','Original diel analysis')
 % legend('show')
@@ -202,14 +240,14 @@ dayend_dt = dat.datetime_utc(dayend(2:end));
 
 % Calculate change in DO over sampling intervals (10 min)
 dCdt = NaN(length(DOconc),1);
-dCdt(2:end,1) = diff(DOconc) ./ hours(diff(dat.datetime_utc));  % [mmol m-3 h-1]
+dCdt(2:end,1) = diff(DOconc) ./ hours(diff(dt_utc));  % [mmol m-3 h-1]
 
 % Initialize vectors to hold outputs
 R_hourly = NaN(length(daylength),counter);
 P_hourly = NaN(length(daylength),counter);
 
 % Calculate the solutions for R_hourly and P_hourly (mean hourly rates)
-% 1000 simulations = 103 seconds (4 seconds on 10/10?)
+% 1000 simulations = 4 seconds
 tic
 for i = 1:length(daylength)
     for j = 1:counter        
@@ -224,17 +262,20 @@ for i = 1:length(daylength)
 end
 toc
 
-R_hourly_med = median(R_hourly,2);
-R_hourly_avg = mean(R_hourly,2);
-R_hourly_sd = std(R_hourly,0,2);
+R_hourly_med = median(R_hourly,2);  % [mmol m-3 h-1]
+R_hourly_avg = mean(R_hourly,2);    % [mmol m-3 h-1]
+R_hourly_sd = std(R_hourly,0,2);    % [mmol m-3 h-1]
 
-P_hourly_med = median(P_hourly,2);
-P_hourly_avg = mean(P_hourly,2);
-P_hourly_sd = std(P_hourly,0,2);
+P_hourly_med = median(P_hourly,2);  % [mmol m-3 h-1]
+P_hourly_avg = mean(P_hourly,2);    % [mmol m-3 h-1]
+P_hourly_sd = std(P_hourly,0,2);    % [mmol m-3 h-1]
 
 %====STEP 3: Calculate DAILY rates of respiration and gross production=====
 R_daily_avg = R_hourly_avg .* 24;                          % Daily rate of respiration; [mmol m-3 d-1]
 P_daily_avg = (P_hourly_avg - R_hourly_avg) .* daylength;  % Daily rate of gross production; [mmol m-3 d-1]
+
+R_daily_sd = R_hourly_sd .* 24;  % [mmol m-3 h-1]
+P_daily_sd = P_hourly_sd .* 24;  % [mmol m-3 h-1]
 
 %====STEP 4: Convert volumetric rates to depth-integrated (areal) estimates
 daily_depth = groupsummary(dat,"datetime_utc","day","mean","depth");
@@ -255,6 +296,7 @@ ER_sd = R_hourly_sd .* 24 .* H_daily(2:end-1);  % [mmol O2 m-2 d-1]
 
 % Final Monte Carlo to calculate NEM
 NEM = NaN(length(daystart_dt),counter);
+% 1000 simulations << 1 second
 tic
 for j = 1:counter
     GPP_randErr = rand*GPP_sd;
@@ -267,10 +309,50 @@ toc
 NEM_med = median(NEM,2);
 NEM_avg = mean(NEM,2);
 NEM_sd = std(NEM,0,2);
-%%
-fig=figure;clf
-fig.WindowState = 'maximized';
-errorbar(daystart_dt,GPP_avg,GPP_sd,'.-','Color',rgb('blue'),'MarkerSize',12,'LineWidth',1)
+
+% Make a table of Monte Carlo results
+date = dateshift(daystart_dt,'start','day');
+date = datetime(date,'TimeZone','UTC');
+diel_dtd_MC = table(date,daystart_dt,dayend_dt,daylength,...
+    R_hourly_avg,P_hourly_avg,R_daily_avg,P_daily_avg,GPP_avg,ER_avg,NEM_avg,...
+    R_hourly_sd,P_hourly_sd,R_daily_sd,P_daily_sd,GPP_sd,ER_sd,NEM_sd);
+diel_dtd_MC = table2timetable(diel_dtd_MC);
+% Remove rows with missing data
+diel_dtd_MC = rmmissing(diel_dtd_MC);
+% Delete endpoint values of GPP, ER, and NEM around big gaps in data 
+threshold = duration(days(7));
+gap = diff(diel_dtd.date);
+idx = find(gap > threshold);
+idx_delete = [idx;idx+1];
+diel_dtd_MC(idx_delete,:) = [];
+
+% Comparison of original diel analysis results and MC averages
+fig1 = figure(1);clf
+fig1.WindowState = 'maximized';
+plot(diel_dtd.date,diel_dtd.GPP,'.-','MarkerSize',12,'LineWidth',1,'DisplayName','GPP (Original)')
 hold on
-errorbar(daystart_dt,ER_avg,ER_sd,'.-','Color',rgb('black'),'MarkerSize',12,'LineWidth',1)
-errorbar(daystart_dt,NEM_avg,NEM_sd,'.-','Color',rgb('red'),'MarkerSize',12,'LineWidth',1)
+plot(diel_dtd.date,diel_dtd.ER,'k.-','MarkerSize',12,'LineWidth',1,'DisplayName','ER (Original)')
+plot(diel_dtd.date,diel_dtd.NEM,'r.-','MarkerSize',12,'LineWidth',1,'DisplayName','NEM (Original)')
+errorbar(diel_dtd_MC.date,diel_dtd_MC.GPP_avg,diel_dtd_MC.GPP_sd,':','Color',rgb('blue'),'MarkerSize',12,'LineWidth',1,'DisplayName','GPP (Monte Carlo)')
+errorbar(diel_dtd_MC.date,diel_dtd_MC.ER_avg,diel_dtd_MC.ER_sd,':','Color',rgb('black'),'MarkerSize',12,'LineWidth',1,'DisplayName','ER (Monte Carlo)')
+errorbar(diel_dtd_MC.date,diel_dtd_MC.NEM_avg,diel_dtd_MC.NEM_sd,':','Color',rgb('red'),'MarkerSize',12,'LineWidth',1,'DisplayName','NEM (Monte Carlo)')
+xlabel('UTC')
+ylabel('mmol O_2 m^{-2} d^{-1}','FontSize',14)
+legend('show','FontSize',14)
+set(gca,'FontSize',14,'LineWidth',2)
+title([site,': MATLAB Results (Detided Data)'])
+% ylim([-500 500])
+
+% Original diel analysis results with errorbars for uncertainty from MC analysis
+fig2 = figure(2);clf
+fig2.WindowState = 'maximized';
+errorbar(diel_dtd.date,diel_dtd.GPP,diel_dtd_MC.GPP_sd,'.-b','MarkerSize',12,'LineWidth',1,'DisplayName','GPP (Original)')
+hold on
+errorbar(diel_dtd.date,diel_dtd.ER,diel_dtd_MC.ER_sd,'.-k','MarkerSize',12,'LineWidth',1,'DisplayName','ER (Original)')
+errorbar(diel_dtd.date,diel_dtd.NEM,diel_dtd_MC.NEM_sd,'.-r','MarkerSize',12,'LineWidth',1,'DisplayName','NEM (Original)')
+xlabel('UTC')
+ylabel('mmol O_2 m^{-2} d^{-1}','FontSize',14)
+legend('show','FontSize',14)
+set(gca,'FontSize',14,'LineWidth',2)
+title([site,': MATLAB Results (Detided Data)'])
+ylim([-500 500])

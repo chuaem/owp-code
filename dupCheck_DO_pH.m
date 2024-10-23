@@ -38,6 +38,19 @@ load([site,'-bestGuess.mat'])
 cd([rootpath,'open-water-platform-data\',site,'\cleaned\corrected'])
 load([site,'-DOCorr.mat'])
 
+%====Import Winkler data===================================================
+cd('G:\Shared drives\SMIIL\Shared Data')
+wink = readtable('winklers_owp.csv');
+varNames = ["datetime_utc","datetime_local","platform","S_lab","DO_mean","DO_std","DO_%err"];
+varUnits = ["","","","psu","umol/L","umol/L","%"];
+wink.Properties.VariableNames = varNames;
+wink.Properties.VariableUnits = varUnits;
+wink.datetime_local.TimeZone = 'America/New_York';
+wink.datetime_utc.TimeZone = 'UTC';
+wink = table2timetable(wink);
+% Find indices of samples taken from this site
+ind_wink = find(ismember(wink.platform,site));
+
 %====Find the indices of deployment changes================================
 switch site
     case 'South'    % South BC Dep. 15 is missing, so need to manually add in dep number
@@ -139,20 +152,19 @@ cd([rootpath,'figures\open-water-platform\',site,'\data-qc\synchronized\DOconc']
 % Check agreement between BC and ERDC sondes
 DO_bc = DOcorr_syn.bc;
 DO_erdc = DOcorr_syn.erdc;
-threshold = 20; % umol/L
-ind_diverge = find(abs(DO_bc - DO_erdc) > threshold);
-
-pc_exceed = height(ind_diverge)/height(DOcorr_syn)*100; % Percentage of synchronized data that exceed threshold
-
-txt = ['Differs by >',num2str(threshold),' \mumol/L (',num2str(pc_exceed,'%.1f'),'%)'];
+% threshold = 20; % umol/L
+% ind_diverge = find(abs(DO_bc - DO_erdc) > threshold);
+% pc_exceed = height(ind_diverge)/height(DOcorr_syn)*100; % Percentage of synchronized data that exceed threshold
+% txt = ['Differs by >',num2str(threshold),' \mumol/L (',num2str(pc_exceed,'%.1f'),'%)'];
 
 fig1 = figure(1);clf
 fig1.WindowState = 'maximized';
 plot(dt_utc,DOcorr_syn.mean,'-','Color',rgb('magenta'),'DisplayName','Mean Value')
 hold on
-plot(dt_utc,DO_bc,'.','Color',rgb('darkred'),'MarkerSize',dotsize,'DisplayName','BC (recalculated)');
-plot(dt_utc,DO_erdc,'.','Color',rgb('darkblue'),'MarkerSize',dotsize,'DisplayName','ERDC (recalculated)')
-plot(dt_utc(ind_diverge),DO_bc(ind_diverge),'o','color',rgb('goldenrod'),'MarkerSize',circlesize,'DisplayName',txt)
+plot(dt_utc,DO_bc,'.','Color',red,'MarkerSize',dotsize,'DisplayName','BC (recalculated)');
+plot(dt_utc,DO_erdc,'.','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC (recalculated)')
+% plot(dt_utc(ind_diverge),DO_bc(ind_diverge),'o','color',rgb('goldenrod'),'MarkerSize',circlesize,'DisplayName',txt)
+errorbar(wink.datetime_utc(ind_wink),wink.DO_mean(ind_wink),wink.DO_std(ind_wink),'o','MarkerSize',6,'LineWidth',2,'color',rgb('goldenrod'),'DisplayName','Winkler Sample')
 xline(dt_utc(ind_depDO),'--',label,'HandleVisibility','off')
 ylabel('DO concentration (\mumol/L)')
 legend('show','location','best')
@@ -170,15 +182,15 @@ switch site
         d7 = DOcorr_syn.bc(ind_depDO(5)+1:ind_depDO(6));       % Dep 7
         d8 = DOcorr_syn.erdc(ind_depDO(6)+1:ind_depDO(7));     % Dep 8
         d9 = DOcorr_syn.mean(ind_depDO(7)+1:ind_depDO(8));     % Dep 9
-        d10 = DOcorr_syn.mean(ind_depDO(8)+1:ind_depDO(9));    % Dep 10
+        d10 = DOcorr_syn.bc(ind_depDO(8)+1:ind_depDO(9));    % Dep 10
         d11 = DOcorr_syn.mean(ind_depDO(9)+1:ind_depDO(10));   % Dep 11
         d12 = DOcorr_syn.mean(ind_depDO(10)+1:ind_depDO(11));  % Dep 12
         d13 = DOcorr_syn.erdc(ind_depDO(11)+1:ind_depDO(12));  % Dep 13
         d14 = DOcorr_syn.erdc(ind_depDO(12)+1:ind_depDO(13));  % Dep 14
         d15 = DOcorr_syn.mean(ind_depDO(13)+1:ind_depDO(14));  % Dep 15
         d16 = DOcorr_syn.mean(ind_depDO(14)+1:ind_depDO(15));  % Dep 16
-        d17 = DOcorr_syn.mean(ind_depDO(15)+1:ind_depDO(16));  % Dep 17
-        d18 = DOcorr_syn.mean(ind_depDO(16)+1:end);            % Dep 18
+        d17 = DOcorr_syn.bc(ind_depDO(15)+1:ind_depDO(16));  % Dep 17
+        d18 = DOcorr_syn.bc(ind_depDO(16)+1:end);            % Dep 18
 
         DO_bestguess = [d1;d2;d5;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
 
@@ -189,13 +201,13 @@ switch site
         d8 = DOcorr_syn.mean(ind_depDO(4)+1:ind_depDO(5));     % Dep 8
         d9 = DOcorr_syn.mean(ind_depDO(5)+1:ind_depDO(6));     % Dep 9
         d10 = DOcorr_syn.mean(ind_depDO(6)+1:ind_depDO(7));    % Dep 10
-        d11 = DOcorr_syn.mean(ind_depDO(7)+1:ind_depDO(8));    % Dep 11
+        d11 = DOcorr_syn.bc(ind_depDO(7)+1:ind_depDO(8));    % Dep 11
         d12 = DOcorr_syn.mean(ind_depDO(8)+1:ind_depDO(9));    % Dep 12
         d13 = DOcorr_syn.erdc(ind_depDO(9)+1:ind_depDO(10));   % Dep 13
         d14 = DOcorr_syn.erdc(ind_depDO(10)+1:ind_depDO(11));  % Dep 14
         d15 = DOcorr_syn.mean(ind_depDO(11)+1:ind_depDO(12));  % Dep 15
-        d16 = DOcorr_syn.mean(ind_depDO(12)+1:ind_depDO(13));  % Dep 16
-        d17 = DOcorr_syn.mean(ind_depDO(13)+1:end);            % Dep 17
+        d16 = DOcorr_syn.erdc(ind_depDO(12)+1:ind_depDO(13));  % Dep 16
+        d17 = DOcorr_syn.erdc(ind_depDO(13)+1:end);            % Dep 17
 
         DO_bestguess = [d2;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17];
 
@@ -204,11 +216,10 @@ switch site
         d2 = DOcorr_syn.mean(ind_depDO(2)+1:ind_depDO(3));     % Dep 2
         d4 = DOcorr_syn.bc(ind_depDO(3)+1:ind_depDO(4));       % Dep 4
         d5 = DOcorr_syn.bc(ind_depDO(4)+1:ind_depDO(5));       % Dep 5
-        % d6 = DOcorr_syn.bc(ind_depDO(5)+1:ind_depDO(6));     % Dep 6
-        d6 = [DOcorr_syn.bc(ind_depDO(5)+1:29593); NaN(ind_depDO(6)-29593,1)];       % Dep 6
+        d6 = DOcorr_syn.bc(ind_depDO(5)+1:ind_depDO(6));       % Dep 6
         d7 = DOcorr_syn.erdc(ind_depDO(6)+1:ind_depDO(7));     % Dep 7
-        d8 = DOcorr_syn.mean(ind_depDO(7)+1:ind_depDO(8));     % Dep 8
-        d9 = DOcorr_syn.mean(ind_depDO(8)+1:ind_depDO(9));     % Dep 9
+        d8 = DOcorr_syn.erdc(ind_depDO(7)+1:ind_depDO(8));     % Dep 8
+        d9 = DOcorr_syn.erdc(ind_depDO(8)+1:ind_depDO(9));     % Dep 9
         d10 = DOcorr_syn.bc(ind_depDO(9)+1:ind_depDO(10));     % Dep 10
         d11 = DOcorr_syn.erdc(ind_depDO(10)+1:ind_depDO(11));  % Dep 11
         d12 = DOcorr_syn.erdc(ind_depDO(11)+1:ind_depDO(12));  % Dep 12
@@ -220,6 +231,9 @@ switch site
         d18 = DOcorr_syn.erdc(ind_depDO(17)+1:end);            % Dep 18
 
         DO_bestguess = [d1;d2;d4;d5;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
+
+        % Remove "obvious" outliers
+        DO_bestguess(28535:ind_depDO(6)) = NaN;
 end
 
 clearvars d1 d2 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17
@@ -237,6 +251,7 @@ hold on
 plot(DOcorr_syn.datetime_utc,DOcorr_syn.erdc,'.','Color',blue,'MarkerSize',dotsize,'LineWidth',linewidth,'DisplayName','ERDC (recalculated)')
 plot(DOcorr_syn.datetime_utc,DOcorr_syn.mean,'.','Color',rgb('magenta'),'MarkerSize',dotsize,'LineWidth',linewidth,'DisplayName','Mean')
 plot(DO_bestguess.datetime_utc,DO_bestguess.DOconc,'.k','MarkerSize',dotsize,'LineWidth',linewidth,'DisplayName','"Best Guess"')
+errorbar(wink.datetime_utc(ind_wink),wink.DO_mean(ind_wink),wink.DO_std(ind_wink),'o','MarkerSize',6,'LineWidth',2,'color',rgb('goldenrod'),'DisplayName','Winkler Sample')
 xline(dt_utc(ind_depDO),'--',label,'HandleVisibility','off')
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 ylim([0 450])
@@ -284,12 +299,10 @@ cd([rootpath,'figures\open-water-platform\',site,'\data-qc\synchronized\pH'])
 % Check agreement between BC and ERDC sondes
 pH_bc = pH_syn.bc;
 pH_erdc = pH_syn.erdc;
-threshold = 0.3; 
-ind_diverge = find(abs(pH_bc - pH_erdc) > threshold);
-
-pc_exceed = height(ind_diverge)/height(pH_syn)*100; % Percentage of synchronized data that exceed threshold
-
-txt = ['Differs by >',num2str(threshold),' (',num2str(pc_exceed,'%.1f'),'%)'];
+% threshold = 0.3; 
+% ind_diverge = find(abs(pH_bc - pH_erdc) > threshold);
+% pc_exceed = height(ind_diverge)/height(pH_syn)*100; % Percentage of synchronized data that exceed threshold
+% txt = ['Differs by >',num2str(threshold),' (',num2str(pc_exceed,'%.1f'),'%)'];
 
 fig3 = figure(3);clf
 fig3.WindowState = 'maximized';

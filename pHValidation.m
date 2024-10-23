@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% validatepH.m
+% pHValidation.m
 % This script uses the discrete DIC/TA measurements to validate the
 % AquaTroll data.
 %
