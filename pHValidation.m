@@ -8,7 +8,7 @@
 %
 % DATE:
 % First created: 8/15/2024
-% Last updated: 8/19/2024
+% Last updated: 11/4/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -23,35 +23,36 @@ site = questdlg(prompt,'Platform Selection','Gull','North','South','Gull');
 %==========================================================================
 
 %----Load the discrete DIC/TA data-----------------------------------------
-cd([rootpath,'discrete-samples'])
+cd('G:\Shared drives\SMIIL\Shared Data\')
+sample_log = readtable('SMIIL DIC_TA Sample Salinities - OWP.xlsx');
 
-load('DICTA_SMIIL_sample_output090424');    % Downloaded from Lab_Sample_Processing/SMIIL GitHub
+cd('G:\Shared drives\SMIIL\Shared Data\Processed')
+load('DIC_TA_Output_SMIIL_OWP_KF');    % Downloaded from Lab_Sample_Processing/SMIIL GitHub
 
-% Create a table of just the OWP data
-idx = find(strcmp(site,sample_output.Location_ID));
-
-discrete_samples = sample_output(idx,:);
-
-% Make into timetable
-date = datetime(discrete_samples.Date_Sampled);
-timeOfDay = datetime(discrete_samples.Sampling_Time,'ConvertFrom','datenum');
+% Make sample log into timetable
+date = datetime(sample_log.Date_Sampled);
+timeOfDay = datetime(sample_log.Sampling_Time,'ConvertFrom','datenum');
 datetime_local = date + timeofday(timeOfDay);
 datetime_local.TimeZone = 'America/New_York';
 datetime_utc = datetime_local;
 datetime_utc.TimeZone = 'UTC';
+sample_log.datetime_utc = datetime_utc;
+sample_log = table2timetable(sample_log,'RowTimes','datetime_utc');
 
-discrete_samples.datetime_utc = datetime_utc;
-discrete_samples.Sampling_Time = timeofday(timeOfDay);
-
-discrete_samples = table2timetable(discrete_samples,"RowTimes","datetime_utc");
+% Make data output into timetable
+datetime_utc = datetime(DIC_TA_discrete.dn_UTC,'ConvertFrom','datenum');
+datetime_utc.TimeZone = 'UTC';
+DIC_TA_discrete.datetime_utc = datetime_utc;
+DIC_TA_discrete = table2timetable(DIC_TA_discrete,"RowTimes","datetime_utc");
+DIC_TA_discrete = sortrows(DIC_TA_discrete);
 
 %----Calculate [H+] from discrete DIC/TA samples-----------------------------
 par1type =    1; % Type "1" = "alkalinity"
-par1     =    discrete_samples.TA; % Values of the first parameter
+par1     =    DIC_TA_discrete.TA; % Values of the first parameter
 par2type =    2; % Type "2" = "DIC"
-par2     =    discrete_samples.DIC; % Values of the second parameter
-sal      =    discrete_samples.Field_Salinity; % Salinity of the sample
-tempin   =    discrete_samples.Field_Temp; % In situ temperature
+par2     =    DIC_TA_discrete.DIC; % Values of the second parameter
+sal      =    sample_log.Final_Salinity; % Salinity of the sample
+tempin   =    sample_log.Field_Temp; % In situ temperature
 presin   =    0; % Lab pressure
 tempout  =    0; % Doesn't matter here
 presout  =    1; % In situ pressure
@@ -68,13 +69,14 @@ carb_sys.results = array2table(carb_sys.results);
 carb_sys.results.Properties.VariableNames = headers';
 
 %----Estimate error--------------------------------------------------------
-% For error in DIC, use the max of DIC_std and DIC_drift
-for i = 1:length(discrete_samples.DIC)
-    eDIC(i,1) = max(discrete_samples.DIC_std(i),discrete_samples.DIC_drift(i));
-end
+% For error in DIC, use the max of DIC_std and DIC_drift (ORIGINAL DATA FILE)
+% for i = 1:length(DIC_TA_discrete.DIC)
+%     eDIC(i,1) = max(DIC_TA_discrete.DIC_std(i),DIC_TA_discrete.DIC_drift(i)); 
+% end
 
-epar1     =    discrete_samples.TA_std; % Error for the first parameter
-epar2     =    eDIC; % Error for the second parameter
+epar1     =    DIC_TA_discrete.TA_std; % Error for the first parameter
+% epar2     =    eDIC; % Error for the second parameter
+epar2     =    DIC_TA_discrete.DIC_std;
 esal      =    0;
 etemp     =    0;
 esil      =    0;
@@ -94,8 +96,11 @@ carb_sys.errors.Properties.VariableUnits = units';
 % Make a table with just the discrete [H+] values and errors
 Hfree = carb_sys.results.("Hfreeout")/10^6; % Convert Hfreeout from umol/kg to mol/kg
 uHfree = carb_sys.errors.("u(Hout)")/10^9; % Convert u(Hout) from nmol/kg to to mol/kg
-H_calc = table(datetime_utc,Hfree,uHfree);
-H_calc.Properties.VariableNames = {'datetime_utc','Hfree','error'};
+H_calc = table(DIC_TA_discrete.datetime_utc,DIC_TA_discrete.Platform,Hfree,uHfree);
+H_calc.Properties.VariableNames = {'datetime_utc','platform','Hfree','error'};
+
+% Extract the discrete values for the site being analyzed
+ind_site = find(strcmp(site,H_calc.platform));
 
 %==========================================================================
 %   Compare discrete sample and AquaTroll [H+]
@@ -162,13 +167,13 @@ dep.Properties.VariableNames = {'depNum','ind'};
 cd([rootpath,'figures\open-water-platform\',site,'\validation\dic_ta'])
 
 % Plot AquaTroll pH data with discrete [H+] on top
-fig1 = figure(1);clf
-fig1.WindowState = 'maximized';
+fig = figure;clf
+fig.WindowState = 'maximized';
 plot(dat_syn.datetime_utc,dat_syn.Hfree1,'o','MarkerSize',8,'color',red,'DisplayName','BC')
 hold on
 plot(dat_syn.datetime_utc,dat_syn.Hfree2,'o','MarkerSize',8,'color',blue,'DisplayName','ERDC')
 plot(finalQC.datetime_utc,finalQC.Hfree,'.k','MarkerSize',12,'DisplayName','"Best Guess"')
-errorbar(H_calc.datetime_utc,H_calc.Hfree,H_calc.error,'o','color',rgb('gold'),'MarkerSize',8,'LineWidth',2,'DisplayName','Discrete Sample')
+errorbar(H_calc.datetime_utc(ind_site),H_calc.Hfree(ind_site),H_calc.error(ind_site),'o','color',rgb('gold'),'MarkerSize',8,'LineWidth',2,'DisplayName','Discrete Sample')
 xline(finalQC.datetime_utc(dep.ind),'--',label,'HandleVisibility','off')
 xlim([dt1 dt2])    % Use same x limits
 xlabel('UTC')
@@ -176,7 +181,7 @@ ylabel('[H+] (mol/kg)')
 title(site,'FontSize',fontsize)
 legend('show','location','best')
 ylim([0 6E-8])
-
+%%
 % Linear regression
 % Remove rows with missing pH values
 finalQC_trimmed = rmmissing(finalQC,'DataVariables',"pH");
@@ -188,7 +193,7 @@ ind_sonde = interp1(t2,1:length(t2),t1,'nearest','extrap');
 
 ind_discrete = 1:1:height(H_calc);
 
-%%
+
 % If closest matching samples are more than 25 minutes off, do not include
 for i = 1:length(ind_sonde(~isnan(ind_sonde)))
     dt = between(finalQC_trimmed.datetime_utc(ind_sonde(i)),H_calc.datetime_utc(i));

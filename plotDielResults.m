@@ -18,26 +18,18 @@ rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 %   Import data
 %==========================================================================
 % Load the MATLAB detided diel analysis results for all sites
-% Gull
-site = 'Gull';
-cd([rootpath,'diel-method\matlab-results\final-qc\',site])
-load('diel_res.mat')
-diel_dtd.dayend_dt = [];
-daily.gull = diel_dtd;
 
-% North
-site = 'North';
-cd([rootpath,'diel-method\matlab-results\final-qc\',site])
-load('diel_res.mat')
-diel_dtd.dayend_dt = [];
-daily.north = diel_dtd;
+fn = {'north','gull','south'};
+for i = 1:length(fn)
+    cd([rootpath,'diel-method\uncertainty-analysis\',fn{i}])
+    load('MonteCarloResults')
+    diel_dtd_MC.daystart_dt = [];
+    diel_dtd_MC.dayend_dt = [];
+    daily.(fn{i}) = diel_dtd_MC;
+end
 
-% South
-site = 'South';
-cd([rootpath,'diel-method\matlab-results\final-qc\',site])
-load('diel_res.mat')
-diel_dtd.dayend_dt = [];
-daily.south = diel_dtd;
+% cd([rootpath,'diel-method\matlab-results\final-qc\gull'])
+% load('diel_res.mat')
 
 % Define colors for plots
 green = "#008837";
@@ -59,18 +51,18 @@ clearvars diel_dtd diel_obs
 %   Define periods to remove
 %==========================================================================
 % Gull
-anomER = find(daily.gull.ER > 0);
-anomGPP = find(daily.gull.GPP < 0);
+anomER = find(daily.gull.ER_avg > 0);
+anomGPP = find(daily.gull.GPP_avg < 0);
 daily.gull{[anomER;anomGPP],:} = NaN;
 
 % North
-anomER = find(daily.north.ER > 0);
-anomGPP = find(daily.north.GPP < 0);
+anomER = find(daily.north.ER_avg > 0);
+anomGPP = find(daily.north.GPP_avg < 0);
 daily.north{[anomER;anomGPP],:} = NaN;
 
 % South
-anomER = find(daily.south.ER > 0);
-anomGPP = find(daily.south.GPP < 0);
+anomER = find(daily.south.ER_avg > 0);
+anomGPP = find(daily.south.GPP_avg < 0);
 daily.south{[anomER;anomGPP],:} = NaN;
 
 %==========================================================================
@@ -82,17 +74,17 @@ monthly.north = retime(daily.north,'monthly','mean');
 monthly.south = retime(daily.south,'monthly','mean');
 
 % Create monthly averages across years for each site/sonde
-monthlyavg.gull = groupsummary(daily.gull,'daystart_dt','monthofyear','mean');
-monthlyavg.north = groupsummary(daily.north,'daystart_dt','monthofyear','mean');
-monthlyavg.south = groupsummary(daily.south,'daystart_dt','monthofyear','mean');
+monthlyavg.gull = groupsummary(daily.gull,'date','monthofyear','mean');
+monthlyavg.north = groupsummary(daily.north,'date','monthofyear','mean');
+monthlyavg.south = groupsummary(daily.south,'date','monthofyear','mean');
 
 monthlyavg.gull.Properties.VariableNames(1) = {'month'};
 monthlyavg.north.Properties.VariableNames(1) = {'month'};
 monthlyavg.south.Properties.VariableNames(1) = {'month'};
 
-monthlystd.gull = groupsummary(daily.gull,'daystart_dt','monthofyear','std');
-monthlystd.north = groupsummary(daily.north,'daystart_dt','monthofyear','std');
-monthlystd.south = groupsummary(daily.south,'daystart_dt','monthofyear','std');
+monthlystd.gull = groupsummary(daily.gull,'date','monthofyear','std');
+monthlystd.north = groupsummary(daily.north,'date','monthofyear','std');
+monthlystd.south = groupsummary(daily.south,'date','monthofyear','std');
 
 monthlystd.gull.Properties.VariableNames(1) = {'month'};
 monthlystd.north.Properties.VariableNames(1) = {'month'};
@@ -102,17 +94,17 @@ monthlystd.south.Properties.VariableNames(1) = {'month'};
 %  Calculate overall rates (average of all values for each site)
 %==========================================================================
 % Units: [mmol O2 m-2 d-1]
-overallGPP_gull = mean(daily.gull.GPP,'omitmissing');
-overallGPP_north = mean(daily.north.GPP,'omitmissing');
-overallGPP_south = mean(daily.south.GPP,'omitmissing');
+overallGPP_gull = mean(daily.gull.GPP_avg,'omitmissing');
+overallGPP_north = mean(daily.north.GPP_avg,'omitmissing');
+overallGPP_south = mean(daily.south.GPP_avg,'omitmissing');
 
-overallER_gull = mean(daily.gull.ER,'omitmissing');
-overallER_north = mean(daily.north.ER,'omitmissing');
-overallER_south = mean(daily.south.ER,'omitmissing');
+overallER_gull = mean(daily.gull.ER_avg,'omitmissing');
+overallER_north = mean(daily.north.ER_avg,'omitmissing');
+overallER_south = mean(daily.south.ER_avg,'omitmissing');
 
-overallNEM_gull = mean(daily.gull.NEM,'omitmissing');
-overallNEM_north = mean(daily.north.NEM,'omitmissing');
-overallNEM_south = mean(daily.south.NEM,'omitmissing');
+overallNEM_gull = mean(daily.gull.NEM_avg,'omitmissing');
+overallNEM_north = mean(daily.north.NEM_avg,'omitmissing');
+overallNEM_south = mean(daily.south.NEM_avg,'omitmissing');
 
 % Convert to [mol O2 m-2 y-1]
 % overallNEM_gull = overallNEM_gull*365/1000;
@@ -154,14 +146,14 @@ fig1.WindowState = 'maximized';
 % Daily plots
 ax1 = nexttile;
 yyaxis left
-    b1 = bar(daily.gull.daystart_dt,daily.gull.GPP);
+    b1 = bar(daily.gull.date,daily.gull.GPP_avg);
     hold on
-    b2 = bar(daily.gull.daystart_dt,daily.gull.ER);
+    b2 = bar(daily.gull.date,daily.gull.ER_avg);
     b1(1).FaceColor = green;
     b2(1).FaceColor = purple;
     ylim([-300 300])
 yyaxis right
-    plot(daily.gull.daystart_dt,daily.gull.NEM,'.-','Color','k','LineWidth',1,'MarkerSize',6)
+    plot(daily.gull.date,daily.gull.NEM_avg,'.-','Color','k','LineWidth',1,'MarkerSize',6)
     ylim([-100 100])
 % Customize the x-axis format
 xlim([start_date end_date])
@@ -182,14 +174,14 @@ legend({'GPP','ER','NEM'},'FontSize',15,'Location',[0.0870,0.7795,0.0602,0.1028]
 % Monthly plot
 ax2 = nexttile;
 yyaxis left
-    b1 = bar(monthly.gull.daystart_dt,monthly.gull.GPP);
+    b1 = bar(monthly.gull.date,monthly.gull.GPP_avg);
     hold on
-    b2 = bar(monthly.gull.daystart_dt,monthly.gull.ER);
+    b2 = bar(monthly.gull.date,monthly.gull.ER_avg);
     b1(1).FaceColor = green;
     b2(1).FaceColor = purple;
     ylim([-300 300])
 yyaxis right
-    plot(monthly.gull.daystart_dt,monthly.gull.NEM,'.-','Color','k','LineWidth',2,'MarkerSize',6)
+    plot(monthly.gull.date,monthly.gull.NEM_avg,'.-','Color','k','LineWidth',2,'MarkerSize',6)
     ylim([-100 100])
 % Customize the x-axis format
 xlim([start_date end_date])
@@ -239,14 +231,14 @@ fig2.WindowState = 'maximized';
 % Daily plot
 ax1 = nexttile;
 yyaxis left
-    b1 = bar(daily.north.daystart_dt,daily.north.GPP);
+    b1 = bar(daily.north.date,daily.north.GPP_avg);
     hold on
-    b2 = bar(daily.north.daystart_dt,daily.north.ER);
+    b2 = bar(daily.north.date,daily.north.ER_avg);
     b1(1).FaceColor = green;
     b2(1).FaceColor = purple;
     ylim([-300 300])
 yyaxis right
-    plot(daily.north.daystart_dt,daily.north.NEM,'.-','Color','k','LineWidth',1,'MarkerSize',6)
+    plot(daily.north.date,daily.north.NEM_avg,'.-','Color','k','LineWidth',1,'MarkerSize',6)
     ylim([-100 100])
 % Customize the x-axis format
 xlim([start_date end_date])
@@ -266,14 +258,14 @@ legend({'GPP','ER','NEM'},'FontSize',14,'Location',[0.0870,0.7795,0.0602,0.1028]
 % Monthly plot
 ax2 = nexttile;
 yyaxis left
-    b1 = bar(monthly.north.daystart_dt,monthly.north.GPP);
+    b1 = bar(monthly.north.date,monthly.north.GPP_avg);
     hold on
-    b2 = bar(monthly.north.daystart_dt,monthly.north.ER);
+    b2 = bar(monthly.north.date,monthly.north.ER_avg);
     b1(1).FaceColor = green;
     b2(1).FaceColor = purple;
     ylim([-300 300])
 yyaxis right
-    plot(monthly.north.daystart_dt,monthly.north.NEM,'.-','Color','k','LineWidth',2,'MarkerSize',6)
+    plot(monthly.north.date,monthly.north.NEM_avg,'.-','Color','k','LineWidth',2,'MarkerSize',6)
     ylim([-100 100])
 % Customize the x-axis format
 xlim([start_date end_date])
@@ -323,14 +315,14 @@ fig3.WindowState = 'maximized';
 % Daily plot
 ax1 = nexttile;
 yyaxis left
-    b1 = bar(daily.south.daystart_dt,daily.south.GPP);
+    b1 = bar(daily.south.date,daily.south.GPP_avg);
     hold on
-    b2 = bar(daily.south.daystart_dt,daily.south.ER);
+    b2 = bar(daily.south.date,daily.south.ER_avg);
     b1(1).FaceColor = green;
     b2(1).FaceColor = purple;
     ylim([-300 300])
 yyaxis right
-    plot(daily.south.daystart_dt,daily.south.NEM,'.-','Color','k','LineWidth',1,'MarkerSize',6)
+    plot(daily.south.date,daily.south.NEM_avg,'.-','Color','k','LineWidth',1,'MarkerSize',6)
     ylim([-100 100])
 % Customize the x-axis format
 xlim([start_date end_date])
@@ -350,14 +342,14 @@ legend({'GPP','ER','NEM'},'FontSize',14,'Location',[0.0870,0.7795,0.0602,0.1028]
 % Monthly plot
 ax2 = nexttile;
 yyaxis left
-    b1 = bar(monthly.south.daystart_dt,monthly.south.GPP);
+    b1 = bar(monthly.south.date,monthly.south.GPP_avg);
     hold on
-    b2 = bar(monthly.south.daystart_dt,monthly.south.ER);
+    b2 = bar(monthly.south.date,monthly.south.ER_avg);
     b1(1).FaceColor = green;
     b2(1).FaceColor = purple;
     ylim([-300 300])
 yyaxis right
-    plot(monthly.south.daystart_dt,monthly.south.NEM,'.-','Color','k','LineWidth',2,'MarkerSize',6)
+    plot(monthly.south.date,monthly.south.NEM_avg,'.-','Color','k','LineWidth',2,'MarkerSize',6)
     ylim([-100 100])
 % Customize the x-axis format
 xlim([start_date end_date])
@@ -397,11 +389,11 @@ pyr(1) = .97*pyr(1);
 set(yr,'position',pyr,'FontSize',20)
 
 title(t,site,'FontSize',36,'FontName','Helvetica','FontWeight','bold')
-
+%%
 %==========================================================================
 %   Compare seasonality in NEM across sites -- without errorbars
 %==========================================================================
-NEMavg = [monthlyavg.north.mean_NEM'; monthlyavg.gull.mean_NEM'; monthlyavg.south.mean_NEM']';
+NEMavg = [monthlyavg.north.mean_NEM_avg'; monthlyavg.gull.mean_NEM_avg'; monthlyavg.south.mean_NEM_avg']';
 month = monthlyavg.gull.month;
 
 fig4 = figure(4);clf
@@ -419,9 +411,9 @@ title('All Sites','FontSize',36,'FontName','Helvetica','FontWeight','bold')
 %==========================================================================
 %   Compare seasonality in GPP, ER, and NEM across sites -- without errorbars
 %==========================================================================
-NEMavg = [monthlyavg.north.mean_NEM'; monthlyavg.gull.mean_NEM'; monthlyavg.south.mean_NEM']';
-GPPavg = [monthlyavg.north.mean_GPP'; monthlyavg.gull.mean_GPP'; monthlyavg.south.mean_GPP']';
-ERavg = [monthlyavg.north.mean_ER'; monthlyavg.gull.mean_ER'; monthlyavg.south.mean_ER']';
+NEMavg = [monthlyavg.north.mean_NEM_avg'; monthlyavg.gull.mean_NEM_avg'; monthlyavg.south.mean_NEM_avg']';
+GPPavg = [monthlyavg.north.mean_GPP_avg'; monthlyavg.gull.mean_GPP_avg'; monthlyavg.south.mean_GPP_avg']';
+ERavg = [monthlyavg.north.mean_ER_avg'; monthlyavg.gull.mean_ER_avg'; monthlyavg.south.mean_ER_avg']';
 month = monthlyavg.gull.month;
 
 fig5 = figure(5);clf

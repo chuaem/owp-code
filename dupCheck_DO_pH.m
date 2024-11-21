@@ -9,7 +9,7 @@
 % 
 % DATE:
 % First created: 4/26/2024
-% Last updated: 9/23/2024
+% Last updated: 10/24/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -131,17 +131,6 @@ mean_DOcorr = mean(DOcorr_syn(:,1:2),2);
 DOcorr_syn.mean = mean_DOcorr.mean;
 dt_utc = DOcorr_syn.datetime_utc;
 
-% Calculate standard deviation for Deployments 11 & 12
-t1 = dat_syn.datetime_utc(ind_dep(8));
-t2 = DOcorr_syn.datetime_utc;
-ind_d11 = interp1(t2,1:length(t2),t1,'nearest');    % Find start index for Dep 11
-
-t1 = dat_syn.datetime_utc(ind_dep(10));
-ind_d13 = interp1(t2,1:length(t2),t1,'nearest');    % Find end index for Dep 12
-
-stdev_DOconc = std(DOcorr_syn(ind_d11:ind_d13,1:2),0,2,'omitmissing');
-stdev.DOconc = mean(stdev_DOconc.std,'omitmissing');
-
 % Find indices of deployment changes in synchronized, corrected DO data
 t1 = dat_syn.datetime_utc(dep.ind);
 t2 = DOcorr_syn.datetime_utc;
@@ -193,6 +182,10 @@ switch site
         d18 = DOcorr_syn.bc(ind_depDO(16)+1:end);            % Dep 18
 
         DO_bestguess = [d1;d2;d5;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
+        
+        % Calculate mean absolute difference for Deployments 11 & 12
+        diff_DOconc = diff([DOcorr_syn.bc(ind_depDO(9):ind_depDO(11)),DOcorr_syn.erdc(ind_depDO(9):ind_depDO(11))],1,2);
+        two_sigma.DOconc = mean(abs(diff_DOconc),'omitmissing');
 
     case 'North'
         d2 = DOcorr_syn.erdc(ind_depDO(1):ind_depDO(2));       % Dep 2
@@ -201,7 +194,7 @@ switch site
         d8 = DOcorr_syn.mean(ind_depDO(4)+1:ind_depDO(5));     % Dep 8
         d9 = DOcorr_syn.mean(ind_depDO(5)+1:ind_depDO(6));     % Dep 9
         d10 = DOcorr_syn.mean(ind_depDO(6)+1:ind_depDO(7));    % Dep 10
-        d11 = DOcorr_syn.bc(ind_depDO(7)+1:ind_depDO(8));    % Dep 11
+        d11 = DOcorr_syn.bc(ind_depDO(7)+1:ind_depDO(8));      % Dep 11
         d12 = DOcorr_syn.mean(ind_depDO(8)+1:ind_depDO(9));    % Dep 12
         d13 = DOcorr_syn.erdc(ind_depDO(9)+1:ind_depDO(10));   % Dep 13
         d14 = DOcorr_syn.erdc(ind_depDO(10)+1:ind_depDO(11));  % Dep 14
@@ -210,6 +203,10 @@ switch site
         d17 = DOcorr_syn.erdc(ind_depDO(13)+1:end);            % Dep 17
 
         DO_bestguess = [d2;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17];
+        
+        % Calculate mean absolute difference for Deployments 10 & 11
+        diff_DOconc = diff([DOcorr_syn.bc(ind_depDO(6):ind_depDO(8)),DOcorr_syn.erdc(ind_depDO(6):ind_depDO(8))],1,2);
+        two_sigma.DOconc = mean(abs(diff_DOconc),'omitmissing');
 
     case 'South'
         d1 = DOcorr_syn.mean(ind_depDO(1):ind_depDO(2));       % Dep 1
@@ -234,6 +231,10 @@ switch site
 
         % Remove "obvious" outliers
         DO_bestguess(28535:ind_depDO(6)) = NaN;
+        
+        % Calculate mean absolute difference for Deployments 10 & 11
+        diff_DOconc = diff([DOcorr_syn.bc(ind_depDO(9):ind_depDO(11)),DOcorr_syn.erdc(ind_depDO(9):ind_depDO(11))],1,2);
+        two_sigma.DOconc = mean(abs(diff_DOconc),'omitmissing');
 end
 
 clearvars d1 d2 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17
@@ -278,17 +279,6 @@ mean_pH = mean(pH_syn(:,1:2),2);
 pH_syn.mean = mean_pH.mean;
 dt_utc = pH_syn.datetime_utc;
 
-% Calculate standard deviation for Deployments 11 & 12
-t1 = dat_syn.datetime_utc(ind_dep(8));
-t2 = pH_syn.datetime_utc;
-ind_d11 = interp1(t2,1:length(t2),t1,'nearest');    % Find start index for Dep 11
-
-t1 = dat_syn.datetime_utc(ind_dep(10));
-ind_d13 = interp1(t2,1:length(t2),t1,'nearest');    % Find end index for Dep 12
-
-stdev_pH = std(pH_syn(ind_d11:ind_d13,1:2),0,2,'omitmissing');
-stdev.pH = mean(stdev_pH.std,'omitmissing');
-
 % Find indices of deployment changes in synchronized pH data
 t1 = dat_syn.datetime_utc(dep.ind);
 t2 = pH_syn.datetime_utc;
@@ -310,35 +300,44 @@ plot(dt_utc,pH_syn.mean,'-','Color',rgb('magenta'),'DisplayName','Mean Value')
 hold on
 plot(dt_utc,pH_bc,'.','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
 plot(dt_utc,pH_erdc,'.','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
-plot(dt_utc(ind_diverge),pH_bc(ind_diverge),'o','color',rgb('goldenrod'),'MarkerSize',circlesize,'DisplayName',txt)
+% plot(dt_utc(ind_diverge),pH_bc(ind_diverge),'o','color',rgb('goldenrod'),'MarkerSize',circlesize,'DisplayName',txt)
 xline(dt_utc(ind_deppH),'--',label,'HandleVisibility','off')
 ylabel('pH')
 legend('show','location','best')
 title([site,' - After Initial QC and Moving Median Test'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
-
+%%
 % Choose "better" deployment
 switch site
     case 'Gull'
+        % Dep 17 -- offset adjustment
+        delta_d17a = pH_syn.erdc(ind_deppH(15)) - pH_syn.bc(ind_deppH(15)-1);
+        delta_d17b = pH_syn.erdc(ind_deppH(16)-1) - pH_syn.bc(105608);
+        delta_d17 = mean([delta_d17a delta_d17b]);
+
         d1 = pH_syn.erdc(ind_deppH(1):ind_deppH(2));       % Dep 1
         d2 = pH_syn.erdc(ind_deppH(2)+1:ind_deppH(3));     % Dep 2
         d5 = pH_syn.bc(ind_deppH(3)+1:ind_deppH(4));       % Dep 5
         d6 = pH_syn.mean(ind_deppH(4)+1:ind_deppH(5));     % Dep 6
         d7 = pH_syn.mean(ind_deppH(5)+1:ind_deppH(6));     % Dep 7
         d8 = pH_syn.erdc(ind_deppH(6)+1:ind_deppH(7));     % Dep 8
-        d9 = pH_syn.mean(ind_deppH(7)+1:ind_deppH(8));     % Dep 9
-        d10 = pH_syn.mean(ind_deppH(8)+1:ind_deppH(9));    % Dep 10
+        d9 = pH_syn.erdc(ind_deppH(7)+1:ind_deppH(8));     % Dep 9
+        d10 = pH_syn.mean(ind_deppH(8)+1:ind_deppH(9));      % Dep 10
         d11 = pH_syn.mean(ind_deppH(9)+1:ind_deppH(10));   % Dep 11
         d12 = pH_syn.mean(ind_deppH(10)+1:ind_deppH(11));  % Dep 12
         d13 = [pH_syn.erdc(ind_deppH(11)+1:69205); pH_syn.bc(69206:ind_deppH(12))];  % Dep 13
         d14 = pH_syn.erdc(ind_deppH(12)+1:ind_deppH(13));  % Dep 14
         d15 = pH_syn.mean(ind_deppH(13)+1:ind_deppH(14));  % Dep 15
         d16 = pH_syn.bc(ind_deppH(14)+1:ind_deppH(15));    % Dep 16
-        d17 = pH_syn.erdc(ind_deppH(15)+1:ind_deppH(16));  % Dep 17
-        d18 = pH_syn.mean(ind_deppH(16)+1:end);            % Dep 18
+        d17 = pH_syn.erdc(ind_deppH(15)+1:ind_deppH(16)) - delta_d17;  % Dep 17
+        d18 = pH_syn.bc(ind_deppH(16)+1:end);            % Dep 18
 
         pH_bestguess = [d1;d2;d5;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
+
+        % Calculate mean absolute difference for Deployments 11 & 12
+        diff_pH = diff([pH_syn.bc(ind_deppH(9):ind_deppH(11)),pH_syn.erdc(ind_deppH(9):ind_deppH(11))],1,2);
+        two_sigma.pH = mean(abs(diff_pH),'omitmissing');
 
     case 'North'
         d2 = pH_syn.erdc(ind_deppH(1):ind_deppH(2));       % Dep 2
@@ -360,7 +359,11 @@ switch site
         % Remove "obvious" outliers
         pH_bestguess(811) = NaN;
         pH_bestguess(6422:6576) = NaN;
-        
+
+        % Calculate mean absolute difference for Deployments 9 & 10
+        diff_pH = diff([pH_syn.bc(ind_deppH(5):ind_deppH(7)),pH_syn.erdc(ind_deppH(5):ind_deppH(7))],1,2);
+        two_sigma.pH = mean(abs(diff_pH),'omitmissing');
+
     case 'South'
         % Funky deployments
         % Dep 13, 14, and 15 -- offset adjustment
@@ -388,6 +391,10 @@ switch site
         d18 = pH_syn.mean(ind_deppH(17)+1:end);            % Dep 18
 
         pH_bestguess = [d1;d2;d4;d5;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
+
+        % Calculate mean absolute difference for Deployments 16 & 17
+        diff_pH = diff([pH_syn.bc(ind_deppH(15):ind_deppH(17)),pH_syn.erdc(ind_deppH(15):ind_deppH(17))],1,2);
+        two_sigma.pH = mean(abs(diff_pH),'omitmissing');
 end
 
 clearvars d1 d2 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18
@@ -411,7 +418,7 @@ ylabel('pH')
 title([site,' - "Best Guess" pH'])
 set(gca,'FontSize',fontsize)
 legend('show','location','best')
-
+%%
 %====Save "best guess" data================================================
 % Add "best-guess" DO and pH into structure
 bestguess.DOconc = DO_bestguess;
@@ -421,7 +428,7 @@ option = questdlg('Save best guess data?','Save File','Yes','No','Yes');
 switch option
     case 'Yes'
         cd([rootpath,'open-water-platform-data\',site,'\cleaned\dupcheck'])
-        save([site,'-bestGuess.mat'],'bestguess','stdev')
+        save([site,'-bestGuess.mat'],'bestguess','two_sigma')
         disp('File saved!')
     case 'No'
         disp('File not saved.')

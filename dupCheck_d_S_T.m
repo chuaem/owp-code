@@ -11,7 +11,7 @@
 % 
 % DATE:
 % First created: 4/10/2024
-% Last updated: 10/1/2024
+% Last updated: 10/24/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -162,9 +162,9 @@ switch site
 
         S_bestguess = [d1;d2;d5;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
 
-        % Calculate standard deviation for Deployments 11 & 12
-        stdev_S  = std(mmed_all(dep.ind(9):dep.ind(11),:),0,2,'omitmissing');
-        stdev.S = mean(stdev_S,'omitmissing');
+        % Calculate mean difference for Deployments 11 & 12
+        diff_S = diff(mmed_all(dep.ind(9):dep.ind(11),:),1,2);
+        two_sigma.S = mean(abs(diff_S),'omitmissing');
 
     case 'North'
         % Funky deployments
@@ -199,9 +199,9 @@ switch site
         S_bestguess(80182:dep.ind(12)) = NaN;
         S_bestguess(84381:84385) = NaN;
 
-        % Calculate standard deviation for Deployments 11 & 12
-        stdev_S  = std(mmed_all(dep.ind(7):dep.ind(9),:),0,2,'omitmissing');
-        stdev.S = mean(stdev_S,'omitmissing');
+        % Calculate mean difference for Deployments 16 & 17
+        diff_S = diff(mmed_all(dep.ind(12):dep.ind(14),:),1,2);
+        two_sigma.S = mean(abs(diff_S),'omitmissing');
 
     case 'South'
         % Funky deployments
@@ -211,7 +211,7 @@ switch site
 
         % Dep 7 -- offset adjustment
         ind = dep.ind(7);
-        delta_d7 = mmed_erdc(ind-11) - mmed_erdc(dep.ind(7));
+        delta_d7 = mmed_erdc(ind-11) - mmed_erdc(ind);
 
         % Dep 15 -- offset adjustment
         delta_d15 = S_erdc(98253) - S_erdc(98251);
@@ -247,10 +247,10 @@ switch site
         S_bestguess(49118:49149) = NaN;
         S_bestguess(77744:77797) = NaN;
         S_bestguess(80846:80852) = NaN;
-        
-        % Calculate standard deviation for Deployments 9 & 12
-        stdev_S  = std(mmed_all([dep.ind(8):dep.ind(9),dep.ind(11):dep.ind(12)],:),0,2,'omitmissing');
-        stdev.S = mean(stdev_S,'omitmissing');
+
+        % Calculate mean absolute difference for Deployments 9 & 12
+        diff_S = diff(mmed_all([dep.ind(8):dep.ind(9),dep.ind(11):dep.ind(12)],:),1,2);
+        two_sigma.S = mean(abs(diff_S),'omitmissing');
 end
 
 clearvars d1 d2 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18
@@ -317,10 +317,6 @@ switch site
         ind_d7 = ind_diverge(kk);     
         depth_bestguess(ind_d7,1) = depth_bc(ind_d7) + delta/2;
 
-        % Calculate standard deviation for Deployments 11 & 12
-        stdev_d = std(depth_all(dep.ind(9):dep.ind(11),:),0,2,'omitmissing');
-        stdev.d = mean(stdev_d,'omitmissing');
-
     case 'North'
         % Funky deployments
         % Dep 13 -- replace the mean depth for entire deployment
@@ -329,10 +325,6 @@ switch site
         
         % Remove "obvious" outliers
         depth_bestguess(30420:30429) = NaN;
-
-        % Calculate standard deviation for Deployments 11 & 12
-        stdev_d = std(depth_all(dep.ind(7):dep.ind(9),:),0,2,'omitmissing');
-        stdev.d = mean(stdev_d,'omitmissing');
 
     case 'South'
         % Funky deployments       
@@ -354,10 +346,6 @@ switch site
 
         % Remove "obvious" outliers
         depth_bestguess(47969:47971) = NaN;
-
-        % Calculate standard deviation for Deployments 7 & 8
-        stdev_d = std(depth_all(dep.ind(6):dep.ind(8),:),0,2,'omitmissing');
-        stdev.d = mean(stdev_d,'omitmissing');
 
 end
 
@@ -396,21 +384,24 @@ T_bestguess = T_mean;
 
 switch site
     case 'Gull'
-        % Calculate standard deviation for Deployments 11 & 12
-        stdev_T = std(T_all(dep.ind(9):dep.ind(11),:),0,2,'omitmissing');
-        stdev.T = mean(stdev_T,'omitmissing');
+        % Calculate mean difference for Deployments 11 & 12
+        diff_T = diff(T_all(dep.ind(9):dep.ind(11),:),1,2);
+        two_sigma.T = mean(abs(diff_T),'omitmissing');
+
     case 'North'
         T_bestguess(30420:30430) = NaN;
 
-        % Calculate standard deviation for Deployments 11 & 12
-        stdev_T = std(T_all(dep.ind(7):dep.ind(9),:),0,2,'omitmissing');
-        stdev.T = mean(stdev_T,'omitmissing');
+        % Calculate mean difference for Deployments 11 & 12
+        diff_T = diff(T_all(dep.ind(7):dep.ind(9),:),1,2);
+        two_sigma.T = mean(abs(diff_T),'omitmissing');
+
     case 'South'
         % Remove "obvious" outliers
         T_bestguess(47968:47970) = NaN;
-        % Calculate standard deviation for Deployments 11 & 12
-        stdev_T = std(T_all(dep.ind(10):dep.ind(11),:),0,2,'omitmissing');
-        stdev.T = mean(stdev_T,'omitmissing'); 
+
+        % Calculate mean difference for Deployments 11 & 12
+        diff_T = diff(T_all(dep.ind(10):dep.ind(11),:),1,2);
+        two_sigma.T = mean(abs(diff_T),'omitmissing');
 end
 
 fig5 = figure(5);clf
@@ -457,7 +448,7 @@ option = questdlg('Save best guess data?','Save File','Yes','No','Yes');
 switch option
     case 'Yes'
         cd([rootpath,'open-water-platform-data\',site,'\cleaned\dupcheck'])
-        save([site,'-bestGuess.mat'],'bestguess','stdev')
+        save([site,'-bestGuess.mat'],'bestguess','two_sigma')
         disp('File saved!')
     case 'No'
         disp('File not saved.')

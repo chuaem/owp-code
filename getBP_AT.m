@@ -8,8 +8,8 @@
 % Emily Chua 
 % 
 % DATE:
-% First created: January 2024
-% Last updated: 5/30/204
+% First created: 1/2024
+% Last updated: 10/24/204
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -42,6 +42,16 @@ metDat_rt = retime(metDat_cleaned,newTimes,'mean');
 
 hoboDat_rt = retime(hoboDat,newTimes,'mean');
 
+%====Determine uncertainties===============================================
+% Find mean absolute difference between sensors
+AT_all = [metDat_rt.Tair, hoboDat_rt.Tair];
+diff_AT = diff(AT_all,1,2);
+two_sigma.AT = mean(abs(diff_AT),'omitmissing');    % [degC]
+
+BP_all = [metDat_rt.patm, hoboDat_rt.patm];
+diff_BP = diff(BP_all,1,2);
+two_sigma.BP = mean(abs(diff_BP),'omitmissing');    % [hPa]
+
 %====Gap fill Gull met station air T data==================================
 % Replace missing Gull T_air data with HOBO Baro Pressure T_air data
 ind_nan = find(isnan(metDat_rt.Tair));
@@ -58,7 +68,7 @@ title('Gap-Filled Air Temperature Data')
 %====Gap fill Gull met station atmos p data================================
 % Replace missing Gull p_atm data with HOBO Baro Pressure p_atm data
 ind_nan = find(isnan(metDat_rt.patm));
-metDat_rt.patm(ind_nan) = hoboDat_rt.patm(ind_nan);4
+metDat_rt.patm(ind_nan) = hoboDat_rt.patm(ind_nan);
 
 figure(2),clf
 plot(metDat_rt.datetime_utc,metDat_rt.patm,'.','MarkerSize',4)
@@ -79,7 +89,7 @@ option = questdlg('Save data?','Save File','Yes','No','Yes');
 switch option
     case 'Yes'
         cd([rootpath,'physical-data\final-dataset'])
-        save('BP&AT.mat','BP_AT_dat')
+        save('BP&AT.mat','BP_AT_dat','two_sigma')
         disp('Files saved!')
     case 'No'
         disp('Files not saved.')

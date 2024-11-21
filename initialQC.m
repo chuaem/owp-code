@@ -10,7 +10,7 @@
 % 
 % DATE:
 % First created: 11/9/2023
-% Last updated: 9/30/2024
+% Last updated: 11/9/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -598,8 +598,8 @@ switch sonde
         % (1) Gross Range Test
         % INPUTS
         low_threshold = 0;      % Lower limit
-        % high_threshold = 100;   % Upper limit
-        high_threshold = 400;   % Upper limit
+        high_threshold = 100;   % Upper limit
+        % high_threshold = 400;   % Upper limit
 
         ind_low = find(chla_orig < low_threshold);
         ind_high = find(chla_orig > high_threshold);
@@ -609,7 +609,8 @@ switch sonde
 
         % (2) Spike Test
         % INPUTS
-        spike_threshold = 150;    % FAIL threshold (RFU)
+        % spike_threshold = 150;    % FAIL threshold (RFU)
+        spike_threshold = 10;    % FAIL threshold (RFU)
 
         d_chla = zeros(length(dat.chla),1);
 
@@ -664,7 +665,8 @@ switch sonde
         % (1) Gross Range Test
         % INPUTS
         low_threshold = 0;      % Lower limit
-        high_threshold = 4000;  % Upper limit
+        % high_threshold = 1000;  % Upper limit
+        high_threshold = 350;  % Upper limit
 
         ind_low = find(turbidity_orig < low_threshold);
         ind_high = find(turbidity_orig > high_threshold);
@@ -674,7 +676,8 @@ switch sonde
 
         % (2) Spike Test
         % INPUTS
-        spike_threshold = 2000;    % FAIL threshold (NTU)
+        % spike_threshold = 2000;    % FAIL threshold (NTU)
+        spike_threshold = 50;
 
         d_turbidity = zeros(length(dat.turbidity),1);
 

@@ -9,7 +9,7 @@
 % 
 % DATE:
 % First created: 4/2/2024
-% Last Updated: 5/30/2024
+% Last Updated: 10/24/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -68,18 +68,32 @@ h = plot(mdl,'marker','.');
 delete(h([3 4]))    % Delete confidence bounds on plot
 hold on
 plot([0 ylim], [0 ylim],'--k')
-legend('Data',[eqn,newline,'R^2 = ',R2],'1:1 line','Location','southeast')
-xlabel('Gull Met Station (Cleaned)')
-ylabel('ERA5')
-title('Hourly Wind Speed (m/s)')
+legend('',[eqn,newline,'R^2 = ',R2],'1:1 line','Location','southeast')
+xlabel('Gull hourly wind speed (m/s)')
+ylabel('ERA5 reanalysis hourly wind speed (m/s)')
+% title('Hourly Wind Speed (m/s)')
+title('')
 daspect([1 1 1])
+
+% Find mean absolute difference between datasets
+diff_wspd = diff([metDat_hourlyMean.wspd,era5Dat.wspd(start:stop)],1,2);
+two_sigma.wspd = mean(abs(diff_wspd),'omitmissing');    % [m/s]
+
+fig7 = figure(7);clf
+fig7.WindowState = 'maximized';
+plot(metDat_hourlyMean.datetime_utc,metDat_hourlyMean.wspd,'.k','DisplayName','Gull Met Station')
+hold on
+plot(era5Dat.datetime(start:stop),era5Dat.wspd(start:stop),'.','DisplayName','ERA5')
+hold off
+ylabel('Hourly wind speed (m/s)')
+legend('show')
 
 %====Option to save data===================================================
 option = questdlg('Save data?','Save File','Yes','No','Yes');
 switch option
     case 'Yes'
         cd([rootpath,'physical-data\final-dataset'])
-        save('windspeed.mat','era5Dat')
+        save('windspeed.mat','era5Dat','two_sigma')
         disp('Files saved!')
     case 'No'
         disp('Files not saved.')

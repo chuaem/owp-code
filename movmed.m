@@ -72,7 +72,8 @@ end
 ind_dep = find(diff(dat.deployment) > 0);
 
 % Double Moving Median Test
-window = 144;
+% window = 144; % 24 h
+window = 150;   % 25 h
 C = 1; % Consistency constant (should be 1.4826 for normally distributed values)
 k = 3;
 
@@ -439,6 +440,17 @@ switch sonde
         turbidity_flags.ind_movmed = ind_bad;
 end
 
+% figure,clf
+% % plot(dat.datetime_utc,dat.turbidity,'.k','DisplayName','Initially Cleaned Data')
+% % hold on
+% plot(dat.datetime_utc,mmed,'-','DisplayName','Moving Median (24-h)')
+% xline([dat.datetime_utc(1); dat.datetime_utc(ind_dep+1)],'--',label,'HandleVisibility','off')
+% legend('show','location','best')
+% ylabel('Turbidity (NTU)')
+% title([site,' ',sonde])
+% xlim([dt1 dt2])                 % Use same x limits for comparing sites
+
+
 %====Clean data============================================================
 option = questdlg('Remove points that failed moving median test (exclude depth and T)?');
 switch option
@@ -550,7 +562,7 @@ switch option
         saveas(fig1,'depth_movmed.png')
         saveas(fig1,'depth_movmed.fig')
         saveas(fig2,'depth_histogram.png')
-        saveas(fig2,'depth_histogram.fig')
+        saveas(fig2,'depth_histogram.fig')  
         saveas(fig3,'T_movmed.png')
         saveas(fig3,'T_movmed.fig')
         saveas(fig4,'T_histogram.png')

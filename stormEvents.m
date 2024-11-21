@@ -1,6 +1,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % stormEvents.m
-% This script...
+% This script picks out major storms during the 3-year OWP measurement period and 
+% evaluates whether NEM values differ significantly during a storm event
+% and the pre- and post-storm periods, using the "original" NEM calculated from "dielAnalysis_final.m".
 %
 % AUTHOR:
 % Emily Chua
@@ -68,7 +70,7 @@ for kk = 1:length(siteNames)
     dailyAvg.(siteNames{kk})((find(dailyAvg.(siteNames{kk}).ER > 0)),:) = [];
     dailyAvg.(siteNames{kk})((find(dailyAvg.(siteNames{kk}).GPP < 0)),:) = [];
 
-    % Remove rows with missing wind speed data
+    % Remove rows with missing NEM values
     dailyAvg.(siteNames{kk})(find(isnan(dailyAvg.(siteNames{kk}).NEM)),:) = [];
 
     %======================================================================

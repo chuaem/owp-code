@@ -138,7 +138,7 @@ dCdt(2:end,1) = diff(DO_conc) ./ hours(diff(dt_utc));  % [mmol m-3 h-1]
 % Mean hourly rates
 for i = 1:length(daylength)
     % During night hours, P = 0
-    R_hourly(i,1) = mean(dCdt(dayend(i+1):daystart(i+1)) - D(dayend(i+1):daystart(i+1)),'omitnan'   ); % Mean hourly rate of nighttime respiration; [mmol m-3 h-1]
+    R_hourly(i,1) = mean(dCdt(dayend(i+1):daystart(i+1)) - D(dayend(i+1):daystart(i+1)),'omitnan'); % Mean hourly rate of nighttime respiration; [mmol m-3 h-1]
     % During day hours, P != 0
     P_hourly(i,1) = mean(dCdt(daystart(i):dayend(i+1)) - D(daystart(i):dayend(i+1)),'omitnan');     % Mean hourly rate of apparent/net production; [mmol m-3 h-1]
 end
@@ -254,7 +254,7 @@ date = dateshift(daystart_dt,'start','day');
 date = datetime(date,'TimeZone','UTC');
 diel_dtd = table(date,daystart_dt,dayend_dt,daylength,R_hourly,P_hourly,R_daily,P_daily,GPP,ER,NEM);
 diel_dtd = table2timetable(diel_dtd);
-%%
+
 %==========================================================================
 %   Make summary statistics tables
 %==========================================================================
@@ -304,7 +304,7 @@ ylim([-500 500])
 option = questdlg('Save results figure?','Save File','Yes','No','Yes');
 switch option
     case 'Yes'
-        cd([rootpath,'figures\diel-analysis\matlab-results\final-qc\',site])
+        cd([rootpath,'figures\diel-analysis\matlab-results\',site])
         saveas(fig1,'dielAnalysis_daily.fig')
         saveas(fig1,'dielAnalysis_daily.png')
         disp('Figure saved!')
