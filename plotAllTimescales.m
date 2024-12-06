@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% plotAllTimeseries.m
+% plotAllTimescales.m
 % This script takes seasonal averages of the measured parameters and
 % calculated metabolic rates, and plots all three sites together.
 % Within-season variability is plotted as errorbars.
@@ -146,7 +146,7 @@ hold on
 errorbar(seasonal.Gull.mean_temperature,seasonal.Gull.std_temperature,'o--','MarkerSize',8,'LineWidth',2,'Color',gull_clr)
 errorbar(seasonal.South.mean_temperature,seasonal.South.std_temperature,'square','LineStyle','--','MarkerSize',8,'LineWidth',2,'Color',south_clr)
 set(gca,'XTick',xtk,'XTickLabel',[])
-text(0.02,0.05,'Temp','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
+text(0.02,0.8,'Temp','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
 ylabel('^oC')
 
 ax2 = nexttile;
@@ -155,7 +155,7 @@ hold on
 errorbar(seasonal.Gull.mean_pH,seasonal.Gull.std_pH,'o--','MarkerSize',8,'LineWidth',2,'Color',gull_clr)
 errorbar(seasonal.South.mean_pH,seasonal.South.std_pH,'square','LineStyle','--','MarkerSize',8,'LineWidth',2,'Color',south_clr)
 set(gca,'XTick',xtk,'XTickLabel',[])
-text(0.02,0.05,'pH','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
+text(0.02,0.8,'pH','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
 % ylabel('-')
 
 ax3 = nexttile;
@@ -164,7 +164,8 @@ hold on
 errorbar(seasonal.Gull.mean_DOsat,seasonal.Gull.std_DOsat,'o--','MarkerSize',8,'LineWidth',2,'Color',gull_clr)
 errorbar(seasonal.South.mean_DOsat,seasonal.South.std_DOsat,'square','LineStyle','--','MarkerSize',8,'LineWidth',2,'Color',south_clr)
 set(gca,'XTick',xtk,'XTickLabel',[])
-text(0.02,0.05,'DO','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
+text(0.02,0.8,'DO','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
+ylim([50 120])
 ylabel('%sat')
 
 ax4 = nexttile;
@@ -174,7 +175,7 @@ errorbar(seasonal.Gull.mean_salinity,seasonal.Gull.std_salinity,'o--','MarkerSiz
 errorbar(seasonal.South.mean_salinity,seasonal.South.std_salinity,'square','LineStyle','--','MarkerSize',8,'LineWidth',2,'Color',south_clr,'DisplayName','South');
 set(gca,'XTick',xtk,'XTickLabel',[])
 legend('show','location','best')
-text(0.02,0.05,'Sal','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
+text(0.02,0.8,'Sal','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
 ylabel('psu')
 
 ax5 = nexttile;
@@ -183,7 +184,8 @@ hold on
 errorbar(seasonal.Gull.mean_chla,seasonal.Gull.std_chla,'o--','MarkerSize',8,'LineWidth',2,'Color',gull_clr)
 errorbar(seasonal.South.mean_chla,seasonal.South.std_chla,'square','LineStyle','--','MarkerSize',8,'LineWidth',2,'Color',south_clr)
 set(gca,'XTick',xtk,'XTickLabel',[])
-text(0.02,0.05,'Chl a','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
+text(0.02,0.8,'Chl a','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
+ylim([0 30])
 ylabel('RFU')
 
 ax6 = nexttile;
@@ -192,7 +194,8 @@ hold on
 errorbar(seasonal.Gull.mean_turbidity,seasonal.Gull.std_turbidity,'o--','MarkerSize',8,'LineWidth',2,'Color',gull_clr)
 errorbar(seasonal.South.mean_turbidity,seasonal.South.std_turbidity,'square','LineStyle','--','MarkerSize',8,'LineWidth',2,'Color',south_clr)
 set(gca,'XTick',xtk,'XTickLabel',[])
-text(0.02,0.05,'Turbidity','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
+text(0.02,0.8,'Turbidity','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
+ylim([0 100])
 ylabel('NTU')
 
 ax7 = nexttile;
@@ -207,7 +210,8 @@ errorbar(seasonal.Gull.mean_ER,seasonal.Gull.std_ER,'o--','MarkerSize',8,'LineWi
 errorbar(seasonal.South.mean_ER,seasonal.South.std_ER,'square','LineStyle','--','MarkerSize',8,'LineWidth',2,'Color',south_clr)
 set(gca,'XTick',xtk,'XTickLabel',xaxisLbl)
 yline(0,'k','LineWidth',2)
-text(0.02,0.05,'ER and GPP','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
+text(0.02,0.8,'ER and GPP','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
+ylim([-400 350])
 ylabel('mmol O_2 m^{-2} d^{-1}')
 
 ax8 = nexttile;
@@ -217,169 +221,184 @@ errorbar(seasonal.Gull.mean_NEM,seasonal.Gull.std_NEM,'o--','MarkerSize',8,'Line
 errorbar(seasonal.South.mean_NEM,seasonal.South.std_NEM,'square','LineStyle','--','MarkerSize',8,'LineWidth',2,'Color',south_clr)
 set(gca,'XTick',xtk,'XTickLabel',xaxisLbl)
 yline(0,'k','LineWidth',2)
-text(0.02,0.05,'NEM','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
+text(0.02,0.8,'NEM','Units','normalized','VerticalAlignment','bottom','FontSize',14,'FontWeight','bold')
+ylim([-250 100])
 ylabel('mmol O_2 m^{-2} d^{-1}')
 
 % title(t1,'Seasonal Means','FontSize',18,'FontWeight','bold')
 
 linkaxes([ax1 ax2 ax3 ax4 ax5 ax6 ax7 ax8],'x')
 %%
-% %====Plot the monthly means===============================================
-% fig2 = figure(2);clf
-% fig2.WindowState = 'maximized';
-% t2 = tiledlayout(4,2,'TileSpacing','tight');
-% 
-% ax1 = nexttile;
-% errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.temperature,monthlyStd.North.temperature,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
-% hold on
-% errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.temperature,monthlyStd.Gull.temperature,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
-% errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.temperature,monthlyStd.South.temperature,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
-% set(gca,'XTickLabel',[])
-% ylabel('T (^oC)')
-% 
-% ax2 = nexttile;
-% errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.pH,monthlyStd.North.pH,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
-% hold on
-% errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.pH,monthlyStd.Gull.pH,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
-% errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.pH,monthlyStd.South.pH,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
-% set(gca,'XTickLabel',[])
-% ylabel('pH')
-% 
-% ax3 = nexttile;
-% errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.DOsat,monthlyStd.North.DOsat,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
-% hold on
-% errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.DOsat,monthlyStd.Gull.DOsat,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
-% errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.DOsat,monthlyStd.South.DOsat,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
-% set(gca,'XTickLabel',[])
-% ylabel('DO (%sat)')
-% 
-% ax4 = nexttile;
-% errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.salinity,monthlyStd.North.salinity,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr,'DisplayName','North')
-% hold on
-% errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.salinity,monthlyStd.Gull.salinity,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr,'DisplayName','Gull')
-% errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.salinity,monthlyStd.South.salinity,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr,'DisplayName','South')
-% set(gca,'XTickLabel',[])
-% ylabel('S (psu)')
-% legend('show','location','best')
-% 
+%====Plot the monthly means================================================
+fig2 = figure(2);clf
+fig2.WindowState = 'maximized';
+t2 = tiledlayout(4,2,'TileSpacing','tight');
+
+ax1 = nexttile;
+errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.temperature,monthlyStd.North.temperature,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
+hold on
+errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.temperature,monthlyStd.Gull.temperature,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
+errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.temperature,monthlyStd.South.temperature,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
+set(gca,'XTickLabel',[])
+ylabel('T (^oC)')
+
+ax2 = nexttile;
+errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.pH,monthlyStd.North.pH,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
+hold on
+errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.pH,monthlyStd.Gull.pH,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
+errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.pH,monthlyStd.South.pH,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
+set(gca,'XTickLabel',[])
+ylabel('pH')
+
+ax3 = nexttile;
+errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.DOsat,monthlyStd.North.DOsat,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
+hold on
+errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.DOsat,monthlyStd.Gull.DOsat,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
+errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.DOsat,monthlyStd.South.DOsat,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
+set(gca,'XTickLabel',[])
+ylabel('DO (%sat)')
+
+ax4 = nexttile;
+errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.salinity,monthlyStd.North.salinity,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr,'DisplayName','North')
+hold on
+errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.salinity,monthlyStd.Gull.salinity,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr,'DisplayName','Gull')
+errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.salinity,monthlyStd.South.salinity,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr,'DisplayName','South')
+set(gca,'XTickLabel',[])
+ylabel('S (psu)')
+legend('show','location','best')
+
+ax5 = nexttile;
+errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.chla,monthlyStd.North.chla,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
+hold on
+errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.chla,monthlyStd.Gull.chla,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
+errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.chla,monthlyStd.South.chla,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
+set(gca,'XTickLabel',[])
+ylabel('Chl a (RFU)')
+
+ax6 = nexttile;
+errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.turbidity,monthlyStd.North.turbidity,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
+hold on
+errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.turbidity,monthlyStd.Gull.turbidity,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
+errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.turbidity,monthlyStd.South.turbidity,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
+set(gca,'XTickLabel',[])
+ylim([0 100])
+ylabel('Turbidity (NTU)')
+
+ax7 = nexttile;
+errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.GPP,monthlyStd.North.GPP,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
+hold on
+errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.GPP,monthlyStd.Gull.GPP,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
+errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.GPP,monthlyStd.South.GPP,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
+hold on
+errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.ER,monthlyStd.North.ER,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
+errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.ER,monthlyStd.Gull.ER,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
+errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.ER,monthlyStd.South.ER,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
+ylabel('ER and GPP')
+yline(0,'k','LineWidth',2)
+
+ax8 = nexttile;
+errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.NEM,monthlyStd.North.NEM,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
+hold on
+errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.NEM,monthlyStd.Gull.NEM,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
+errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.NEM,monthlyStd.South.NEM,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
+ylabel('NEM')
+yline(0,'k','LineWidth',2)
+
+title(t2,'Monthly Means','FontSize',18,'FontWeight','bold')
+
+%% ====Plots of continuous data============================================
+fig = figure(1);clf
+fig.WindowState = 'maximized';
+t1 = tiledlayout(8,1,'TileSpacing','compact');
+
+ax1 = nexttile;
+plot(dat_10min.North.datetime_utc,dat_10min.North.temperature,'-','Color',north_clr)
+hold on
+plot(dat_10min.Gull.datetime_utc,dat_10min.Gull.temperature,'-','Color',gull_clr)
+plot(dat_10min.South.datetime_utc,dat_10min.South.temperature,'-','Color',south_clr)
+set(gca,'XTickLabel',[])
+ylabel('T (^oC)')
+
+ax2 = nexttile;
+plot(dat_10min.North.datetime_utc,dat_10min.North.salinity,'-','Color',north_clr)
+hold on
+plot(dat_10min.Gull.datetime_utc,dat_10min.Gull.salinity,'-','Color',gull_clr)
+plot(dat_10min.South.datetime_utc,dat_10min.South.salinity,'-','Color',south_clr)
+set(gca,'XTickLabel',[])
+ylabel('S (psu)')
+
+ax3 = nexttile;
+plot(dat_10min.North.datetime_utc,dat_10min.North.DOsat,'-','Color',north_clr)
+hold on
+plot(dat_10min.Gull.datetime_utc,dat_10min.Gull.DOsat,'-','Color',gull_clr)
+plot(dat_10min.South.datetime_utc,dat_10min.South.DOsat,'-','Color',south_clr)
+set(gca,'XTickLabel',[])
+ylabel('DO (%sat)')
+
+ax4 = nexttile;
+plot(dat_10min.North.datetime_utc,dat_10min.North.pH,'-','Color',north_clr)
+hold on
+plot(dat_10min.Gull.datetime_utc,dat_10min.Gull.pH,'-','Color',gull_clr)
+plot(dat_10min.South.datetime_utc,dat_10min.South.pH,'-','Color',south_clr)
+set(gca,'XTickLabel',[])
+ylabel('pH')
+
+ax5 = nexttile;
+plot(north_tidal.date,north_tidal.tidal,'-','Color',north_clr)
+hold on
+plot(gull_tidal.date,gull_tidal.tidal,'-','Color',gull_clr)
+plot(south_tidal.date,south_tidal.tidal,'-','Color',south_clr)
+set(gca,'XTickLabel',[])
+ylabel('Tidal (m)')
+
+ax6 = nexttile;
+plot(era5Dat.datetime,era5Dat.wspd,'-')
+set(gca,'XTickLabel',[])
+ylabel('Wind speed (m/s)')
+
 % ax5 = nexttile;
-% errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.chla,monthlyStd.North.chla,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
+% plot(dat_10min.North.datetime_utc,dat_10min.North.chla,'-','Color',north_clr)
 % hold on
-% errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.chla,monthlyStd.Gull.chla,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
-% errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.chla,monthlyStd.South.chla,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
+% plot(dat_10min.Gull.datetime_utc,dat_10min.Gull.chla,'-','Color',gull_clr)
+% plot(dat_10min.South.datetime_utc,dat_10min.South.chla,'-','Color',south_clr)
 % set(gca,'XTickLabel',[])
 % ylabel('Chl a (RFU)')
 % 
 % ax6 = nexttile;
-% errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.turbidity,monthlyStd.North.turbidity,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
+% plot(dat_10min.North.datetime_utc,dat_10min.North.turbidity,'-','Color',north_clr)
 % hold on
-% errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.turbidity,monthlyStd.Gull.turbidity,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
-% errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.turbidity,monthlyStd.South.turbidity,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
+% plot(dat_10min.Gull.datetime_utc,dat_10min.Gull.turbidity,'-','Color',gull_clr)
+% plot(dat_10min.South.datetime_utc,dat_10min.South.turbidity,'-','Color',south_clr)
 % set(gca,'XTickLabel',[])
 % ylabel('Turbidity (NTU)')
-% 
-% ax7 = nexttile;
-% errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.GPP,monthlyStd.North.GPP,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
-% hold on
-% errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.GPP,monthlyStd.Gull.GPP,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
-% errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.GPP,monthlyStd.South.GPP,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
-% hold on
-% errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.ER,monthlyStd.North.ER,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
-% errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.ER,monthlyStd.Gull.ER,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
-% errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.ER,monthlyStd.South.ER,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
-% ylabel('ER and GPP')
-% yline(0,'k','LineWidth',2)
-% 
-% ax8 = nexttile;
-% errorbar(monthlyMean.North.datetime_utc,monthlyMean.North.NEM,monthlyStd.North.NEM,'.:','MarkerSize',12,'LineWidth',2,'Color',north_clr)
-% hold on
-% errorbar(monthlyMean.Gull.datetime_utc,monthlyMean.Gull.NEM,monthlyStd.Gull.NEM,'.:','MarkerSize',12,'LineWidth',2,'Color',gull_clr)
-% errorbar(monthlyMean.South.datetime_utc,monthlyMean.South.NEM,monthlyStd.South.NEM,'.:','MarkerSize',12,'LineWidth',2,'Color',south_clr)
-% ylabel('NEM')
-% yline(0,'k','LineWidth',2)
-% 
-% title(t2,'Monthly Means','FontSize',18,'FontWeight','bold')
 
-%% ====Plots of daily ==================================================
-% fig = figure(1);clf
-% fig.WindowState = 'maximized';
-% t1 = tiledlayout(5,1,'TileSpacing','tight');
-% 
-% ax1 = nexttile;
-% yyaxis left
-% % plot(daily.north.datetime_utc,daily.north.temperature)
-% % hold on
-% plot(daily_gull.datetime_utc,daily_gull.temperature)
-% % plot(daily.south.datetime_utc,daily.south.temperature)
-% set(gca,'XTickLabel',[])
-% ylabel('T (^oC)')
-% 
-% yyaxis right
-% % plot(daily.north.datetime_utc,daily.north.pH)
-% % hold on
-% plot(daily_gull.datetime_utc,daily_gull.pH)
-% % plot(daily.south.datetime_utc,daily.south.pH)
-% ylim([7.4 8.6])
-% ylabel('pH')
-% 
-% ax2 = nexttile;
-% yyaxis left
-% % plot(daily.north.datetime_utc,daily.north.DOsat)
-% % hold on
-% plot(daily_gull.datetime_utc,daily_gull.DOsat)
-% % plot(daily.south.datetime_utc,daily.south.DOsat)
-% set(gca,'XTickLabel',[])
-% ylabel('DO (%sat)')
-% 
-% yyaxis right
-% % plot(daily.north.datetime_utc,daily.north.salinity)
-% % hold on
-% plot(daily_gull.datetime_utc,daily_gull.salinity)
-% % plot(daily.south.datetime_utc,daily.south.salinity)
-% ylabel('S (psu)')
-% 
-% ax3 = nexttile;
-% yyaxis left
-% % plot(daily.north.datetime_utc,daily.north.chla,'DisplayName','North')
-% % hold on
-% plot(daily_gull.datetime_utc,daily_gull.chla,'DisplayName','Gull')
-% % plot(daily.south.datetime_utc,daily.south.chla,'DisplayName','South')
-% set(gca,'XTickLabel',[])
-% ylabel('Chl a (RFU)')
-% legend('show','Location','northwest')
-% 
-% yyaxis right
-% % plot(daily.north.datetime_utc,daily.north.turbidity,'HandleVisibility','off')
-% % hold on
-% plot(daily_gull.datetime_utc,daily_gull.turbidity,'HandleVisibility','off')
-% % plot(daily.south.datetime_utc,daily.south.turbidity,'HandleVisibility','off')
-% ylabel('Turbidity (NTU)')
-% 
-% ax4 = nexttile;
-% yyaxis left
-% % plot(daily.north.datetime_utc,daily.north.GPP,'-k')
-% % hold on
-% plot(daily_gull.datetime_utc,daily_gull.GPP,':')
+ax7 = nexttile;
+plot(metab.North.date,metab.North.GPP,'-','Color',north_clr)
+hold on
+plot(metab.Gull.date,metab.Gull.GPP,'-','Color',gull_clr)
+plot(metab.South.date,metab.South.GPP,'-','Color',south_clr)
+set(gca,'XTickLabel',[])
+ylabel('Turbidity (NTU)')
+ylabel('ER and GPP')
+
+set(gcf, 'Units', 'Inches', 'Position', [-9.9000   -2.6583    8.5000   10.6500], 'PaperUnits', 'Inches', 'PaperSize', [8.5, 11])
+
+xlabel('Calendar Year')
+
+%%
+yyaxis right
+% plot(daily.north.datetime_utc,daily.north.NEM)
 % hold on
-% % plot(daily.south.datetime_utc,daily.south.GPP,':k')
-% % plot(daily.north.datetime_utc,daily.north.ER,'-k')
-% plot(daily_gull.datetime_utc,daily_gull.ER,':')
-% % plot(daily.south.datetime_utc,daily.south.ER,':k')
-% ylabel('ER and GPP')
-% 
-% yyaxis right
-% % plot(daily.north.datetime_utc,daily.north.NEM)
-% % hold on
-% plot(daily_gull.datetime_utc,daily_gull.NEM)
-% % plot(daily.south.datetime_utc,daily.south.NEM)
-% ylabel('NEM')
-% 
-% nexttile
-% yyaxis left
-% plot(daily_gull.datetime_utc,daily_gull.depth)
-% ylabel('Depth')
-% yyaxis right
-% plot(daily_gull.datetime_utc,daily_gull.par)
-% ylabel('PAR')
-% 
-% title(t1,'Daily Means','FontSize',18,'FontWeight','bold')
+plot(daily_gull.datetime_utc,daily_gull.NEM)
+% plot(daily.south.datetime_utc,daily.south.NEM)
+ylabel('NEM')
+
+nexttile
+yyaxis left
+plot(daily_gull.datetime_utc,daily_gull.depth)
+ylabel('Depth')
+yyaxis right
+plot(daily_gull.datetime_utc,daily_gull.par)
+ylabel('PAR')
+
+title(t1,'Daily Means','FontSize',18,'FontWeight','bold')

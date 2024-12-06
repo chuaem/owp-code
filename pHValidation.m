@@ -1,7 +1,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % pHValidation.m
-% This script uses the discrete DIC/TA measurements to validate the
-% AquaTroll data.
+% This script plots the discrete DIC/TA measurements on top of the AquaTroll
+% pH data to help with visual assessment of whether the BC, ERDC, or mean
+% is the "best guess" for this deployment (noted manually). Based on this
+% assessment, the best guess calls are entered in "dupCheck_DO_pH.m".
 %
 % AUTHOR:
 % Emily Chua
@@ -107,7 +109,7 @@ ind_site = find(strcmp(site,H_calc.platform));
 %==========================================================================
 % Load the final QC'd AquaTroll data (best guess data)
 cd([rootpath,'open-water-platform-data\',site,'\cleaned\final-qc'])
-load([site,'-cleaned.mat']);
+load('finalQC.mat');
 
 % Load the cleaned BC and ERDC data for comparison
 cd([rootpath,'open-water-platform-data\',site,'\cleaned\movmed\'])
@@ -167,8 +169,8 @@ dep.Properties.VariableNames = {'depNum','ind'};
 cd([rootpath,'figures\open-water-platform\',site,'\validation\dic_ta'])
 
 % Plot AquaTroll pH data with discrete [H+] on top
-fig = figure;clf
-fig.WindowState = 'maximized';
+fig1 = figure(1);clf
+fig1.WindowState = 'maximized';
 plot(dat_syn.datetime_utc,dat_syn.Hfree1,'o','MarkerSize',8,'color',red,'DisplayName','BC')
 hold on
 plot(dat_syn.datetime_utc,dat_syn.Hfree2,'o','MarkerSize',8,'color',blue,'DisplayName','ERDC')
@@ -181,62 +183,62 @@ ylabel('[H+] (mol/kg)')
 title(site,'FontSize',fontsize)
 legend('show','location','best')
 ylim([0 6E-8])
-%%
-% Linear regression
-% Remove rows with missing pH values
-finalQC_trimmed = rmmissing(finalQC,'DataVariables',"pH");
 
-% Find closest matching indices
-t1 = H_calc.datetime_utc;
-t2 = finalQC_trimmed.datetime_utc;
-ind_sonde = interp1(t2,1:length(t2),t1,'nearest','extrap');
+% % Linear regression
+% % Remove rows with missing pH values
+% finalQC_trimmed = rmmissing(finalQC,'DataVariables',"pH");
+% 
+% % Find closest matching indices
+% t1 = H_calc.datetime_utc;
+% t2 = finalQC_trimmed.datetime_utc;
+% ind_sonde = interp1(t2,1:length(t2),t1,'nearest','extrap');
+% 
+% ind_discrete = 1:1:height(H_calc);
+% 
+% 
+% % If closest matching samples are more than 25 minutes off, do not include
+% for i = 1:length(ind_sonde(~isnan(ind_sonde)))
+%     dt = between(finalQC_trimmed.datetime_utc(ind_sonde(i)),H_calc.datetime_utc(i));
+%     if abs(time(dt)) > minutes(25)
+%         ind_sonde(i) = NaN;
+%         ind_discrete(i) = NaN;
+%     end
+% end
+% 
+% ind_sonde = rmmissing(ind_sonde);
+% ind_discrete = rmmissing(ind_discrete);
+% 
+% % Create the model
+% x = finalQC_trimmed.Hfree(ind_sonde);
+% y = H_calc.Hfree(ind_discrete);
+% mdl = fitlm(x,y,'y~x1-1');  % Force intercept through zero; see Wilkinson notation
+% 
+% tbl = table(finalQC_trimmed.datetime_utc(ind_sonde),H_calc.datetime_utc(ind_discrete),x,y);
+% tbl.Properties.VariableNames = {'AquaTroll datetime','Discrete datetime','AquaTroll [H+]','Discrete [H+]'};
+% 
+% % Create equation string for plot
+% eqn = ['y = ',num2str(mdl.Coefficients.Estimate,3),'x'];
+% R2 = num2str(mdl.Rsquared.Ordinary,2);
+% 
+% fig2 = figure(2);clf
+% fig2.WindowState = 'maximized';
+% h = plot(mdl,'marker','.','markersize',20);
+% % delete(h([3 4]))    % Delete confidence bounds on plot
+% hold on
+% plot([min(min([x,y])) max(max([x,y]))], [min(min([x,y])) max(max([x,y]))],'--k')
+% errorbar(x,y,H_calc.error(ind_discrete),'.b','MarkerSize',dotsize,'LineWidth',2)
+% % x1=0:0.1:8.5;
+% % y1=mdl.Coefficients.Estimate*x1;
+% % plot(x1,y1,'-r')
+% % plot([min(min([x1,y1])) max(max([x1,y1]))], [min(min([x1,y1])) max(max([x1,y1]))],'--k')
+% legend('',[eqn,newline,'R^2 = ',R2],'95% confidence interval','','1:1 line','Location','southeast')
+% xlabel('AquaTroll [H+] (mol/kg)')
+% ylabel('Discrete [H+] (mol/kg)')
+% title(site)
+% daspect([1 1 1])
+% ylim([min(min([x,y])) max(max([x,y]))])
+% xlim([min(min([x,y])) max(max([x,y]))])
 
-ind_discrete = 1:1:height(H_calc);
-
-
-% If closest matching samples are more than 25 minutes off, do not include
-for i = 1:length(ind_sonde(~isnan(ind_sonde)))
-    dt = between(finalQC_trimmed.datetime_utc(ind_sonde(i)),H_calc.datetime_utc(i));
-    if abs(time(dt)) > minutes(25)
-        ind_sonde(i) = NaN;
-        ind_discrete(i) = NaN;
-    end
-end
-
-ind_sonde = rmmissing(ind_sonde);
-ind_discrete = rmmissing(ind_discrete);
-
-% Create the model
-x = finalQC_trimmed.Hfree(ind_sonde);
-y = H_calc.Hfree(ind_discrete);
-mdl = fitlm(x,y,'y~x1-1');  % Force intercept through zero; see Wilkinson notation
-
-tbl = table(finalQC_trimmed.datetime_utc(ind_sonde),H_calc.datetime_utc(ind_discrete),x,y);
-tbl.Properties.VariableNames = {'AquaTroll datetime','Discrete datetime','AquaTroll [H+]','Discrete [H+]'};
-
-% Create equation string for plot
-eqn = ['y = ',num2str(mdl.Coefficients.Estimate,3),'x'];
-R2 = num2str(mdl.Rsquared.Ordinary,2);
-
-fig2 = figure(2);clf
-fig2.WindowState = 'maximized';
-h = plot(mdl,'marker','.','markersize',20);
-% delete(h([3 4]))    % Delete confidence bounds on plot
-hold on
-plot([min(min([x,y])) max(max([x,y]))], [min(min([x,y])) max(max([x,y]))],'--k')
-errorbar(x,y,H_calc.error(ind_discrete),'.b','MarkerSize',dotsize,'LineWidth',2)
-% x1=0:0.1:8.5;
-% y1=mdl.Coefficients.Estimate*x1;
-% plot(x1,y1,'-r')
-% plot([min(min([x1,y1])) max(max([x1,y1]))], [min(min([x1,y1])) max(max([x1,y1]))],'--k')
-legend('',[eqn,newline,'R^2 = ',R2],'95% confidence interval','','1:1 line','Location','southeast')
-xlabel('AquaTroll [H+] (mol/kg)')
-ylabel('Discrete [H+] (mol/kg)')
-title(site)
-daspect([1 1 1])
-ylim([min(min([x,y])) max(max([x,y]))])
-xlim([min(min([x,y])) max(max([x,y]))])
-%%
 % % See Table 2, Rule 16 for propagation of uncertainty for y = A + log10(x)
 % % https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3387884/
 % abs_uncert = carb_sys.errors.("u(Hout)")*10^-9; % Factor of 10^-9 to convert nmol/kg to mol/kg
@@ -250,10 +252,10 @@ option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');
 switch option
     case 'Yes'
         cd([rootpath,'figures\open-water-platform\',site,'\validation\dic_ta'])
-        saveas(fig1,[site,'_timeseries.png'])
-        saveas(fig1,[site,'_timeseries.fig'])
-        saveas(fig2,[site,'_linreg.png'])
-        saveas(fig2,[site,'_linreg.fig'])
+        saveas(fig1,'pHValid_timeseries.png')
+        saveas(fig1,'pHValid_timeseries.fig')
+        % saveas(fig2,[site,'_linreg.png'])
+        % saveas(fig2,[site,'_linreg.fig'])
         disp('Plots saved!')
     case 'No'
         disp('Plots not saved.')

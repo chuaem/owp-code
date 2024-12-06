@@ -160,10 +160,10 @@ option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');
 switch option
     case 'Yes'
         cd([rootpath,'figures\open-water-platform\',site,'\validation\dic_ta\salinity'])
-        saveas(fig1,[site,'_bestguess-timeseries.fig'])
-        saveas(fig1,[site,'_bestguess-timeseries.png'])
-        saveas(fig2,[site,'_bestguess-linreg.fig'])
-        saveas(fig2,[site,'_bestguess-linreg.png'])   
+        saveas(fig1,'S_bestguess-timeseries.fig')
+        saveas(fig1,'S_bestguess-timeseries.png')
+        saveas(fig2,'S_bestguess-linreg.fig')
+        saveas(fig2,'S_bestguess-linreg.png')   
         disp('Plots saved!')
     case 'No'
         disp('Plots not saved.')

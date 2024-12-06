@@ -307,13 +307,13 @@ legend('show','location','best')
 title([site,' - After Initial QC and Moving Median Test'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
-%%
+
 % Choose "better" deployment
 switch site
     case 'Gull'
         % Dep 17 -- offset adjustment
         delta_d17a = pH_syn.erdc(ind_deppH(15)) - pH_syn.bc(ind_deppH(15)-1);
-        delta_d17b = pH_syn.erdc(ind_deppH(16)-1) - pH_syn.bc(105608);
+        delta_d17b = pH_syn.erdc(ind_deppH(16)-1) - pH_syn.bc(95389);
         delta_d17 = mean([delta_d17a delta_d17b]);
 
         d1 = pH_syn.erdc(ind_deppH(1):ind_deppH(2));       % Dep 1
@@ -328,7 +328,7 @@ switch site
         d12 = pH_syn.mean(ind_deppH(10)+1:ind_deppH(11));  % Dep 12
         d13 = [pH_syn.erdc(ind_deppH(11)+1:69205); pH_syn.bc(69206:ind_deppH(12))];  % Dep 13
         d14 = pH_syn.erdc(ind_deppH(12)+1:ind_deppH(13));  % Dep 14
-        d15 = pH_syn.mean(ind_deppH(13)+1:ind_deppH(14));  % Dep 15
+        d15 = pH_syn.bc(ind_deppH(13)+1:ind_deppH(14));  % Dep 15
         d16 = pH_syn.bc(ind_deppH(14)+1:ind_deppH(15));    % Dep 16
         d17 = pH_syn.erdc(ind_deppH(15)+1:ind_deppH(16)) - delta_d17;  % Dep 17
         d18 = pH_syn.bc(ind_deppH(16)+1:end);            % Dep 18
@@ -343,18 +343,23 @@ switch site
         d2 = pH_syn.erdc(ind_deppH(1):ind_deppH(2));       % Dep 2
         d6 = pH_syn.bc(ind_deppH(2)+1:ind_deppH(3));       % Dep 6
         d7 = pH_syn.erdc(ind_deppH(3)+1:ind_deppH(4));     % Dep 7
-        d8 = pH_syn.mean(ind_deppH(4)+1:ind_deppH(5));     % Dep 8
-        d9 = pH_syn.mean(ind_deppH(5)+1:ind_deppH(6));     % Dep 9
+        % d8 = pH_syn.mean(ind_deppH(4)+1:ind_deppH(5));     % Dep 8
+        d8 = pH_syn.erdc(ind_deppH(4)+1:ind_deppH(5));     % Dep 8
+        % d9 = pH_syn.mean(ind_deppH(5)+1:ind_deppH(6));     % Dep 9
+        d9 = pH_syn.erdc(ind_deppH(5)+1:ind_deppH(6));     % Dep 9
         d10 = pH_syn.mean(ind_deppH(6)+1:ind_deppH(7));    % Dep 10
         d11 = pH_syn.bc(ind_deppH(7)+1:ind_deppH(8));      % Dep 11
         d12 = pH_syn.mean(ind_deppH(8)+1:ind_deppH(9));    % Dep 12
         d13 = pH_syn.erdc(ind_deppH(9)+1:ind_deppH(10));   % Dep 13
-        d14 = pH_syn.bc(ind_deppH(10)+1:ind_deppH(11));    % Dep 14
-        d15 = pH_syn.mean(ind_deppH(11)+1:ind_deppH(12));  % Dep 15
+        d14 = pH_syn.mean(ind_deppH(10)+1:ind_deppH(11));    % Dep 14
+        % d15 = pH_syn.mean(ind_deppH(11)+1:ind_deppH(12));  % Dep 15
+        d15 = pH_syn.bc(ind_deppH(11)+1:ind_deppH(12));  % Dep 15
         d16 = pH_syn.bc(ind_deppH(12)+1:ind_deppH(13));    % Dep 16
-        d17 = pH_syn.mean(ind_deppH(13)+1:end);            % Dep 17
-
-        pH_bestguess = [d2;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17];
+        % d17 = pH_syn.mean(ind_deppH(13)+1:ind_deppH(14);            % Dep 17
+        d17 = pH_syn.bc(ind_deppH(13)+1:ind_deppH(14));            % Dep 17
+        d18 = [pH_syn.bc(ind_deppH(14)+1:98936); pH_syn.erdc(98937:end)];        % Dep 18
+        
+        pH_bestguess = [d2;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
         
         % Remove "obvious" outliers
         pH_bestguess(811) = NaN;
@@ -365,12 +370,17 @@ switch site
         two_sigma.pH = mean(abs(diff_pH),'omitmissing');
 
     case 'South'
-        % Funky deployments
-        % Dep 13, 14, and 15 -- offset adjustment
-        ind1 = ind_deppH(12)-1;
-        ind2 = find(~isnan(pH_syn.erdc(ind_deppH(12):end)),1);
-        ind2 = ind1 + ind2;
-        delta = pH_syn.erdc(ind1-1) - pH_syn.erdc(ind2);
+        % % Funky deployments
+        % % Dep 13, 14, and 15 -- offset adjustment
+        % ind1 = ind_deppH(12)-1;
+        % ind2 = find(~isnan(pH_syn.erdc(ind_deppH(12):end)),1);
+        % ind2 = ind1 + ind2;
+        % delta = pH_syn.erdc(ind1-1) - pH_syn.erdc(ind2);
+
+        % Dep 13 -- offset adjustment
+        delta_d13a = pH_syn.erdc(58943) - pH_syn.erdc(ind_deppH(12)-1);
+        delta_d13b = pH_syn.erdc(ind_deppH(13)-1) - pH_syn.erdc(ind_deppH(13)+1);
+        delta_d13 = mean([delta_d13a delta_d13b]);
         
         d1 = pH_syn.erdc(ind_deppH(1):ind_deppH(2));       % Dep 1
         d2 = pH_syn.erdc(ind_deppH(2)+1:ind_deppH(3));     % Dep 2
@@ -378,17 +388,17 @@ switch site
         d5 = pH_syn.erdc(ind_deppH(4)+1:ind_deppH(5));     % Dep 5
         d6 = pH_syn.bc(ind_deppH(5)+1:ind_deppH(6));       % Dep 6
         d7 = pH_syn.bc(ind_deppH(6)+1:ind_deppH(7));       % Dep 7
-        d8 = pH_syn.mean(ind_deppH(7)+1:ind_deppH(8));     % Dep 8
+        d8 = pH_syn.erdc(ind_deppH(7)+1:ind_deppH(8));     % Dep 8
         d9 = pH_syn.mean(ind_deppH(8)+1:ind_deppH(9));     % Dep 9
         d10 = pH_syn.bc(ind_deppH(9)+1:ind_deppH(10));     % Dep 10
         d11 = pH_syn.erdc(ind_deppH(10)+1:ind_deppH(11));  % Dep 11
         d12 = pH_syn.erdc(ind_deppH(11)+1:ind_deppH(12));  % Dep 12
-        d13 = pH_syn.erdc(ind_deppH(12)+1:ind_deppH(13)) + delta;  % Dep 13
-        d14 = pH_syn.erdc(ind_deppH(13)+1:ind_deppH(14)) + delta;  % Dep 14
-        d15 = pH_syn.erdc(ind_deppH(14)+1:ind_deppH(15)) + delta;  % Dep 15
-        d16 = pH_syn.mean(ind_deppH(15)+1:ind_deppH(16));  % Dep 16
-        d17 = pH_syn.mean(ind_deppH(16)+1:ind_deppH(17));  % Dep 17
-        d18 = pH_syn.mean(ind_deppH(17)+1:end);            % Dep 18
+        d13 = pH_syn.erdc(ind_deppH(12)+1:ind_deppH(13)) - delta_d13;  % Dep 13
+        d14 = pH_syn.erdc(ind_deppH(13)+1:ind_deppH(14));  % Dep 14
+        d15 = pH_syn.erdc(ind_deppH(14)+1:ind_deppH(15));  % Dep 15
+        d16 = pH_syn.bc(ind_deppH(15)+1:ind_deppH(16));  % Dep 16
+        d17 = pH_syn.erdc(ind_deppH(16)+1:ind_deppH(17));  % Dep 17
+        d18 = pH_syn.bc(ind_deppH(17)+1:end);            % Dep 18
 
         pH_bestguess = [d1;d2;d4;d5;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
 
@@ -418,7 +428,7 @@ ylabel('pH')
 title([site,' - "Best Guess" pH'])
 set(gca,'FontSize',fontsize)
 legend('show','location','best')
-%%
+
 %====Save "best guess" data================================================
 % Add "best-guess" DO and pH into structure
 bestguess.DOconc = DO_bestguess;

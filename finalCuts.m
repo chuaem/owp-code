@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % finalCuts.m
 % This script looks at the turbidity and chla data from all platforms
-% together and defines periods to cut based on visual assessment.
+% together and periods to cut are defined based on visual assessment.
 %
 % AUTHOR:
 % Emily Chua
@@ -78,10 +78,10 @@ plot(era5Dat.datetime,era5Dat.wspd,'-k','HandleVisibility','off')
 ylabel('Wind speed (m/s)')
 ax.YAxis(1).Color = 'b';
 yyaxis right
-plot(gull.datetime_utc,gull.turbidity,'.-','Color',gull_clr,'DisplayName','Gull')
+plot(gull.datetime_utc,gull.turbidity,'.','Color',gull_clr,'DisplayName','Gull')
 hold on
-plot(north.datetime_utc,north.turbidity,'.-','Color',north_clr,'DisplayName','North')
-plot(south.datetime_utc,south.turbidity,'.-','Color',south_clr,'DisplayName','South')
+plot(north.datetime_utc,north.turbidity,'.','Color',north_clr,'DisplayName','North')
+plot(south.datetime_utc,south.turbidity,'.','Color',south_clr,'DisplayName','South')
 yline(100,'--r','LineWidth',2,'DisplayName','100 NTU')
 yline(300,'--r','LineWidth',2,'DisplayName','300 NTU')
 xline(south.datetime_utc(dep.ind),'--',label,'HandleVisibility','off')
@@ -211,6 +211,8 @@ for i = 1:height(ind_rm)
     south.turbidity(ind_rm.ind_start(i):ind_rm.ind_end(i)) = NaN;
 end
 
+clearvars s t ind_start ind_end ind_rm
+
 fig = figure;clf
 fig.WindowState = 'maximized';
 ax = axes;
@@ -232,7 +234,7 @@ legend('show','location','best')
 ax.YAxis(1).Color = 'k';
 ax.YAxis(2).Color = 'k';
 title('After Final Cuts')
-%%
+
 %====CHL A=================================================================
 fig = figure;clf
 fig.WindowState = 'maximized';
@@ -259,25 +261,118 @@ chla_orig.gull = gull.chla;
 chla_orig.south = south.chla;
 
 % Remove values that are exactly zero
-% north.chla(find(ismember(north.chla,0))) = NaN;
-% gull.turbidity(find(ismember(gull.turbidity,0))) = NaN;
-% south.turbidity(find(ismember(south.turbidity,0))) = NaN;
+north.chla(find(ismember(north.chla,0))) = NaN;
+gull.chla(find(ismember(gull.chla,0))) = NaN;
+south.chla(find(ismember(south.chla,0))) = NaN;
 
-datarep = ~diff(north.chla,'omitmissing');
-%%
+% Remove periods based on visual assessment
+%----North-----------------------------------------------------------------
+% Find start indices of partial deployment periods to cut
+s{1} = '10/16/22 4:15';
+s{2} = '11/2/22 22:05';
+for i = 1:length(s)
+    t = datetime(s{i},'InputFormat','MM/dd/yy HH:mm','TimeZone','UTC');
+    [~, ind_start(i,1)] = ismember(t,north.datetime_utc);
+end
+ind_start = sort(ind_start);
+
+% Find end indices of periods to cut (last index of current deployment)
+dep_rm = [9;10];
+for i = 1:length(dep_rm)
+    ind_end(i,1) = find(ismember(north.deployment,dep_rm(i)),1,'last');
+end
+
+ind_rm = table(ind_start,ind_end);
+
+for i = 1:height(ind_rm)
+    north.chla(ind_rm.ind_start(i):ind_rm.ind_end(i)) = NaN;
+end
+
+clearvars s t ind_start ind_end ind_rm
+
+%----Gull-----------------------------------------------------------------
+% Find start indices of partial deployment periods to cut
+s{1} = '6/13/23 14:05';
+for i = 1:length(s)
+    t = datetime(s{i},'InputFormat','MM/dd/yy HH:mm','TimeZone','UTC');
+    [~, ind_start(i,1)] = ismember(t,gull.datetime_utc);
+end
+ind_start = sort(ind_start);
+
+% Find end indices of periods to cut (last index of current deployment)
+dep_rm = [13];
+for i = 1:length(dep_rm)
+    ind_end(i,1) = find(ismember(gull.deployment,dep_rm(i)),1,'last');
+end
+
+ind_rm = table(ind_start,ind_end);
+
+for i = 1:height(ind_rm)
+    gull.chla(ind_rm.ind_start(i):ind_rm.ind_end(i)) = NaN;
+end
+
+clearvars ind_start ind_end ind_rm
+
+%----South-----------------------------------------------------------------
+% Find start indices of partial deployment periods to cut
+s{1} = '11/2/22 22:05';
+for i = 1:length(s)
+    t = datetime(s{i},'InputFormat','MM/dd/yy HH:mm','TimeZone','UTC');
+    [~, ind_start(i,1)] = ismember(t,south.datetime_utc);
+end
+ind_start = sort(ind_start);
+
+% Find end indices of periods to cut (last index of current deployment)
+dep_rm = [10];
+for i = 1:length(dep_rm)
+    ind_end(i,1) = find(ismember(south.deployment,dep_rm(i)),1,'last');
+end
+
+ind_rm = table(ind_start,ind_end);
+
+for i = 1:height(ind_rm)
+    south.chla(ind_rm.ind_start(i):ind_rm.ind_end(i)) = NaN;
+end
+
+clearvars s t ind_start ind_end ind_rm
+
+fig = figure;clf
+fig.WindowState = 'maximized';
+ax = axes;
+yyaxis left
+plot(era5Dat.datetime,era5Dat.wspd,':k','HandleVisibility','off')
+ylabel('Wind speed (m/s)')
+ax.YAxis(1).Color = 'b';
+yyaxis right
+plot(north.datetime_utc,chla_orig.north,'o','MarkerSize',5,'LineWidth',.5,'Color',rgb('LightSteelBlue'),'DisplayName','North orig')
+hold on
+plot(gull.datetime_utc,chla_orig.gull,'o','MarkerSize',5,'LineWidth',.5,'Color',rgb('DarkSeaGreen'),'DisplayName','Gull orig')
+plot(south.datetime_utc,chla_orig.south,'o','MarkerSize',5,'LineWidth',.5,'Color',rgb('Tan'),'DisplayName','South orig')
+plot(north.datetime_utc,north.chla,'.','Color',north_clr,'DisplayName','North final')
+plot(gull.datetime_utc,gull.chla,'.','Color',gull_clr,'DisplayName','Gull final')
+plot(south.datetime_utc,south.chla,'.','Color',south_clr,'DisplayName','South final')
+xline(south.datetime_utc(dep.ind),'--',label,'HandleVisibility','off')
+ylabel('Chl a (RFU)')
+legend('show','location','best')
+ax.YAxis(1).Color = 'k';
+ax.YAxis(2).Color = 'k';
+title('After Final Cuts')
 
 %====Save data=============================================================
 option = questdlg('Save data?','Save File','Yes','No','Yes');
 switch option
     case 'Yes'
         cd([rootpath,'open-water-platform-data\north\cleaned\final-qc'])
-        save('finalQC.mat','north')
+        finalQC = north;
+        save('finalQC.mat','finalQC')
         
         cd([rootpath,'open-water-platform-data\gull\cleaned\final-qc'])
-        save('finalQC.mat','gull')
+        finalQC = gull;
+        save('finalQC.mat','finalQC')
      
         cd([rootpath,'open-water-platform-data\south\cleaned\final-qc'])
-        save('finalQC.mat','south')
+        finalQC = south;
+        save('finalQC.mat','finalQC')
 
         disp('Files saved!')
     case 'No'

@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % combineSondeData.m
-% This script combines the QC'd data up to this point for the BC and ERDC 
-% sondes and plots the results.
+% This script combines the data that have been QC'd up to this point for the 
+% BC and ERDC sondes and plots the results.
 %
 % AUTHOR:
 % Emily Chua 

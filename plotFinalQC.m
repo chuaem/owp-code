@@ -14,30 +14,43 @@ clear;close all;clc
 
 rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 
-cd([rootpath,'open-water-platform-data\gull\cleaned\final-qc'])
-load('gull-cleaned.mat');
-gull = finalQC;
-
 cd([rootpath,'open-water-platform-data\north\cleaned\final-qc'])
-load('north-cleaned.mat');
+load('finalQC.mat');
 north = finalQC;
 
-cd([rootpath,'open-water-platform-data\south\cleaned\final-qc'])
-load('south-cleaned.mat');
-south = finalQC;
+cd([rootpath,'open-water-platform-data\gull\cleaned\final-qc'])
+load('finalQC.mat');
+gull = finalQC;
 
-clearvars finalQC
+cd([rootpath,'open-water-platform-data\south\cleaned\final-qc'])
+load('finalQC.mat');
+south = finalQC;
 
 %====Import windspeed data==============================================
 cd([rootpath,'physical-data\final-dataset'])
 load('windspeed.mat')
 
 % Find daily tidal range for each site
-gull_range = groupsummary(gull,"datetime_utc","day","range","depth");
-gull_range.day_datetime_utc = datetime(cellstr(gull_range.day_datetime_utc),'TimeZone','UTC');
-gull_range = table2timetable(gull_range);
-gull_range.GroupCount = [];
-gull_range.Properties.VariableNames = {'tidal'};
+north_tidal = groupsummary(north,"datetime_utc","day","range","depth");
+north_tidal.date = datetime(cellstr(north_tidal.day_datetime_utc),'TimeZone','UTC');
+north_tidal = table2timetable(north_tidal);
+north_tidal.GroupCount = [];
+north_tidal.day_datetime_utc = [];
+north_tidal.Properties.VariableNames = {'tidal'};
+
+gull_tidal = groupsummary(gull,"datetime_utc","day","range","depth");
+gull_tidal.date = datetime(cellstr(gull_tidal.day_datetime_utc),'TimeZone','UTC');
+gull_tidal = table2timetable(gull_tidal);
+gull_tidal.GroupCount = [];
+gull_tidal.day_datetime_utc = [];
+gull_tidal.Properties.VariableNames = {'tidal'};
+
+south_tidal = groupsummary(south,"datetime_utc","day","range","depth");
+south_tidal.date = datetime(cellstr(south_tidal.day_datetime_utc),'TimeZone','UTC');
+south_tidal = table2timetable(south_tidal);
+south_tidal.GroupCount = [];
+south_tidal.day_datetime_utc = [];
+south_tidal.Properties.VariableNames = {'tidal'};
 
 % Find indices of deployment changes
 ind_dep = find(diff(south.deployment) > 0);
@@ -50,7 +63,7 @@ label = {'Deployment 1','Deployment 2','Deployment 4','Deployment 5',...
     'Deployment 14','Deployment 15','Deployment 16','Deployment 17','Deployment 18'};
 
 % See Wong (2011) and https://www.rapidtables.com/convert/color/rgb-to-hex.html?r=86&g=180&b=233
-north_clr = '#56B4E9';
+north_clr = '#5D3A9B';
 gull_clr = '#019E73';
 south_clr = '#D55E00';
 
@@ -130,83 +143,7 @@ xline(south.datetime_utc(dep.ind),'--',label,'HandleVisibility','off')
 ylabel('Chl a (RFU)')
 legend('show','location','best')
 title('Final QC''d data')
-%%
-fig = figure;clf
-fig.WindowState = 'maximized';
-ax = axes;
-yyaxis left
-plot(era5Dat.datetime,era5Dat.wspd,'-k','HandleVisibility','off')
-ylabel('Wind speed (m/s)')
-ax.YAxis(1).Color = 'b';
-yyaxis right
-plot(gull.datetime_utc,gull.turbidity,'.-','Color',gull_clr,'DisplayName','Gull')
-hold on
-plot(north.datetime_utc,north.turbidity,'.-','Color',north_clr,'DisplayName','North')
-plot(south.datetime_utc,south.turbidity,'.-','Color',south_clr,'DisplayName','South')
-yline(100,'--r','LineWidth',2)
-yline(300,'--r','LineWidth',2)
-xline(south.datetime_utc(dep.ind),'--',label,'HandleVisibility','off')
-ylabel('Turbidity (NTU)')
-legend('show','location','best')
-ax.YAxis(1).Color = 'k';
-ax.YAxis(2).Color = 'k';
-title('Final QC''d data')
-%%
-% fig = figure;clf
-% fig.WindowState = 'maximized';
-% ax = axes;
-% yyaxis left
-% plot(gull_range.day_datetime_utc,gull_range.tidal,'-b','HandleVisibility','off')
-% ylabel('Tidal range (m)')
-% ax.YAxis(1).Color = 'b';
-% yyaxis right
-% plot(gull.datetime_utc,gull.turbidity,'.','Color',gull_clr,'DisplayName','Gull')
-% hold on
-% plot(north.datetime_utc,north.turbidity,'.','Color',north_clr,'DisplayName','North')
-% plot(south.datetime_utc,south.turbidity,'.','Color',south_clr,'DisplayName','South')
-% xline(south.datetime_utc(dep.ind),'--',label,'HandleVisibility','off')
-% ylabel('Turbidity (NTU)')
-% legend('show','location','best')
-% ax.YAxis(2).Color = 'k';
-% title('Final QC''d data')
 
-fig = figure;clf
-fig.WindowState = 'maximized';
-ax = axes;
-yyaxis left
-plot(era5Dat.datetime,era5Dat.wspd,'-k','HandleVisibility','off')
-ylabel('Wind speed (m/s)')
-yyaxis right
-plot(gull.datetime_utc,gull.chla,'.','Color',gull_clr,'DisplayName','Gull')
-hold on
-plot(north.datetime_utc,north.chla,'.','Color',north_clr,'DisplayName','North')
-plot(south.datetime_utc,south.chla,'.','Color',south_clr,'DisplayName','South')
-xline(south.datetime_utc(dep.ind),'--',label,'HandleVisibility','off')
-ylabel('Chl a (RFU)')
-legend('show','location','best')
-ax.YAxis(1).Color = 'k';
-ax.YAxis(2).Color = 'k';
-title('Final QC''d data')
-
-% fig = figure;clf
-% fig.WindowState = 'maximized';
-% ax = axes;
-% yyaxis left
-% plot(gull_range.day_datetime_utc,gull_range.tidal,'-b','HandleVisibility','off')
-% ylabel('Tidal range (m)')
-% ax.YAxis(1).Color = 'b';
-% yyaxis right
-% plot(gull.datetime_utc,gull.chla,'.','Color',gull_clr,'DisplayName','Gull')
-% hold on
-% plot(north.datetime_utc,north.chla,'.','Color',north_clr,'DisplayName','North')
-% plot(south.datetime_utc,south.chla,'.','Color',south_clr,'DisplayName','South')
-% xline(south.datetime_utc(dep.ind),'--',label,'HandleVisibility','off')
-% ylabel('Chl a (RFU)')
-% legend('show','location','best')
-% ax.YAxis(2).Color = 'k';
-% title('Final QC''d data')
-
-%%
 % %% Check influence of wind events
 % 
 % % Turbidity
@@ -252,8 +189,8 @@ option = questdlg('Save plots as .png and .fig?','Save plots','Yes','No','Yes');
 
 switch option
     case 'Yes'
-        cd([rootpath,'figures\open-water-platform\all-sites\Timeseries - 10 min']);
-    
+        cd([rootpath,'figures\open-water-platform\all-sites\Final QC']);
+
         saveas(fig1,'finalQC_depth.png')
         saveas(fig1,'finalQC_depth.fig')
         saveas(fig2,'finalQC_salinity.png')

@@ -20,7 +20,7 @@ prompt = {'Choose the platform'};
 site = questdlg(prompt,'Platform Selection','Gull','North','South','Gull');
 cd([rootpath,'open-water-platform-data\',site,'\cleaned\final-qc'])
 
-load([site,'-cleaned.mat'])
+load('finalQC.mat')
 
 dat = finalQC;
 

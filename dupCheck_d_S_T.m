@@ -11,7 +11,7 @@
 % 
 % DATE:
 % First created: 4/10/2024
-% Last updated: 10/24/2024
+% Last updated: 12/05/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -269,6 +269,159 @@ title([site,' - "Best Guess" Salinity'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 legend('show')
+
+% % Not using moving median
+% S_all = [S_bc,S_erdc];
+% S_mean = mean(S_all,2,'omitmissing');
+% 
+% fig1 = figure(1);clf
+% fig1.WindowState = 'maximized';
+% plot(dt_utc,S_bc,'.','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
+% hold on
+% plot(dt_utc,S_erdc,'.','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
+% plot(dt_utc,S_mean,'-','Color',rgb('magenta'),'DisplayName','Mean Value')
+% plot(discreteS.datetime_utc(ind_site),discreteS.Lab_Salinity(ind_site),'o','Color',rgb('gold'),'MarkerSize',6,'LineWidth',2,'DisplayName','Lab S')
+% xline(dt_utc(dep.ind),'--',label,'HandleVisibility','off')
+% ylabel('Salinity (psu)')
+% legend('show','location','best')
+% title([site,' - After Initial QC and Moving Median Test'])
+% xlim([dt1 dt2])                 % Use same x limits for comparing sites
+% set(gca,'FontSize',fontsize)
+% 
+% switch site
+%     case 'Gull'
+%         % Funky deployments
+%         % Dep 6 -- define points where sensors do not track together
+%         kk = find(ind_diverge > 29223 & ind_diverge < dep.ind(5));
+%         ind_d6 = ind_diverge(kk);
+% 
+%         % Choose "better" deployment
+%         d1 = S_erdc(dep.ind(1):dep.ind(2));        % Dep 1
+%         d2 = S_mean(dep.ind(2)+1:dep.ind(3));      % Dep 2
+%         d5 = S_mean(dep.ind(3)+1:dep.ind(4));      % Dep 5
+%         d6 = [S_mean(dep.ind(4)+1:ind_d6(1)); S_erdc(ind_d6(1)+1:dep.ind(5))];  % Dep 6
+%         d7 = S_mean(dep.ind(5)+1:dep.ind(6));      % Dep 7
+%         d8 = [S_mean(dep.ind(6)+1:41331); S_erdc(41332:dep.ind(7))];        % Dep 8
+%         d9 = S_erdc(dep.ind(7)+1:dep.ind(8));      % Dep 9
+%         d10 = S_erdc(dep.ind(8)+1:dep.ind(9));       % Dep 10
+%         d11 = S_mean(dep.ind(9)+1:dep.ind(10));    % Dep 11
+%         d12 = S_mean(dep.ind(10)+1:dep.ind(11));   % Dep 12
+%         d13 = [S_erdc(dep.ind(11)+1:81445); S_erdc(81446:dep.ind(12))];   % Dep 13
+%         d14 = S_erdc(dep.ind(12)+1:dep.ind(13));     % Dep 14
+%         d15 = S_bc(dep.ind(13)+1:dep.ind(14));     % Dep 15
+%         d16 = [S_erdc(dep.ind(14)+1:111691); S_bc(111692:dep.ind(15))];     % Dep 16
+%         d17 = S_mean(dep.ind(15)+1:dep.ind(16));   % Dep 17
+%         d18 = S_bc(dep.ind(16)+1:end);           % Dep 18
+% 
+%         S_bestguess = [d1;d2;d5;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
+% 
+%         % Calculate mean difference for Deployments 11 & 12
+%         diff_S = diff(S_all(dep.ind(9):dep.ind(11),:),1,2);
+%         two_sigma.S = mean(abs(diff_S),'omitmissing');
+% 
+%     case 'North'
+%         % Funky deployments
+%         % Dep 7 -- offset adjustment
+%         delta_d7 = S_bc(20745) - S_erdc(20786);
+% 
+%         % Dep 15 -- offset adjustment
+%         delta_d15 = S_erdc(76160) - S_erdc(76159);
+% 
+%         % Choose "better" deployment
+%         d2 = [S_erdc(dep.ind(1):dep.ind(2))];          % Dep 2
+%         d6 = S_bc(dep.ind(2)+1:dep.ind(3));          % Dep 6
+%         d7 = S_bc(dep.ind(3)+1:dep.ind(4)) - delta_d7; % Dep 7
+%         d8 = S_erdc(dep.ind(4)+1:dep.ind(5));        % Dep 8
+%         d9 = S_erdc(dep.ind(5)+1:dep.ind(6));        % Dep 9
+%         d10 = S_erdc(dep.ind(6)+1:dep.ind(7));       % Dep 10
+%         d11 = S_mean(dep.ind(7)+1:dep.ind(8));       % Dep 11
+%         d12 = S_erdc(dep.ind(8)+1:dep.ind(9));       % Dep 12
+%         d13 = S_erdc(dep.ind(9)+1:dep.ind(10));      % Dep 13
+%         d14 = S_erdc(dep.ind(10)+1:dep.ind(11));     % Dep 14
+%         d15 = S_erdc(dep.ind(11)+1:dep.ind(12)) - delta_d15; % Dep 15
+%         d16 = S_mean(dep.ind(12)+1:dep.ind(13));     % Dep 16
+%         d17 = S_mean(dep.ind(13)+1:dep.ind(14));     % Dep 17
+%         d18 = S_erdc(dep.ind(14)+1:end);             % Dep 18
+% 
+%         S_bestguess = [d2;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
+% 
+%         % Remove "obvious" outliers
+%         S_bestguess(4351:dep.ind(2)) = NaN;
+%         S_bestguess(11090:15492) = NaN;
+%         S_bestguess(20785) = NaN;
+%         S_bestguess(80182:dep.ind(12)) = NaN;
+%         S_bestguess(84381:84385) = NaN;
+% 
+%         % Calculate mean difference for Deployments 16 & 17
+%         diff_S = diff(S_all(dep.ind(12):dep.ind(14),:),1,2);
+%         two_sigma.S = mean(abs(diff_S),'omitmissing');
+% 
+%     case 'South'
+%         % Funky deployments
+%         % Dep 6 -- offset adjustment
+%         ind = dep.ind(5);
+%         delta_d6 = S_bc(ind+1) - S_bc(ind-1);
+% 
+%         % Dep 7 -- offset adjustment
+%         ind = dep.ind(7);
+%         delta_d7 = S_erdc(ind-11) - S_erdc(ind);
+% 
+%         % Dep 15 -- offset adjustment
+%         delta_d15 = S_erdc(98253) - S_erdc(98251);
+% 
+%         % Choose "better" deployment
+%         d1 = S_erdc(dep.ind(1):dep.ind(2));        % Dep 1
+%         d2 = S_mean(dep.ind(2)+1:dep.ind(3));      % Dep 2
+%         d4 = S_bc(dep.ind(3)+1:dep.ind(4));        % Dep 4
+%         d5 = S_bc(dep.ind(4)+1:dep.ind(5));        % Dep 5
+%         d6 = S_bc(dep.ind(5)+1:dep.ind(6)) - delta_d6;        % Dep 6
+%         d7 = S_erdc(dep.ind(6)+1:dep.ind(7)) - delta_d7;      % Dep 7
+%         d8 = S_erdc(dep.ind(7)+1:dep.ind(8));      % Dep 8
+%         d9 = S_mean(dep.ind(8)+1:dep.ind(9));      % Dep 9
+%         d10 = S_bc(dep.ind(9)+1:dep.ind(10));      % Dep 10
+%         d11 = S_erdc(dep.ind(10)+1:dep.ind(11));   % Dep 11
+%         d12 = S_mean(dep.ind(11)+1:dep.ind(12));   % Dep 12
+%         d13 = S_erdc(dep.ind(12)+1:dep.ind(13));   % Dep 13
+%         d14 = S_mean(dep.ind(13)+1:dep.ind(14));   % Dep 14
+%         d15 = S_erdc(dep.ind(14)+1:dep.ind(15)) + delta_d15;   % Dep 15
+%         d16 = S_mean(dep.ind(15)+1:dep.ind(16));   % Dep 16
+%         d17 = S_erdc(dep.ind(16)+1:dep.ind(17));   % Dep 17
+%         d18 = S_mean(dep.ind(17)+1:end);           % Dep 18
+% 
+%         S_bestguess = [d1;d2;d4;d5;d6;d7;d8;d9;d10;d11;d12;d13;d14;d15;d16;d17;d18];
+% 
+%         % Remove "obvious" outliers
+%         S_bestguess(5896:5898) = NaN;
+%         S_bestguess(11043:dep.ind(3)) = NaN;
+%         S_bestguess(11928) = NaN;
+%         S_bestguess(29482) = NaN;
+%         S_bestguess(33012) = NaN;
+%         S_bestguess(38194:38204) = NaN;
+%         S_bestguess(49118:49149) = NaN;
+%         S_bestguess(77744:77797) = NaN;
+%         S_bestguess(80846:80852) = NaN;
+% 
+%         % Calculate mean absolute difference for Deployments 9 & 12
+%         diff_S = diff(S_all([dep.ind(8):dep.ind(9),dep.ind(11):dep.ind(12)],:),1,2);
+%         two_sigma.S = mean(abs(diff_S),'omitmissing');
+% end
+% 
+% clearvars d1 d2 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18
+% 
+% fig2 = figure(2);clf
+% fig2.WindowState = 'maximized';
+% plot(dt_utc,S_bc,'.','Color',red,'MarkerSize',dotsize,'DisplayName','BC');
+% hold on
+% plot(dt_utc,S_erdc,'.','Color',blue,'MarkerSize',dotsize,'DisplayName','ERDC')
+% plot(dt_utc,S_mean,'.','Color',rgb('magenta'),'DisplayName','Mean Value')
+% plot(dt_utc(1:length(S_bestguess)),S_bestguess,'.k','DisplayName','"Best guess"')
+% plot(discreteS.datetime_utc(ind_site),discreteS.Lab_Salinity(ind_site),'o','Color',rgb('gold'),'MarkerSize',6,'LineWidth',2,'DisplayName','Lab S')
+% xline(dt_utc(dep.ind),'--',label,'HandleVisibility','off')
+% ylabel('Salinity (psu)')
+% title([site,' - "Best Guess" Salinity'])
+% xlim([dt1 dt2])                 % Use same x limits for comparing sites
+% set(gca,'FontSize',fontsize)
+% legend('show')
 
 disp('Press enter to continue on to Depth')
 pause

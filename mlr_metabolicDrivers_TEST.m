@@ -24,7 +24,7 @@ fn = {'north','gull','south'};
 
 for i = 1:length(fn)
     cd([rootpath,'open-water-platform-data\',fn{i},'\cleaned\final-qc'])
-    load([fn{i},'-cleaned.mat']);
+    load('finalQC.mat');
     params.(fn{i}) = finalQC;
     cd([rootpath,'diel-method\uncertainty-analysis\',fn{i}])
     load('MonteCarloResults')

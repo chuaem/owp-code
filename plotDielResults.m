@@ -389,7 +389,7 @@ pyr(1) = .97*pyr(1);
 set(yr,'position',pyr,'FontSize',20)
 
 title(t,site,'FontSize',36,'FontName','Helvetica','FontWeight','bold')
-%%
+
 %==========================================================================
 %   Compare seasonality in NEM across sites -- without errorbars
 %==========================================================================
