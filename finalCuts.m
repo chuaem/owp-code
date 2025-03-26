@@ -234,7 +234,7 @@ legend('show','location','best')
 ax.YAxis(1).Color = 'k';
 ax.YAxis(2).Color = 'k';
 title('After Final Cuts')
-
+%%
 %====CHL A=================================================================
 fig = figure;clf
 fig.WindowState = 'maximized';
@@ -357,7 +357,7 @@ legend('show','location','best')
 ax.YAxis(1).Color = 'k';
 ax.YAxis(2).Color = 'k';
 title('After Final Cuts')
-
+%%
 %====Save data=============================================================
 option = questdlg('Save data?','Save File','Yes','No','Yes');
 switch option

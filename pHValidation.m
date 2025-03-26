@@ -183,7 +183,7 @@ ylabel('[H+] (mol/kg)')
 title(site,'FontSize',fontsize)
 legend('show','location','best')
 ylim([0 6E-8])
-
+%%
 % % Linear regression
 % % Remove rows with missing pH values
 % finalQC_trimmed = rmmissing(finalQC,'DataVariables',"pH");

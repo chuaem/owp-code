@@ -54,15 +54,15 @@ T_err = 0; % [degC]
 % p_err = 0.1/2; % [dbar] (pressure in [dbar] and depth in [m] are approx. equal)
 d_err = 0; % [m]; assign manually based on guesstimated error in measuring height of sensor above bottom
 p_err = 0; % [dbar] (pressure in [dbar] and depth in [m] are approx. equal)
-DOconc_1sig = two_sigma.DOconc/2;  % [umol/L]
+% DOconc_1sig = two_sigma.DOconc/2;  % [umol/L]
 
 cd([rootpath,'physical-data\final-dataset'])
 load('BP&AT.mat')
 slp_err = 0; % [hPa]
 
 load('windspeed.mat')
-U10_err = two_sigma.wspd/2; % [m/s]
-% U10_err = 0; % [m/s]
+% U10_err = two_sigma.wspd/2; % [m/s]
+U10_err = 0; % [m/s]
 
 % Load model output from DO linear regression with Winkler data
 cd([rootpath,'open-water-platform-data\',site,'\cleaned\validation'])
@@ -71,11 +71,11 @@ DOconc_mdl = mdl;
 clear mdl
 
 % Load diel analysis results from different k parameterizations
-cd([rootpath,'diel-method\sensitivity-analysis\',site,'\ro_hunt_wann_vary'])
+cd([rootpath,'diel-method\sensitivity-analysis\gull\ro_hunt_wann_vary'])
 R2b = load('diel_res.mat');
-cd([rootpath,'diel-method\sensitivity-analysis\',site,'\wann_vary'])
+cd([rootpath,'diel-method\sensitivity-analysis\gull\wann_vary'])
 W2b = load('diel_res.mat');
-cd([rootpath,'diel-method\sensitivity-analysis\',site,'\emer_vary'])
+cd([rootpath,'diel-method\sensitivity-analysis\gull\emer_vary'])
 Eb = load('diel_res.mat');
 
 %==========================================================================
@@ -95,8 +95,8 @@ k_err(2) = mean(abs(diff([R2b.fas.k, Eb.fas.k],1,2)),'omitmissing');   % R&H-200
 k_err(3) = mean(abs(diff([W2b.fas.k, Eb.fas.k],1,2)),'omitmissing');   % W-2014 vs E-2019
 
 % Take largest difference between parameterizations
-% k_err = max(k_err)/2;   % [h-1]
-k_err = 0;
+k_err = max(k_err)/2;   % [h-1]
+% k_err = 0;
 
 %====Define input variables================================================
 dt_utc = wtreg_res_rt.DateTimeStamp;

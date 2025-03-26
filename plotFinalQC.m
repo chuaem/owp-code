@@ -7,13 +7,14 @@
 %
 % DATE:
 % First created: 5/15/2024
-% Last updated: 11/9/2024
+% Last updated: 1/19/2025
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
 
 rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 
+%====Import data===========================================================
 cd([rootpath,'open-water-platform-data\north\cleaned\final-qc'])
 load('finalQC.mat');
 north = finalQC;
@@ -26,7 +27,6 @@ cd([rootpath,'open-water-platform-data\south\cleaned\final-qc'])
 load('finalQC.mat');
 south = finalQC;
 
-%====Import windspeed data==============================================
 cd([rootpath,'physical-data\final-dataset'])
 load('windspeed.mat')
 
@@ -62,6 +62,17 @@ label = {'Deployment 1','Deployment 2','Deployment 4','Deployment 5',...
     'Deployment 10','Deployment 11','Deployment 12','Deployment 13',...
     'Deployment 14','Deployment 15','Deployment 16','Deployment 17','Deployment 18'};
 
+%====Calculate the average deployment length===============================
+dep_change = [south.datetime_utc(dep.ind);south.datetime_utc(end)];
+for i = 2:length(dep_change)
+    dt(i-1) = dep_change(i) - dep_change(i-1);
+end
+
+duration_avg = mean(dt);    % Mean deployment length in hh:mm:ss
+
+duration_avg.Format = 'd';  % Mean deployment length in days --> Convert manually to weeks
+
+%====Plot data=============================================================
 % See Wong (2011) and https://www.rapidtables.com/convert/color/rgb-to-hex.html?r=86&g=180&b=233
 north_clr = '#5D3A9B';
 gull_clr = '#019E73';

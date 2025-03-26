@@ -166,6 +166,19 @@ date = datetime(date,'TimeZone','UTC');
 diel_obs = table(date,daystart_dt,dayend_dt,daylength,R_hourly,P_hourly,R_daily,P_daily,GPP,ER,NEM);
 diel_obs = table2timetable(diel_obs);
 
+%   Make summary statistics table
+% Remove rows with missing data
+diel_obs = rmmissing(diel_obs);
+
+% Detided data
+anomGPP = length(find(diel_obs.GPP < 0)) / length(diel_obs.GPP) * 100;
+anomER = length(find(diel_obs.ER > 0)) / length(diel_obs.ER) * 100;
+meanGPP = mean(diel_obs.GPP);
+sdGPP = std(diel_obs.GPP);
+meanER = mean(diel_obs.ER);
+sdER = std(diel_obs.ER);
+summStats.obs = table(meanGPP,sdGPP,anomGPP,meanER,sdER,anomER);
+
 %==========================================================================
 %   Conduct diel analysis with detided DO data
 %==========================================================================
@@ -255,9 +268,7 @@ date = datetime(date,'TimeZone','UTC');
 diel_dtd = table(date,daystart_dt,dayend_dt,daylength,R_hourly,P_hourly,R_daily,P_daily,GPP,ER,NEM);
 diel_dtd = table2timetable(diel_dtd);
 
-%==========================================================================
-%   Make summary statistics tables
-%==========================================================================
+%   Make summary statistics table
 % Remove rows with missing data
 diel_dtd = rmmissing(diel_dtd);
 

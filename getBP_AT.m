@@ -9,7 +9,7 @@
 % 
 % DATE:
 % First created: 1/2024
-% Last updated: 10/24/204
+% Last updated: 10/24/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear;close all;clc
@@ -51,7 +51,7 @@ two_sigma.AT = mean(abs(diff_AT),'omitmissing');    % [degC]
 BP_all = [metDat_rt.patm, hoboDat_rt.patm];
 diff_BP = diff(BP_all,1,2);
 two_sigma.BP = mean(abs(diff_BP),'omitmissing');    % [hPa]
-
+%%
 %====Gap fill Gull met station air T data==================================
 % Replace missing Gull T_air data with HOBO Baro Pressure T_air data
 ind_nan = find(isnan(metDat_rt.Tair));
@@ -60,6 +60,7 @@ metDat_rt.Tair(ind_nan) = hoboDat_rt.Tair(ind_nan);
 figure(1),clf
 plot(metDat_rt.datetime_utc,metDat_rt.Tair,'.','MarkerSize',4)
 hold on
+% plot(hoboDat_rt.datetime_utc,hoboDat_rt.Tair,'og','MarkerSize',6,'LineWidth',1)
 plot(metDat_rt.datetime_utc(ind_nan),metDat_rt.Tair(ind_nan),'og','MarkerSize',6,'LineWidth',1)
 ylabel('Air Temperature (^oC)')
 legend('Gull Met Station','HOBO Water-Level Logger Dataset','location','southeast')
@@ -73,6 +74,7 @@ metDat_rt.patm(ind_nan) = hoboDat_rt.patm(ind_nan);
 figure(2),clf
 plot(metDat_rt.datetime_utc,metDat_rt.patm,'.','MarkerSize',4)
 hold on
+% plot(hoboDat_rt.datetime_utc,hoboDat_rt.patm,'og','MarkerSize',6,'LineWidth',1)
 plot(metDat_rt.datetime_utc(ind_nan),metDat_rt.patm(ind_nan),'og','MarkerSize',6,'LineWidth',1)
 ylabel('p_{atm} (hPa)')
 legend('Gull Met Station','HOBO Water-Level Logger Dataset')

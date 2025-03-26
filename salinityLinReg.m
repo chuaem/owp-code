@@ -25,7 +25,7 @@ site = questdlg(prompt,'Platform Selection','Gull','North','South','Gull');
 
 %====Import best-guess sonde data==========================================
 cd([rootpath,'open-water-platform-data\',site,'\cleaned\final-qc\'])
-load([site,'-cleaned.mat'])
+load('finalQC.mat')
 
 %====Import lab S from discrete samples====================================
 cd('G:\Shared drives\SMIIL\Shared Data')
@@ -98,7 +98,7 @@ title([site,' - "Best Guess" Salinity'])
 xlim([dt1 dt2])                 % Use same x limits for comparing sites
 set(gca,'FontSize',fontsize)
 legend('show')
-
+%%
 %====Best-guess linear regression==========================================
 Sbestguess = table(finalQC.datetime_utc,finalQC.salinity);
 Sbestguess.Properties.VariableNames = {'datetime_utc','salinity'};

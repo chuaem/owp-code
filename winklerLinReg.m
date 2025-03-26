@@ -25,7 +25,7 @@ load([site,'-DOCorr.mat'])
 
 %====Import best-guess DO concentration====================================
 cd([rootpath,'open-water-platform-data\',site,'\cleaned\final-qc\'])
-load([site,'-cleaned.mat'])
+load('finalQC.mat')
 
 %====Import Winkler data===================================================
 cd('G:\Shared drives\SMIIL\Shared Data')

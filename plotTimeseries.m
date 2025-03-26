@@ -107,13 +107,9 @@ daily.south([anomER;anomGPP],:) = [];
 
 % See triad scheme in https://files-aje-com.s3.amazonaws.com/www/row/_assets/docs/Using_Color_In_Your_Manuscript_Figures.pdf
 % and https://www.rapidtables.com/convert/color/rgb-to-hex.html?r=86&g=180&b=233
-% north_clr = '#56B4E9';
 north_clr = '#5D3A9B';
 gull_clr = '#019E73';
 south_clr = '#D55E00';
-% north_clr = '#017ddf';
-% gull_clr = '#52d589';
-% south_clr = '#b46d15';
 
 t = datetime(2021,01,01):calyears(1):datetime(2023,01,01);
 yr = year(t);
@@ -124,12 +120,12 @@ xtk = 1:3;
 cd([rootpath,'figures'])
 
 %% ====Plot daily means of the parameters==================================
-fig = figure(2);clf
-fig.WindowState = 'maximized';
+fig1 = figure;clf
+fig1.WindowState = 'maximized';
 % t1 = tiledlayout(6,1,'tilespacing','tight');
-t1 = tiledlayout(8,1,'TileSpacing','tight');
+t1 = tiledlayout(8,1,'Padding','compact','TileSpacing','tight');
  
-ax1 = nexttile;
+nexttile;
 ymin = -5;
 ymax = 35;
 plot(daily.north.datetime_utc,daily.north.temperature,'-','LineWidth',1.5,'Color',north_clr,'DisplayName','North')
@@ -141,13 +137,13 @@ xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
 set(gca,'XTickLabel',[])
 ylim([ymin ymax])
 yticks([ymin (ymin+ymax)/2 ymax])
-text(0.02,0.75,'Temp','Units','normalized','VerticalAlignment','bottom','FontSize',12,'FontWeight','bold')
-ylabel('^oC')
-set(gca,'box','off','LineWidth',1.5)
+text(0.02,0.8,'a) Temperature','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+ylabel('^oC','FontSize',20)
+set(gca,'box','off','LineWidth',1)
 grid on
 legend('show','Location','northoutside','Orientation','horizontal')
 
-ax2 = nexttile;
+nexttile;
 ymin = 25;
 ymax = 40;
 plot(daily.north.datetime_utc,daily.north.salinity,'-','LineWidth',1.5,'Color',north_clr)
@@ -159,29 +155,30 @@ xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
 set(gca,'XTickLabel',[])
 ylim([ymin ymax])
 yticks([ymin (ymin+ymax)/2 ymax])
-text(0.02,0.75,'Sal','Units','normalized','VerticalAlignment','bottom','FontSize',12,'FontWeight','bold')
-ylabel('psu')
-set(gca,'box','off','LineWidth',1.5)
+text(0.02,0.8,'b) Salinity','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+ylabel('psu','FontSize',20)
+set(gca,'box','off','LineWidth',1)
 grid on
 
-ax3 = nexttile;
+nexttile;
 ymin = 25;
 ymax = 125;
 plot(daily.north.datetime_utc,daily.north.DOsat,'-','LineWidth',1.5,'Color',north_clr)
 hold on
 plot(daily.gull.datetime_utc,daily.gull.DOsat,'-.','LineWidth',1.5,'Color',gull_clr)
 plot(daily.south.datetime_utc,daily.south.DOsat,':','LineWidth',1.5,'Color',south_clr)
+yline(100,'k','LineWidth',1.5)
 datetick('x','yyyy')
 xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
 set(gca,'XTickLabel',[])
 ylim([ymin ymax])
 yticks([ymin (ymin+ymax)/2 ymax])
-text(0.02,0.75,'DO sat','Units','normalized','VerticalAlignment','bottom','FontSize',12,'FontWeight','bold')
-ylabel('%sat')
-set(gca,'box','off','LineWidth',1.5)
+text(0.02,0.8,'c) DO','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+ylabel('% sat','FontSize',20)
+set(gca,'box','off','LineWidth',1)
 grid on
 
-ax4 = nexttile;
+nexttile;
 ymin = 7.3;
 ymax = 8.7;
 plot(daily.north.datetime_utc,daily.north.pH,'-','LineWidth',1.5,'Color',north_clr)
@@ -193,12 +190,12 @@ xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
 set(gca,'XTickLabel',[])
 ylim([ymin ymax])
 yticks([ymin (ymin+ymax)/2 ymax])
-text(0.02,0.75,'pH','Units','normalized','VerticalAlignment','bottom','FontSize',12,'FontWeight','bold')
+text(0.02,0.8,'d) pH','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
 % ylabel('-')
-set(gca,'box','off','LineWidth',1.5)
+set(gca,'box','off','LineWidth',1)
 grid on
 
-ax5 = nexttile;
+nexttile;
 ymin = .5;
 ymax = 2.5;
 plot(daily.north.datetime_utc,daily.north.tidal,'-','LineWidth',1.5,'Color',north_clr)
@@ -210,30 +207,28 @@ xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
 set(gca,'XTickLabel',[])
 ylim([ymin ymax])
 yticks([ymin (ymin+ymax)/2 ymax])
-text(0.02,0.75,'Tidal','Units','normalized','VerticalAlignment','bottom','FontSize',12,'FontWeight','bold')
-ylabel('m')
-set(gca,'box','off','LineWidth',1.5)
+text(0.02,0.8,'e) Tidal range','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+ylabel('m','FontSize',20)
+set(gca,'box','off','LineWidth',1)
 grid on
 
-ax6 = nexttile;
+nexttile;
 ymin = 0;
 ymax = 15;
-plot(daily.south.datetime_utc,daily.south.wspd,'-k','LineWidth',1.5)
+plot(daily.south.datetime_utc,daily.south.wspd,'-','Color',rgb('darkslategray'),'LineWidth',1)
 datetick('x','yyyy')
 xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
 set(gca,'XTickLabel',[])
 ylim([ymin ymax])
 yticks([ymin (ymin+ymax)/2 ymax])
-text(0.02,0.755,'Wind speed','Units','normalized','VerticalAlignment','bottom','FontSize',12,'FontWeight','bold')
-ylabel('m/s')
-set(gca,'box','off','LineWidth',1.5)
+text(0.02,0.8,'f) Wind speed','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+ylabel('m/s','FontSize',20)
+set(gca,'box','off','LineWidth',1)
 grid on
 
-ax7 = nexttile;
-ymin = -750;
-ymax = 450;
-% ymin = -700;
-% ymax = 700;
+nexttile;
+ymin = -700;
+ymax = 700;
 plot(daily.north.datetime_utc,daily.north.GPP_avg,'-','LineWidth',1.5,'Color',north_clr)
 hold on
 plot(daily.gull.datetime_utc,daily.gull.GPP_avg,'-.','LineWidth',1.5,'Color',gull_clr)
@@ -247,16 +242,15 @@ xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
 set(gca,'XTickLabel',[])
 ylim([ymin ymax])
 yticks([ymin (ymin+ymax)/2 ymax])
-text(0.02,0.75,'GPP','Units','normalized','VerticalAlignment','bottom','FontSize',12,'FontWeight','bold')
-text(0.02,0.05,'ER','Units','normalized','VerticalAlignment','bottom','FontSize',12,'FontWeight','bold')
-ylabel('mmol m^{-2} d^{-1}')
-set(gca,'box','off','LineWidth',1.5)
+text(0.02,0.8,'g) GPP','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+text(0.02,0.05,'h) ER','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+ylabel('mmol m^{-2} d^{-1}','FontSize',20)
+set(gca,'box','off','LineWidth',1)
 grid on
 
-ax8 = nexttile;
+nexttile;
 ymin = -500;
-ymax = 200;
-% ymax = 500;
+ymax = 500;
 plot(daily.north.datetime_utc,daily.north.NEM_avg,'-','LineWidth',1.5,'Color',north_clr)
 hold on
 plot(daily.gull.datetime_utc,daily.gull.NEM_avg,'-.','LineWidth',1.5,'Color',gull_clr)
@@ -266,182 +260,173 @@ datetick('x','yyyy')
 xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
 ylim([ymin ymax])
 yticks([ymin (ymin+ymax)/2 ymax])
-text(0.02,0.75,'NEM','Units','normalized','VerticalAlignment','bottom','FontSize',12,'FontWeight','bold')
-ylabel('mmol m^{-2} d^{-1}')
-set(gca,'box','off','LineWidth',1.5)
+text(0.02,0.8,'i) NEM','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+ylabel('mmol m^{-2} d^{-1}','FontSize',20)
+set(gca,'box','off','LineWidth',1)
 grid on
-
-% ax7 = nexttile;
-% plot(daily.north.datetime_utc,daily.north.chla,'-','LineWidth',1.5,'Color',north_clr)
-% hold on
-% plot(daily.gull.datetime_utc,daily.gull.chla,'-','LineWidth',1.5,'Color',gull_clr)
-% plot(daily.south.datetime_utc,daily.south.chla,'-','LineWidth',1.5,'Color',south_clr)
-% datetick('x','yyyy')
-% xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
-% set(gca,'XTickLabel',[])
-% ylabel('Chl a (RFU)')
-% 
-% ax8 = nexttile;
-% plot(daily.north.datetime_utc,daily.north.turbidity,'-','LineWidth',1.5,'Color',north_clr)
-% hold on
-% plot(daily.gull.datetime_utc,daily.gull.turbidity,'-','LineWidth',1.5,'Color',gull_clr)
-% plot(daily.south.datetime_utc,daily.south.turbidity,'-','LineWidth',1.5,'Color',south_clr)
-% set(gca,'XTickLabel',[])
-% ylabel('Turb (NTU)')
-% datetick('x','yyyy')
-% xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
-
-set(gcf, 'Units', 'Inches', 'Position', [-9.9000   -2.6583    8.5000   10.6500], 'PaperUnits', 'Inches', 'PaperSize', [8.5, 11])
 
 xlabel('Calendar Year')
 
-% %% ===Plot daily means of ONLY the metabolic rates=========================
-% fig = figure(2);clf
-% fig.WindowState = 'maximized';
-% t2 = tiledlayout(2,1,'tilespacing','tight');
-% 
-% ax1 = nexttile;
-% plot(daily.north.datetime_utc,daily.north.GPP_avg,'-','LineWidth',1.5,'Color',north_clr)
-% hold on
-% plot(daily.gull.datetime_utc,daily.gull.GPP_avg,'-','LineWidth',1.5,'Color',gull_clr)
-% plot(daily.south.datetime_utc,daily.south.GPP_avg,'-','LineWidth',1.5,'Color',south_clr)
-% plot(daily.north.datetime_utc,daily.north.ER_avg,'-','LineWidth',1.5,'Color',north_clr)
-% plot(daily.gull.datetime_utc,daily.gull.ER_avg,'-','LineWidth',1.5,'Color',gull_clr)
-% plot(daily.south.datetime_utc,daily.south.ER_avg,'-','LineWidth',1.5,'Color',south_clr)
-% yline(0,'k','LineWidth',1.5)
-% datetick('x','yyyy')
-% xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
-% set(gca,'XTickLabel',[])
-% ylabel('ER & GPP')
-% 
-% legend('show','Location','northoutside','Orientation','horizontal')
-% 
-% ax2 = nexttile;
-% plot(daily.north.datetime_utc,daily.north.NEM_avg,'-','LineWidth',1.5,'Color',north_clr)
-% hold on
-% plot(daily.gull.datetime_utc,daily.gull.NEM_avg,'-','LineWidth',1.5,'Color',gull_clr)
-% plot(daily.south.datetime_utc,daily.south.NEM_avg,'-','LineWidth',1.5,'Color',south_clr)
-% yline(0,'k','LineWidth',1.5)
-% datetick('x','yyyy')
-% xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
-% ylabel('NEM')
+%====SAVE THE FIGURE WITH THE DESIRED SIZE MANUALLY========================
+cd([rootpath,'figures\open-water-platform\all-sites'])
 
-%% ====Bar plots of metabolic rates on daily & monthly time scales=========
-%====Calculate day of year averages======================================
-% Create daily averages across years for each site/sonde
-dayofyear.gull = groupsummary(daily.gull,'datetime_utc','dayofyear','mean');
-dayofyear.north = groupsummary(daily.north,'datetime_utc','dayofyear','mean');
-dayofyear.south = groupsummary(daily.south,'datetime_utc','dayofyear','mean');
+disp('Go to Export Setup, then hit Enter to save .fig and .jpg')
+pause
 
-dayofyear.gull.Properties.VariableNames(1) = {'day'};
-dayofyear.north.Properties.VariableNames(1) = {'day'};
-dayofyear.south.Properties.VariableNames(1) = {'day'};
+% STEP 1:
+% File --> Export Setup --> Width = 7 in; Height = 9 in --> Check "Expand axes to fill figure" --> Apply to Figure --> Export...  
 
-dayofyear_avg = table;
-dayofyear_avg.day = (1:365)';
-for i = 1:height(dayofyear.gull)
-    dayofyear_avg.GPP(i) = mean([dayofyear.north.mean_GPP_avg(i) dayofyear.gull.mean_GPP_avg(i) dayofyear.south.mean_GPP_avg(i)],'omitmissing');
-    dayofyear_avg.ER(i) = mean([dayofyear.north.mean_ER_avg(i) dayofyear.gull.mean_ER_avg(i) dayofyear.south.mean_ER_avg(i)],'omitmissing');
-    dayofyear_avg.NEM(i) = mean([dayofyear.north.mean_NEM_avg(i) dayofyear.gull.mean_NEM_avg(i) dayofyear.south.mean_NEM_avg(i)],'omitmissing');
-end
+% Step 2:
+saveas(fig1,'daily_params&rates.fig')
+exportgraphics(fig1,'daily_params&rates.jpg','Resolution',600)
 
-%====Calculate month of year averages======================================
-% Create monthly bins
-monthly.gull = retime(daily.gull,'monthly','mean');
-monthly.north = retime(daily.north,'monthly','mean');
-monthly.south = retime(daily.south,'monthly','mean');
-
-% Create monthly averages across years for each site/sonde
-monthofyear.gull = groupsummary(daily.gull,'datetime_utc','monthofyear','mean');
-monthofyear.north = groupsummary(daily.north,'datetime_utc','monthofyear','mean');
-monthofyear.south = groupsummary(daily.south,'datetime_utc','monthofyear','mean');
-
-monthofyear.gull.Properties.VariableNames(1) = {'month'};
-monthofyear.north.Properties.VariableNames(1) = {'month'};
-monthofyear.south.Properties.VariableNames(1) = {'month'};
-
-monthofyear_avg = table;
-monthofyear_avg.month = (1:12)';
-for i = 1:height(monthofyear.gull)
-    monthofyear_avg.GPP(i) = mean([monthofyear.north.mean_GPP_avg(i) monthofyear.gull.mean_GPP_avg(i) monthofyear.south.mean_GPP_avg(i)]);
-    monthofyear_avg.ER(i) = mean([monthofyear.north.mean_ER_avg(i) monthofyear.gull.mean_ER_avg(i) monthofyear.south.mean_ER_avg(i)]);
-    monthofyear_avg.NEM(i) = mean([monthofyear.north.mean_NEM_avg(i) monthofyear.gull.mean_NEM_avg(i) monthofyear.south.mean_NEM_avg(i)]);
-end
-
-%====Create bar plots======================================================
-% % Version 1
-% fig = figure;clf
-% t = tiledlayout(2,1);
-% 
-% nexttile
-% bar(dayofyear_avg.day,dayofyear_avg.GPP,0.5,'k')
-% hold on
-% bar(dayofyear_avg.day,dayofyear_avg.ER,0.5,'k')
-% bar(dayofyear_avg.day,dayofyear_avg.NEM,0.5,'FaceColor',[0.8353, 0.3686, 0])
-% % ylim([-550 300])
-% title('Daily')
-% set(gca,'box','off','LineWidth',1.5)
-% xlabel('Day of Year')
-% 
-% nexttile
-% bar(monthofyear_avg.month,monthofyear_avg.GPP,0.5,'k')
-% hold on
-% bar(monthofyear_avg.month,monthofyear_avg.ER,0.5,'k')
-% bar(monthofyear_avg.month,monthofyear_avg.NEM,0.5,'FaceColor',[0.8353, 0.3686, 0])
-% title('Monthly')
-% set(gca,'box','off','LineWidth',1.5)
-% xlabel('Month of Year')
-% 
-% ylabel(t,'GPP, ER, and NEM (mmol O_2 m^{-2} d^{-1})','FontSize',16)
-% 
-% set(gcf,'Position',[-1200 -100 400 300])
-% fig.Units               = 'centimeters';
-% fig.Position(3)         = 18;
-% fig.Position(4)         = 22;
-
-% Version 2
-% Colors from https://personal.sron.nl/~pault/
-gpp_clr = '#55AA22';
-er_clr = '#BB0011';
-
-fig = figure;clf
-t = tiledlayout(2,2,'TileSpacing','compact','padding','compact');
-
-nexttile
-bar(dayofyear_avg.day,dayofyear_avg.GPP,0.5,'FaceColor',gpp_clr,'EdgeColor',gpp_clr)
+%% ===Supplemental plot w/ chla and turbidity==============================
+fig2 = figure(2);clf
+fig2.WindowState = 'maximized';
+t1 = tiledlayout(8,1,'TileSpacing','tight');
+ 
+nexttile;
+ymin = -5;
+ymax = 35;
+plot(daily.north.datetime_utc,daily.north.temperature,'-','LineWidth',1.5,'Color',north_clr,'DisplayName','North')
 hold on
-bar(dayofyear_avg.day,dayofyear_avg.ER,0.5,'FaceColor',er_clr,'EdgeColor',er_clr)
-text(0.03,0.9,'GPP','Units','normalized','VerticalAlignment','bottom','FontSize',12,'FontWeight','bold','color',gpp_clr)
-text(0.03,0.05,'ER','Units','normalized','VerticalAlignment','bottom','FontSize',12,'FontWeight','bold','color',er_clr)
+plot(daily.gull.datetime_utc,daily.gull.temperature,'-.','LineWidth',1.5,'Color',gull_clr,'DisplayName','Gull')
+plot(daily.south.datetime_utc,daily.south.temperature,':','LineWidth',1.5,'Color',south_clr,'DisplayName','South')
+datetick('x','yyyy')
+xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
 set(gca,'XTickLabel',[])
-ylabel('mmol O_2 m^{-2} d^{-1}','fontsize',14)
-title('Daily')
-set(gca,'box','off','LineWidth',1.5)
+ylim([ymin ymax])
+yticks([ymin (ymin+ymax)/2 ymax])
+text(0.02,0.8,'a) Temperature','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+ylabel('^oC','FontSize',20)
+set(gca,'box','off','LineWidth',1)
+grid on
+legend('show','Location','northoutside','Orientation','horizontal')
 
-nexttile
-bar(monthofyear_avg.month,monthofyear_avg.GPP,0.5,'FaceColor',gpp_clr,'EdgeColor',gpp_clr)
+nexttile;
+ymin = 25;
+ymax = 40;
+plot(daily.north.datetime_utc,daily.north.salinity,'-','LineWidth',1.5,'Color',north_clr)
 hold on
-bar(monthofyear_avg.month,monthofyear_avg.ER,0.5,'FaceColor',er_clr,'EdgeColor',er_clr)
-text(0.03,0.9,'GPP','Units','normalized','VerticalAlignment','bottom','FontSize',12,'FontWeight','bold','color',gpp_clr)
-text(0.03,0.05,'ER','Units','normalized','VerticalAlignment','bottom','FontSize',12,'FontWeight','bold','color',er_clr)
+plot(daily.gull.datetime_utc,daily.gull.salinity,'-.','LineWidth',1.5,'Color',gull_clr)
+plot(daily.south.datetime_utc,daily.south.salinity,':','LineWidth',1.5,'Color',south_clr)
+datetick('x','yyyy')
+xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
 set(gca,'XTickLabel',[])
-title('Monthly')
-set(gca,'box','off','LineWidth',1.5)
+ylim([ymin ymax])
+yticks([ymin (ymin+ymax)/2 ymax])
+text(0.02,0.8,'b) Salinity','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+ylabel('psu','FontSize',20)
+set(gca,'box','off','LineWidth',1)
+grid on
 
-nexttile
-bar(dayofyear_avg.day,dayofyear_avg.NEM,0.5,'k','EdgeColor','k')
-text(0.03,0.05,'NEM','Units','normalized','VerticalAlignment','bottom','FontSize',12,'FontWeight','bold')
-set(gca,'box','off','LineWidth',1.5)
-ylabel('mmol O_2 m^{-2} d^{-1}','fontsize',14)
-xlabel('Day of Year','fontsize',14)
+nexttile;
+ymin = 25;
+ymax = 125;
+plot(daily.north.datetime_utc,daily.north.DOsat,'-','LineWidth',1.5,'Color',north_clr)
+hold on
+plot(daily.gull.datetime_utc,daily.gull.DOsat,'-.','LineWidth',1.5,'Color',gull_clr)
+plot(daily.south.datetime_utc,daily.south.DOsat,':','LineWidth',1.5,'Color',south_clr)
+yline(100,'k','LineWidth',1.5)
+datetick('x','yyyy')
+xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
+set(gca,'XTickLabel',[])
+ylim([ymin ymax])
+yticks([ymin (ymin+ymax)/2 ymax])
+text(0.02,0.8,'c) DO','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+ylabel('% sat','FontSize',20)
+set(gca,'box','off','LineWidth',1)
+grid on
 
-nexttile
-bar(monthofyear_avg.month,monthofyear_avg.NEM,0.5,'k')
-text(0.03,0.05,'NEM','Units','normalized','VerticalAlignment','bottom','FontSize',12,'FontWeight','bold')
-set(gca,'box','off','LineWidth',1.5)
-xlabel('Month of Year','fontsize',14)
+nexttile;
+ymin = 7.3;
+ymax = 8.7;
+plot(daily.north.datetime_utc,daily.north.pH,'-','LineWidth',1.5,'Color',north_clr)
+hold on
+plot(daily.gull.datetime_utc,daily.gull.pH,'-.','LineWidth',1.5,'Color',gull_clr)
+plot(daily.south.datetime_utc,daily.south.pH,':','LineWidth',1.5,'Color',south_clr)
+datetick('x','yyyy')
+xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
+set(gca,'XTickLabel',[])
+ylim([ymin ymax])
+yticks([ymin (ymin+ymax)/2 ymax])
+text(0.02,0.8,'d) pH','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+% ylabel('-')
+set(gca,'box','off','LineWidth',1)
+grid on
 
-set(gcf,'Position',[-1200 -100 400 300])
-fig.Units               = 'centimeters';
-fig.Position(3)         = 25.2095 ;
-fig.Position(4)         = 18;
+nexttile;
+ymin = 0;
+ymax = 60;
+plot(daily.north.datetime_utc,daily.north.chla,'-','LineWidth',1.5,'Color',north_clr)
+hold on
+plot(daily.gull.datetime_utc,daily.gull.chla,'-.','LineWidth',1.5,'Color',gull_clr)
+plot(daily.south.datetime_utc,daily.south.chla,':','LineWidth',1.5,'Color',south_clr)
+datetick('x','yyyy')
+xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
+set(gca,'XTickLabel',[])
+ylim([ymin ymax])
+yticks([ymin (ymin+ymax)/2 ymax])
+text(0.02,0.8,'e) Chl a','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+ylabel('RFU','FontSize',20)
+set(gca,'box','off','LineWidth',1)
+grid on
+
+nexttile;
+plot(daily.north.datetime_utc,daily.north.turbidity,'-','LineWidth',1.5,'Color',north_clr)
+hold on
+plot(daily.gull.datetime_utc,daily.gull.turbidity,'-.','LineWidth',1.5,'Color',gull_clr)
+plot(daily.south.datetime_utc,daily.south.turbidity,':','LineWidth',1.5,'Color',south_clr)
+set(gca,'XTickLabel',[])
+text(0.02,0.8,'f) Turbidity','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+ylabel('NTU','FontSize',20)
+datetick('x','yyyy')
+xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
+set(gca,'box','off','LineWidth',1)
+grid on
+
+nexttile;
+ymin = .5;
+ymax = 2.5;
+plot(daily.north.datetime_utc,daily.north.tidal,'-','LineWidth',1.5,'Color',north_clr)
+hold on
+plot(daily.gull.datetime_utc,daily.gull.tidal,'-.','LineWidth',1.5,'Color',gull_clr)
+plot(daily.south.datetime_utc,daily.south.tidal,':','LineWidth',1.5,'Color',south_clr)
+datetick('x','yyyy')
+xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
+set(gca,'XTickLabel',[])
+ylim([ymin ymax])
+yticks([ymin (ymin+ymax)/2 ymax])
+text(0.02,0.8,'g) Tidal range','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+ylabel('m','FontSize',20)
+set(gca,'box','off','LineWidth',1)
+grid on
+
+nexttile;
+ymin = 0;
+ymax = 15;
+plot(daily.south.datetime_utc,daily.south.wspd,'-','Color',rgb('darkslategray'),'LineWidth',1)
+datetick('x','yyyy')
+xlim([daily.gull.datetime_utc(1) daily.gull.datetime_utc(end)])
+set(gca,'XTickLabel',[])
+ylim([ymin ymax])
+yticks([ymin (ymin+ymax)/2 ymax])
+text(0.02,0.8,'h) Wind speed','Units','normalized','VerticalAlignment','bottom','FontSize',20,'FontWeight','bold')
+ylabel('m/s','FontSize',20)
+set(gca,'box','off','LineWidth',1)
+grid on
+
+xlabel('Calendar Year')
+
+%====SAVE THE FIGURE WITH THE DESIRED SIZE MANUALLY========================
+cd([rootpath,'figures\open-water-platform\all-sites'])
+
+disp('Go to Export Setup, then hit Enter to save .fig and .jpg')
+pause
+
+% STEP 1:
+% File --> Export Setup --> Width = 7 in; Height = 9 in --> Check "Expand axes to fill figure" --> Apply to Figure
+
+% Step 2:
+saveas(fig2,'daily_params-SI.fig')
+exportgraphics(fig2,'daily_params-SI.jpg','Resolution',600)

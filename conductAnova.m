@@ -20,59 +20,28 @@ rootpath = 'G:\My Drive\Postdoc\Work\SMIIL\';
 %==========================================================================
 % Import data
 %==========================================================================
-site = 'gull';
-cd([rootpath,'open-water-platform-data\',site,'\cleaned\final-qc'])
-load([site,'-cleaned.mat']);
-params.gull = finalQC;
-% cd([rootpath,'diel-method\matlab-results\final-qc\',site])
-% load('diel_res.mat')
-% metab.gull = diel_dtd;
-cd([rootpath,'diel-method\uncertainty-analysis\',site])
-load('MonteCarloResults.mat')
-metab.gull = diel_dtd_MC;
-% Remove times with anomalous GPP and ER values
-anomER = find(metab.gull.ER_avg > 0);
-anomGPP = find(metab.gull.GPP_avg < 0);
-metab.gull([anomER;anomGPP],:) = [];
+%====Import final QC'd data & diel analysis results========================
+site = {'north','gull','south'};
 
-site = 'north';
-cd([rootpath,'open-water-platform-data\',site,'\cleaned\final-qc'])
-load([site,'-cleaned.mat']);
-params.north = finalQC;
-% cd([rootpath,'diel-method\matlab-results\final-qc\',site])
-% load('diel_res.mat')
-% metab.north = diel_dtd;
-cd([rootpath,'diel-method\uncertainty-analysis\',site])
-load('MonteCarloResults.mat')
-metab.north = diel_dtd_MC;
-% Remove times with anomalous GPP and ER values
-anomER = find(metab.north.ER_avg > 0);
-anomGPP = find(metab.north.GPP_avg < 0);
-metab.north([anomER;anomGPP],:) = [];
-
-site = 'south';
-cd([rootpath,'open-water-platform-data\',site,'\cleaned\final-qc'])
-load([site,'-cleaned.mat']);
-params.south = finalQC;
-% cd([rootpath,'diel-method\matlab-results\final-qc\',site])
-% load('diel_res.mat')
-% metab.south = diel_dtd;
-cd([rootpath,'diel-method\uncertainty-analysis\',site])
-load('MonteCarloResults.mat')
-metab.south= diel_dtd_MC;
-% Remove times with anomalous GPP and ER values
-anomER = find(metab.south.ER_avg > 0);
-anomGPP = find(metab.south.GPP_avg < 0);
-metab.south([anomER;anomGPP],:) = [];
-
+for kk = 1:length(site)
+    cd([rootpath,'open-water-platform-data\',site{kk},'\cleaned\final-qc'])
+    load('finalQC.mat');
+    params.(site{kk}) = finalQC;
+    cd([rootpath,'diel-method\uncertainty-analysis\',site{kk}])
+    load('MonteCarloResults')
+    metab.(site{kk}) = diel_dtd_MC;
+    % Set anomalous GPP and ER values to NaN
+    anom_ER = find(metab.(site{kk}).ER_avg > 0);
+    anom_GPP = find(metab.(site{kk}).GPP_avg < 0);
+    metab.(site{kk}).ER_avg(anom_ER,:) = NaN;
+    metab.(site{kk}).GPP_avg(anom_GPP,:) = NaN;
+    metab.(site{kk}).NEM_avg([anom_ER;anom_GPP],:) = NaN;
+end
 clearvars finalQC diel_dtd diel_obs
 
-%====Import windspeed and PAR data=========================================
+%====Import windspeed data=================================================
 cd([rootpath,'physical-data\final-dataset'])
 load('windspeed.mat')
-
-cd([rootpath,'physical-data\final-dataset'])
-load('par.mat')
 
 %====Calculate daily means for each site===================================
 gull_dailyAvg = retime(params.gull,'daily','mean');
@@ -80,39 +49,31 @@ north_dailyAvg = retime(params.north,'daily','mean');
 south_dailyAvg = retime(params.south,'daily','mean');
 
 wspd_dailyAvg = retime(era5Dat,'daily','mean');
-par_dailyAvg= retime(parDat,'daily','mean');
 
 cd([rootpath,'figures\stats-analyses'])
 
 %====Create tables containing all data for each site=======================
 % Gull
-dt2 = dateshift(metab.gull.daystart_dt,'start','day');
-metab.gull.daystart_dt = dt2;
-daily_gull = synchronize(gull_dailyAvg,wspd_dailyAvg,par_dailyAvg,metab.gull);
-daily_gull = removevars(daily_gull,{'deployment','dayend_dt','daylength','R_hourly_avg','P_hourly_avg','R_daily_avg','P_daily_avg','datetime_local','Tair','light_lux'});
+daily_gull = synchronize(gull_dailyAvg,wspd_dailyAvg,metab.gull);
+daily_gull = removevars(daily_gull,{'deployment','dayend_dt','daylength','R_hourly_avg','P_hourly_avg','R_daily_avg','P_daily_avg'});
 daily_gull(daily_gull.datetime_utc < datetime(2021,6,29,"TimeZone","UTC"),:) = [];
 daily_gull(daily_gull.datetime_utc > datetime(2024,6,4,"TimeZone","UTC"),:) = [];
 
 % North
-dt2 = dateshift(metab.north.daystart_dt,'start','day');
-metab.north.daystart_dt = dt2;
-daily_north = synchronize(north_dailyAvg,wspd_dailyAvg,par_dailyAvg,metab.north);
-daily_north = removevars(daily_north,{'deployment','dayend_dt','daylength','R_hourly_avg','P_hourly_avg','R_daily_avg','P_daily_avg','datetime_local','Tair','light_lux'});
+daily_north = synchronize(north_dailyAvg,wspd_dailyAvg,metab.north);
+daily_north = removevars(daily_north,{'deployment','dayend_dt','daylength','R_hourly_avg','P_hourly_avg','R_daily_avg','P_daily_avg'});
 daily_north(daily_north.datetime_utc < datetime(2021,6,29,"TimeZone","UTC"),:) = [];
 daily_north(daily_north.datetime_utc > datetime(2024,6,4,"TimeZone","UTC"),:) = [];
 
 % South
-dt2 = dateshift(metab.south.daystart_dt,'start','day');
-metab.south.daystart_dt = dt2;
-daily_south = synchronize(south_dailyAvg,wspd_dailyAvg,par_dailyAvg,metab.south);
-daily_south = removevars(daily_south,{'deployment','dayend_dt','daylength','R_hourly_avg','P_hourly_avg','R_daily_avg','P_daily_avg','datetime_local','Tair','light_lux'});
+daily_south = synchronize(south_dailyAvg,wspd_dailyAvg,metab.south);
+daily_south = removevars(daily_south,{'deployment','dayend_dt','daylength','R_hourly_avg','P_hourly_avg','R_daily_avg','P_daily_avg'});
 daily_south(daily_south.datetime_utc < datetime(2021,6,29,"TimeZone","UTC"),:) = [];
 daily_south(daily_south.datetime_utc > datetime(2024,6,4,"TimeZone","UTC"),:) = [];
 
 %==========================================================================
 % Perform ANOVA
 %==========================================================================
-
 % Create a grouping variable
 group = {'North','Gull','South'};
 
